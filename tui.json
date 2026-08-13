@@ -1,0 +1,25 @@
+{
+  "$schema": "https://opencode.ai/tui.json",
+  "theme": "tokyonight",
+  "scroll_speed": 3,
+  "scroll_acceleration": {
+    "enabled": true
+  },
+  "diff_style": "auto",
+  "mouse": true,
+  "attention": {
+    "enabled": true,
+    "notifications": true,
+    "sound": true,
+    "volume": 0.4
+  },
+  "keybinds": {
+    "command_list": "ctrl+p",
+    "session_new": "ctrl+alt+n",
+    "session_child_cycle": "ctrl+alt+right",
+    "session_child_cycle_reverse": "ctrl+alt+left",
+    "messages_undo": "ctrl+z",
+    "messages_redo": "ctrl+shift+z",
+    "messages_copy": "ctrl+shift+c"
+  }
+}
