@@ -8,6 +8,7 @@ These project-agnostic instructions apply to every OpenCode session and agent un
 
 - Use Traditional Chinese (`zh-TW`) for user-facing replies, questions, progress, verification, and errors. Preserve exact code, commands, paths, identifiers, model IDs, and logs in their original language.
 - Keep reusable agents, prompts, rules, commands, skills, handoffs, decisions, and configuration comments concise and English-first. Never add project-specific assumptions to global configuration.
+- In persisted or shareable handoffs, knowledge, decisions, and documentation, never record personal home directories, OS usernames, absolute workspace paths, email addresses, credentials, or other machine-specific identifiers. Use repository-relative paths and a sanitized workspace label instead.
 
 ## Configuration ownership
 

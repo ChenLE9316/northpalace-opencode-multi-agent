@@ -17,13 +17,13 @@ Use only for a Plan/Build transition leaving the conversation, new Desktop sessi
 # Handoff: <workflow-id> — <topic>
 **Workflow ID**: <id>
 **From / To**: <owner> → <next owner>
-**Date / Working dir**: <ISO date> · <absolute path>
+**Date / Workspace**: <ISO date> · <sanitized repository or workspace label>
 
 ## Current State
 - Phase, progress, active task ids, owners, status, resume policy
 
 ## Done / In Progress / Todo
-- Done with `path:line` evidence
+- Done with repository-relative `path:line` evidence
 - Active item and blocker
 - Remaining items with risk/dependency
 
@@ -37,13 +37,13 @@ Use only for a Plan/Build transition leaving the conversation, new Desktop sessi
 - Root-cause id, attempts, new evidence, disposition
 
 ## Ownership
-- Retained and released paths with task ids
+- Retained and released repository-relative paths with task ids
 
 ## Resume Candidates
 - Same-session task ids still valid; fresh tasks required for another agent/review
 
 ## Git / File Evidence
-- Branch, HEAD, changed files, diff stat when Git evidence was supplied
+- Repository-relative paths, branch, HEAD, changed files, diff stat when Git evidence was supplied
 
 ## Next 1–3 Steps
 1. Smallest immediate action
@@ -55,5 +55,6 @@ Use only for a Plan/Build transition leaving the conversation, new Desktop sessi
 
 - English, concise, evidence-backed, and explicit about Done versus Unverified.
 - Never fabricate state, commits, commands, verification, or runtime facts.
-- Never store secrets, full environment values, hidden reasoning, or unnecessary logs.
+- Never store secrets, full environment values, hidden reasoning, unnecessary logs, email addresses, personal home directories, OS usernames, or absolute workspace paths.
+- Use repository-relative `path:line` evidence. When workspace identity matters, use a sanitized repository/workspace label that contains no user profile or machine identifier.
 - Reuse a task id only for the same valid agent session; another owner gets a new linked task.

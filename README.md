@@ -2,14 +2,16 @@
 
 北宮冰玉個人習慣設定
 
-這是一套公開、具明確設計取向的 OpenCode 設定，目標是用於結構化的 Multi-Agent 軟體工程工作流。
+這是一套公開、具明確設計取向的 **OpenCode Desktop 專用 Multi-Agent 設定與參考架構**，目標是用於結構化的 Multi-Agent 軟體工程工作流。
 
 這個儲存庫同時具備兩種用途：
 
-1. 一份**可直接套用的 OpenCode 全域設定**；
-2. 一套**Multi-Agent 參考架構**，核心包含受限委派、明確權責、唯讀規劃、驗證關卡，以及由父節點統一管理狀態。
+1. 一份**可直接套用到 OpenCode 的全域設定**；
+2. 一套**以 OpenCode Desktop 為主要操作介面的 Multi-Agent 參考架構**，核心包含受限委派、明確權責、唯讀規劃、驗證關卡，以及由父節點統一管理狀態。
 
-這套設定主要為 OpenCode Desktop + CLI 協作流程設計，刻意讓 Multi-Agent 控制面保持可見，而不是把 orchestration 隱藏在另一套獨立 runtime 裡。
+> **定位說明：這套設定是 Desktop-first / Desktop-specific。** 日常 Multi-Agent 操作、child-session 檢視、人工介入與 session 導航都以 **OpenCode Desktop** 為主要使用方式。OpenCode CLI 仍可用於 `opencode models`、`opencode debug ...`、LSP/MCP/health check、設定驗證與疑難排解，但 CLI 是輔助工具，不是與 Desktop 並列的主要操作介面。
+
+這套設計刻意讓 Multi-Agent 控制面保持可見，讓 operator 能在 OpenCode Desktop 直接檢視 root 與 child sessions，而不是把 orchestration 隱藏在另一套獨立 runtime 裡。
 
 ## 這套設定提供什麼
 
@@ -27,7 +29,8 @@
 - **18 個自訂 commands**，涵蓋 workflow、review、verification、health check、Rust/Tauri、backup 與 spec
 - **7 個可重複使用的 skills**
 - Playwright 與 Context7 MCP 整合
-- 針對 Windows / OpenCode Desktop 的 shell 與疑難排解指引
+- OpenCode Desktop child-session navigation 與 human-in-the-loop 操作
+- 針對 Windows / OpenCode Desktop 的 shell、環境與疑難排解指引
 
 ## 架構
 
@@ -75,7 +78,7 @@ inline `explore` 與 `general` subagents 也使用 `opencode/deepseek-v4-flash-f
 .
 ├─ opencode.jsonc          # Runtime、permissions、L1 agents、inline subagents、MCP、LSP
 ├─ tui.json               # Desktop/TUI 互動設定與 child-session 導航
-├─ AGENTS.md              # 全域共享行為與安全契約
+├─ AGENTS.md              # 全域共享行為、安全與隱私契約
 ├─ agents/                # 34 個 specialist 定義
 ├─ prompts/               # L1 build / plan prompts
 ├─ rules/                 # Multi-Agent orchestration 契約
@@ -88,7 +91,7 @@ inline `explore` 與 `general` subagents 也使用 `opencode/deepseek-v4-flash-f
 
 ## 安裝方式
 
-### 方式 A — 當成 OpenCode 全域設定使用
+### 方式 A — 作為 OpenCode Desktop 的全域設定
 
 請先備份你現有的 OpenCode 設定。
 
@@ -99,11 +102,11 @@ Clone 這個儲存庫，然後把內容複製到 OpenCode 全域設定目錄：
 
 這個儲存庫的根目錄本身就已經按照 OpenCode 全域設定目錄的結構整理好，因此**不要**再額外包一層 `.opencode/`。
 
-複製完成後，請完整重新啟動 OpenCode Desktop / CLI，讓 config-time agents、commands、skills、permissions、MCP 定義與 prompts 全部重新載入。
+複製完成後，請完整重新啟動 **OpenCode Desktop**，讓 config-time agents、commands、skills、permissions、MCP 定義與 prompts 全部重新載入。
 
-### 方式 B — 保留為獨立資料夾
+### 方式 B — 保留為獨立設定資料夾
 
-你也可以讓這個儲存庫保持獨立，並透過 `OPENCODE_CONFIG_DIR` 指向它。
+你也可以讓這個儲存庫保持獨立，並透過 `OPENCODE_CONFIG_DIR` 指向它。這種方式適合測試或驗證設定，而不覆蓋既有全域配置。
 
 Bash 範例：
 
@@ -112,16 +115,16 @@ export OPENCODE_CONFIG_DIR="/path/to/northpalace-opencode-multi-agent"
 opencode
 ```
 
-這種方式適合在不覆蓋現有全域設定的情況下測試這套 Multi-Agent stack。
+CLI 在這套 stack 中主要用於設定驗證、模型/LSP/MCP 檢查與疑難排解；主要 Multi-Agent 操作仍以 OpenCode Desktop 為準。
 
 ## 第一次啟動檢查清單
 
 1. 完成你所選 primary model 與 subagent models 所需的 provider 驗證。
-2. 執行 `opencode models`，確認所有設定中的 model ID 都能正確解析。
+2. 使用 CLI 執行 `opencode models`，確認所有設定中的 model ID 都能正確解析。
 3. 確認 Node/npm 可用，讓固定版本的 MCP 套件能正常執行。
 4. 如果你需要 LSP workflow，請確認設定中的 LSP executable 都存在。
-5. 從一般專案啟動 OpenCode，執行 `/verify-config`。
-6. 任何 config / agent / skill / command 修改後，都請重新啟動 OpenCode Desktop。
+5. 從一般專案啟動 OpenCode Desktop，執行 `/verify-config`。
+6. 任何 config / agent / skill / command 修改後，都請完整重新啟動 OpenCode Desktop。
 
 目前 MCP 定義固定以下版本：
 
@@ -198,7 +201,7 @@ Child agent 回報成功，不代表整個 workflow 已經完成。Parent 必須
 | `/review` | 對目前變更執行獨立 review |
 | `/audit` | 進行 security / architecture 導向 audit |
 | `/verify` | 驗證目前 implementation |
-| `/verify-config` | 驗證 config、agent DAG、permissions、model routes 與 portability |
+| `/verify-config` | 驗證 config、agent DAG、permissions、model routes、privacy 與 portability |
 | `/opencode-healthcheck` | 執行唯讀的 OpenCode / Desktop 環境健康檢查 |
 | `/backup-config` | 建立帶時間戳記且經驗證的 canonical config 備份 |
 | `/spec` | 建立或調整 implementation specification |
@@ -226,17 +229,24 @@ Child agent 回報成功，不代表整個 workflow 已經完成。Parent 必須
 
 Agent 應只載入目前需要的 skill，不應把所有程序一次塞進 context。
 
-## Human-in-the-loop 操作方式
+## Human-in-the-loop / Desktop 操作方式
 
-這套 stack 刻意保留 operator 控制權。
+這套 stack 刻意保留 operator 控制權，並以 **OpenCode Desktop** 的 session 視圖作為主要 observability layer。
 
-TUI 設定包含 child-session navigation，因此你可以直接檢查被委派的 session，而不是只在 root 等待結果回傳：
+TUI/Desktop 設定包含 child-session navigation，因此你可以直接檢查被委派的 session，而不是只在 root 等待結果回傳：
 
 - `Ctrl+Alt+Right` — 下一個 child session
 - `Ctrl+Alt+Left` — 上一個 child session
 - `Ctrl+Alt+N` — 建立新 session
 
 這套設計假設高風險 publishing、破壞性 cleanup、force operations 與 external side effects 都需要明確批准。
+
+## 隱私與可攜性
+
+- Runtime handoffs 與 curated knowledge 預設只保留在本機，Git 只追蹤對應的 `.gitkeep` placeholder。
+- 可持久化或可分享的 handoff、knowledge、decision 與文件，不應保存個人 home directory、OS username、Email、credential、絕對 workspace path 或其他 machine-specific identifier。
+- 檔案證據使用 repository-relative `path:line`；需要識別 workspace 時使用 sanitized workspace label 或 repository name。
+- `北宮冰玉` 是本專案公開保留的識別名稱，不屬於上述需要移除的 machine-specific metadata。
 
 ## 安全模型
 
@@ -271,15 +281,11 @@ TUI 設定包含 child-session navigation，因此你可以直接檢查被委派
 
 結構修改後請執行 `/verify-config`。
 
-## 可攜性說明
-
-這個公開版本以可攜性為目標：不包含特定機器的絕對路徑，也沒有額外的同步目標。Runtime handoffs 與 curated knowledge 預設只保留在本機，Git 只追蹤對應的 `.gitkeep` placeholder。
-
 ## 專案識別
 
-**NorthPalace OpenCode Multi-Agent** 是以 **NorthPalace** 為命名空間發布的個人化、具明確設計取向的 OpenCode Multi-Agent 設定。
+**NorthPalace OpenCode Multi-Agent** 是以 **NorthPalace** 為命名空間發布的個人化、具明確設計取向、以 **OpenCode Desktop** 為主要操作介面的 Multi-Agent configuration / framework layer。
 
-它的定位是建立在 OpenCode 之上的 configuration / framework layer，而不是取代 OpenCode runtime。
+它建立在 OpenCode runtime 之上，不取代 OpenCode runtime；CLI 是設定驗證與診斷的輔助介面，Desktop 才是本專案主要的人機操作面。
 
 ## 授權條款
 

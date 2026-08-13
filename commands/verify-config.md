@@ -1,5 +1,5 @@
 ---
-description: Read-only verification of OpenCode config, agent DAG, effective permissions, document budgets, runtime tools, versions, and portability.
+description: Read-only verification of OpenCode config, agent DAG, effective permissions, document budgets, runtime tools, versions, privacy, and portability.
 agent: build
 subtask: false
 ---
@@ -14,7 +14,8 @@ Verify the effective global configuration without modifying anything. Return `OK
 6. Confirm `websearch` is both allowed and registered in fresh Build, Plan, representative L2, and L3 sessions; distinguish missing provider/flag registration from permission denial.
 7. Require no repeated agent boilerplate markers. For runtime configuration Markdown (AGENTS plus `agents/`, `prompts/`, `rules/`, `commands/`, `skills/`, `decisions/`, `handoffs/`, and `knowledge/`; exclude repository-only README files), require total ≤88,000 bytes, `agents/` ≤45,000 bytes, AGENTS ≤60 lines, orchestration ≤65, Build ≤35, and Plan ≤28.
 8. Run `opencode agent list` and `opencode debug skill`; require 34 specialists + configured built-ins and 7 user skills. Treat runtime hidden agents separately when reporting the total.
-9. Require exactly 18 custom command files and no machine-specific absolute paths or host-specific synchronization assumptions in reusable configuration or documentation.
-10. Report CLI and Desktop versions, LSP executable/version results, Web Search provider/registration state without printing secrets, MCP pins, and runtime-owned package manifest/SDK version alignment. Report `node_modules/` size separately as disposable runtime dependency state.
+9. Require exactly 18 custom command files. Require reusable configuration, documentation, handoff templates, decision templates, and knowledge templates to contain no personal home directories, OS usernames, email addresses, credentials, machine-specific absolute workspace paths, or host-specific synchronization assumptions. Repository-relative example paths and documented platform-neutral config locations are allowed. Handoff evidence must use repository-relative `path:line` and a sanitized repository/workspace label instead of an absolute working directory.
+10. Confirm the README describes this stack as OpenCode Desktop-first/Desktop-specific: Desktop is the primary Multi-Agent operation, child-session inspection, human-in-the-loop, and session-navigation interface; CLI is described only as an auxiliary interface for models/debug/LSP/MCP/health checks, configuration verification, and troubleshooting.
+11. Report CLI and Desktop versions, LSP executable/version results, Web Search provider/registration state without printing secrets, MCP pins, and runtime-owned package manifest/SDK version alignment. Report `node_modules/` size separately as disposable runtime dependency state.
 
-Do not print credentials, full environment values, session content, or full logs. Give the smallest corrective action for each failure.
+Do not print credentials, full environment values, personal machine identifiers, session content, or full logs. Give the smallest corrective action for each failure.
