@@ -19,6 +19,7 @@
 - **34 個 specialist subagents**
 - **5 個 coordinator subagents**，可在受限條件下委派 L3 工作
 - 透過 `subagent_depth: 2` 限制為 **L1 → L2 → L3 最大深度**
+- **mixed-initiative 雙控制模式**：模型可以自行判斷 routing，使用者也可以用 `@agent` 與 `/command` 手動引導
 - **唯讀 Plan graph**，用於規劃、架構、研究與風險分析
 - **單一可修改的 Build root**，負責實作工作流
 - **由父節點中介溝通**，避免 sibling-to-sibling 直接共享狀態
@@ -33,6 +34,8 @@
 - 針對 Windows / OpenCode Desktop 的 shell、環境與疑難排解指引
 
 ## 架構
+
+模型自主 orchestration 的標準路徑：
 
 ```text
 使用者
@@ -58,6 +61,88 @@
 - `release-manager`
 
 其他所有 specialist agents 都是 `task: deny` 的 leaf。
+
+## 雙控制模式：模型自動判斷 + 使用者手動引導
+
+這套 stack 不是只能讓模型全自動跑，也不是只能由使用者逐步手動指定。它採用 **mixed-initiative** 設計：模型與使用者都可以主動決定下一個操作，但兩者的 authority 不相同。
+
+```text
+                        Human Operator
+                             │
+          ┌──────────────────┼──────────────────┐
+          │                  │                  │
+      一般自然語言          @agent             /command
+          │                  │                  │
+          ▼                  ▼                  ▼
+     Plan / Build       直接指定 Agent       指定工作程序
+          │                  │                  │
+          │           operator-directed         │
+          │               routing               │
+          ▼                                     ▼
+   模型依風險與證據                         review / verify /
+   自行選擇 routing                        workflow / audit / ...
+          │
+     ┌────┴────┐
+     ▼         ▼
+ direct L2  coordinator L2
+               │
+               ▼
+              L3
+```
+
+### 模型自行判斷
+
+使用者可以只描述目標，不必指定每一個 Agent。`plan` / `build` 會依照任務風險、現有 evidence、ownership 與驗證需求，自行判斷要：
+
+- 直接完成工作；
+- 呼叫一個 approved L2 specialist；
+- 透過 approved coordinator 拆成 bounded L3 tasks；
+- 啟動 review、security、test 或其他必要驗證。
+
+模型主動建立的 Task delegation 必須遵守 `permission.task` allowlist、L1 → L2 → L3 深度、parent mediation、ownership 與其他 orchestration invariants。
+
+### 使用者以 `@agent` 手動指定角色
+
+使用者也可以在 OpenCode Desktop 中直接使用 `@agent` 指定想要的 Agent，跳過模型原本可能選擇的 routing。例如直接要求 `@rust-engineer`、`@architect`、`@review` 或其他已設定角色處理一個明確工作。
+
+這是 **operator-directed routing**，不是模型自己擴張 delegation authority。換句話說，`permission.task` 的 allowlist 主要限制的是**模型可以自主委派給誰**，不是拿來取消使用者直接選擇已設定 Agent 的操作能力。
+
+### 使用者以 `/command` 手動指定程序
+
+使用者可以用 `/command` 明確選擇一套預先定義的操作程序，例如：
+
+```text
+/workflow
+/review
+/audit
+/verify
+/verify-config
+/rust-test
+/tauri-verify
+```
+
+這類 command 是 operator-facing control surface：使用者可以不用等待模型自行判斷何時需要某個程序，而是直接啟動它。
+
+### 自動與手動可以混合使用
+
+三種入口不是互斥模式。典型操作可以是：
+
+```text
+使用者給目標
+→ Build 自動拆分與委派
+→ 使用者切換查看 child session
+→ 使用者用 @review 額外指定檢查
+→ /verify 執行明確驗證
+→ Build 整合 evidence 並繼續收斂
+```
+
+如果使用者手動介入的是一個**正在進行中的 workflow**，既有 workflow id、owned paths、dependencies、evidence、安全 gate 與 acceptance / verification requirements 仍然保持有效，除非使用者明確改變 scope、objective 或另開 standalone task。
+
+因此這套架構的核心原則是：
+
+> **Model autonomy is governed; operator authority is preserved.**
+>
+> 模型可以自行判斷與執行受治理的 Multi-Agent routing；使用者也始終可以透過 `@agent`、`/command`、session navigation 與明確指令直接引導系統。
 
 ## 模型路由
 
@@ -137,7 +222,7 @@ CLI 在這套 stack 中主要用於設定驗證、模型/LSP/MCP 檢查與疑難
 
 使用 `plan` primary agent 進行架構設計、調查、需求整理、證據蒐集、風險分析或 implementation planning。
 
-Plan 以及從 Plan 合法可達的所有 agent graph 都應保持唯讀。
+Plan 以及由 Plan **自主委派**合法可達的 agent graph 都應保持唯讀。使用者明確的 `@agent` / `/command` 操作屬於 operator-directed control path，與模型自主 Task graph 分開理解。
 
 典型流程：
 
@@ -233,6 +318,8 @@ Agent 應只載入目前需要的 skill，不應把所有程序一次塞進 cont
 
 這套 stack 刻意保留 operator 控制權，並以 **OpenCode Desktop** 的 session 視圖作為主要 observability layer。
 
+除了讓 Plan / Build 自行判斷 routing，operator 也可以直接使用 `@agent` 指定角色、使用 `/command` 指定程序，並在自動與手動操作之間隨時切換。這些操作是設計的一部分，不是 autonomous DAG 的例外或失敗 fallback。
+
 TUI/Desktop 設定包含 child-session navigation，因此你可以直接檢查被委派的 session，而不是只在 root 等待結果回傳：
 
 - `Ctrl+Alt+Right` — 下一個 child session
@@ -274,18 +361,19 @@ TUI/Desktop 設定包含 child-session navigation，因此你可以直接檢查�
 - 只有 `plan` 與 `build` 擁有 L1 workflows
 - 不允許 L4 nesting
 - 不允許 coordinator cycles
-- Plan 可達 graph 必須維持唯讀
+- Plan 的**模型自主可達 graph**必須維持唯讀
 - subagents 不使用 `question`
-- 只有核准的 coordinators 可以往 L3 委派
-- 每個設定中的 agent 都應存在預期的合法可達路由
+- 只有核准的 coordinators 可以由模型往 L3 委派
+- 每個設定中的 agent 都應存在預期的合法 autonomous route 或明確 operator-facing use case
+- 使用者明確的 `@agent` / `/command` 是 operator-directed control，不應被誤判為模型 routing violation
 
 結構修改後請執行 `/verify-config`。
 
 ## 專案識別
 
-**NorthPalace OpenCode Multi-Agent** 是以 **NorthPalace** 為命名空間發布的個人化、具明確設計取向、以 **OpenCode Desktop** 為主要操作介面的 Multi-Agent configuration / framework layer。
+**NorthPalace OpenCode Multi-Agent** 是以 **NorthPalace** 為命名空間發布的個人化、具明確設計取向、以 **OpenCode Desktop** 為主要操作介面的 mixed-initiative Multi-Agent configuration / framework layer。
 
-它建立在 OpenCode runtime 之上，不取代 OpenCode runtime；CLI 是設定驗證與診斷的輔助介面，Desktop 才是本專案主要的人機操作面。
+它建立在 OpenCode runtime 之上，不取代 OpenCode runtime；CLI 是設定驗證與診斷的輔助介面，Desktop 才是本專案主要的人機操作面。模型可以在受治理的 DAG 內自主 routing，而 Human Operator 可以透過 `@agent`、`/command` 與 session navigation 直接引導行為。
 
 ## 授權條款
 
