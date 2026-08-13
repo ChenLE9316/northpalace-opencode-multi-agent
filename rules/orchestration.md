@@ -9,6 +9,13 @@ Authoritative, lazy-loaded rules for multi-agent and multi-session work. Keep wo
 - The only specialist coordinators are `agent-orchestrator`, `planning-agent`, `product-manager`, `decision-analyst`, and `release-manager`. Their allowlists contain leaves only; self-delegation, coordinator-to-coordinator edges, and cycles are invalid.
 - Use `agent-orchestrator` only for genuinely independent packages. Maximum concurrent fan-out is 4, and parallel work must have disjoint ownership or disjoint research questions.
 
+## Mixed-initiative control
+
+- Model-initiated work follows the autonomous DAG: an L1 may decide to act directly, call an approved L2 specialist, or use an approved coordinator for bounded L3 work according to risk and evidence.
+- The human operator sits above the autonomous DAG and may explicitly steer execution with `@agent` or `/command`. These are operator-directed invocation paths, not illegal model-created graph edges; task allowlists govern model autonomy, not the user's ability to select a configured capability.
+- A manual invocation inside an active workflow inherits its workflow id, objective, ownership, dependencies, evidence, safety gates, and verification obligations unless the user explicitly starts a standalone task or changes scope.
+- When operator direction changes the route, the owning L1 reconciles the resulting evidence and state before continuing. Human steering may replace a model routing choice, but it does not silently discard active ownership or acceptance requirements.
+
 ## Envelope contract and budgets
 
 - `TaskEnvelope`: workflow/task/parent ids, phase, objective, owned paths, evidence, constraints, expected output, verification, stop conditions, and when relevant dependencies, search budget, attempt/root-cause id, and resume policy.
