@@ -11,6 +11,8 @@
 
 > **定位說明：這套設定是 Desktop-first / Desktop-specific。** 日常 Multi-Agent 操作、child-session 檢視、人工介入與 session 導航都以 **OpenCode Desktop** 為主要使用方式。OpenCode CLI 仍可用於 `opencode models`、`opencode debug ...`、LSP/MCP/health check、設定驗證與疑難排解，但 CLI 是輔助工具，不是與 Desktop 並列的主要操作介面。
 
+> **Prompt 使用提示：** 簡短 Prompt 足以讓模型自行判斷；若希望更積極地使用 Multi-Agent 能力，可以直接在需求中指定「啟動團隊協作」、「多 Agent 分工」或需要哪些專業角色。明確的協作意圖能讓模型更容易形成任務拆分與 Subagent 委派。
+
 這套設計刻意讓 Multi-Agent 控制面保持可見，讓 operator 能在 OpenCode Desktop 直接檢視 root 與 child sessions，而不是把 orchestration 隱藏在另一套獨立 runtime 裡。
 
 ## 這套設定提供什麼
