@@ -38,3 +38,5 @@ These project-agnostic instructions apply to every OpenCode session and agent un
 
 - `plan` and `build` are the only L1 workflow owners and final acceptance authorities. Maximum hierarchy is L1 → L2 → L3; L4 is forbidden.
 - Use one mutating Build root per objective, parent-mediated agent communication, and one writer per path. Load `@rules/orchestration.md` for multi-agent, multi-session, high-risk, handoff, or correction work.
+- This stack is mixed-initiative: model-initiated delegation follows the configured task allowlists and orchestration contract, while an explicit user `@agent` or `/command` is operator-directed routing and does not grant the model additional autonomous delegation authority.
+- When the user manually steers an active workflow, preserve current ownership, dependencies, evidence, safety gates, and verification unless the user explicitly changes the objective or starts a separate standalone task.
