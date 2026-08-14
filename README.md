@@ -160,6 +160,8 @@ inline `explore` 與 `general` subagents 也使用 `opencode/deepseek-v4-flash-f
 `build` 與 `plan` 是主要 L1 agents，因此刻意保留原本的 `opencode-go/deepseek-v4-flash` 路由。如果你想改成完全免費的 stack，可以把 `opencode.jsonc` 最上層的 `model` 與 `small_model` 改成你已透過 `opencode models` 驗證可用的 OpenCode Zen free 模型。
 
 > OpenCode 的免費 Zen 模型可能屬於限時免費方案。若要長期依賴某條模型路由，請先確認目前實際可用狀態。
+>
+> **正式使用建議：** 公開版本保留 OpenCode Zen free 路由，主要是方便先直接試用並確認整套 Multi-Agent workflow 能在你的環境正常運作。如果是自己長期或正式使用，建議把目前的 free subagent 模型路由改成 **OpenCode Go 方案可用的付費模型**；更換後先用 `opencode models` 確認 model ID，再重新執行 `/verify-config`。
 
 ## 儲存庫結構
 
