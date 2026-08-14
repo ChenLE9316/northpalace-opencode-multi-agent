@@ -32,7 +32,7 @@
 - **全新 review / security sessions**，提升獨立驗證效果
 - **受限重試與 root-cause tracking**
 - **19 個自訂 commands**，涵蓋 workflow、operator-only 全員委派、review、verification、health check、Rust/Tauri、backup 與 spec
-- **8 個可重複使用的 skills**，其中 `four-wave-dispatch` 僅能由 Human Operator 透過 `/dispatch-all` 主動啟動
+- **8 個可重複使用的 skills**，其中 `northpalace-langfei-ni-token` 僅能由 Human Operator 透過 `/northpalace-langfei-ni-token` 主動啟動
 - Playwright 與 Context7 MCP 整合
 - OpenCode Desktop child-session navigation 與 human-in-the-loop 操作
 - 針對 Windows / OpenCode Desktop 的 shell、環境與疑難排解指引
@@ -117,7 +117,7 @@
 
 ```text
 /workflow
-/dispatch-all
+/northpalace-langfei-ni-token
 /review
 /audit
 /verify
@@ -128,7 +128,7 @@
 
 這類 command 是 operator-facing control surface：使用者可以不用等待模型自行判斷何時需要某個程序，而是直接啟動它。
 
-`/dispatch-all` 是刻意設計成 **Human Operator only** 的全員委派入口。模型平常無法透過 `skill` tool 自行載入 `four-wave-dispatch`；只有你主動執行 `/dispatch-all` 時，command 才會把該 procedure 注入當前 L1。它會依目前是 `plan` 或 `build` 使用不同的合法 agent graph，分成四波依序派發並在每波收斂結果後才進入下一波。
+`/northpalace-langfei-ni-token` 是刻意設計成 **Human Operator only** 的全員委派入口。模型平常無法透過 `skill` tool 自行載入 `northpalace-langfei-ni-token`；只有你主動執行 `/northpalace-langfei-ni-token` 時，command 才會把該 procedure 注入當前 L1。它會依目前是 `plan` 或 `build` 使用不同的合法 agent graph，分成四波依序派發並在每波收斂結果後才進入下一波。
 
 目前 full sweep 的覆蓋範圍：
 
@@ -184,7 +184,7 @@ inline `explore` 與 `general` subagents 也使用 `opencode/deepseek-v4-flash-f
 ├─ prompts/               # L1 build / plan prompts
 ├─ rules/                 # Multi-Agent orchestration 契約
 ├─ commands/              # 19 個操作 commands
-├─ skills/                # 8 個 reusable skills（含 operator-only four-wave dispatch）
+├─ skills/                # 8 個 reusable skills（含 operator-only NorthPalace Langfei Ni Token）
 ├─ decisions/             # 版本化架構決策
 ├─ handoffs/              # Runtime continuity checkpoints（本機內容預設不進 Git）
 └─ knowledge/             # Runtime curated knowledge（本機內容預設不進 Git）
@@ -298,7 +298,7 @@ Child agent 回報成功，不代表整個 workflow 已經完成。Parent 必須
 | Command | 用途 |
 |---|---|
 | `/workflow` | 建立或整理 Multi-Agent workflow |
-| `/dispatch-all` | **Human Operator only**：依目前 Plan / Build L1，以四波 sequential sweep 派發全部合法覆蓋的 subagents |
+| `/northpalace-langfei-ni-token` | **Human Operator only**：依目前 Plan / Build L1，以四波 sequential sweep 派發全部合法覆蓋的 subagents |
 | `/resume-workflow` | 從持久化 handoff / state boundary 恢復 workflow |
 | `/review` | 對目前變更執行獨立 review |
 | `/audit` | 進行 security / architecture 導向 audit |
@@ -319,18 +319,18 @@ Child agent 回報成功，不代表整個 workflow 已經完成。Parent 必須
 
 ## Skills
 
-內建 skills 共 8 個。一般 skills 採 lazy-loaded；`four-wave-dispatch` 是例外，刻意對模型的 `skill` tool 設為 `deny`，只允許 Human Operator 執行 `/dispatch-all` 時由 command 直接注入：
+內建 skills 共 8 個。一般 skills 採 lazy-loaded；`northpalace-langfei-ni-token` 是例外，刻意對模型的 `skill` tool 設為 `deny`，只允許 Human Operator 執行 `/northpalace-langfei-ni-token` 時由 command 直接注入：
 
 - `agent-handoff`
 - `desktop-troubleshooting`
-- `four-wave-dispatch` — operator-only，四波 Plan / Build full-subagent sweep
+- `northpalace-langfei-ni-token` — **NorthPalace Langfei Ni Token**，operator-only，四波 Plan / Build full-subagent sweep
 - `release-notes-drafter`
 - `spec-review`
 - `spec-writer`
 - `tauri-patterns`
 - `windows-shell`
 
-除了 operator-only 的 `four-wave-dispatch` 之外，Agent 應只載入目前需要的 skill，不應把所有程序一次塞進 context。
+除了 operator-only 的 `northpalace-langfei-ni-token` 之外，Agent 應只載入目前需要的 skill，不應把所有程序一次塞進 context。
 
 ## Human-in-the-loop / Desktop 操作方式
 

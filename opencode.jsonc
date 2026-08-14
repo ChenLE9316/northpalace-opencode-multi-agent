@@ -112,7 +112,7 @@
     "doom_loop": "ask",
     "skill": {
       "*": "allow",
-      "four-wave-dispatch": "deny"
+      "northpalace-langfei-ni-token": "deny"
     },
     "question": "allow",
   },

@@ -1,25 +1,25 @@
 ---
-name: four-wave-dispatch
-description: Operator-only four-wave full-subagent dispatch procedure for the active Plan or Build L1. Never auto-invoke; execute only when injected by the explicit /dispatch-all command.
+name: northpalace-langfei-ni-token
+description: Operator-only four-wave full-subagent dispatch procedure for the active Plan or Build L1. Never auto-invoke; execute only when injected by the explicit /northpalace-langfei-ni-token command.
 license: MIT
 compatibility: opencode
 ---
 
-# Four-Wave Full Subagent Dispatch
+# NorthPalace Langfei Ni Token
 
 ## Operator gate
 
-This procedure is **operator-only**. Execute it only when the current message explicitly states that the human operator invoked `/dispatch-all` and this file was injected by that command.
+This procedure is **operator-only**. Execute it only when the current message explicitly states that the human operator invoked `/northpalace-langfei-ni-token` and this file was injected by that command.
 
 - Never self-select, suggest, schedule, recurse into, or auto-trigger this procedure.
 - Never invoke this skill through the `skill` tool. Runtime config intentionally denies model access to this skill.
-- A child/coordinator must never invoke `/dispatch-all` or reproduce this procedure for another parent.
+- A child/coordinator must never invoke `/northpalace-langfei-ni-token` or reproduce this procedure for another parent.
 - The active owner must be exactly the `plan` or `build` primary L1. If the current agent is anything else, stop without delegation and tell the operator to switch to Plan or Build.
 - Human initiation does not bypass `permission.task`, `subagent_depth`, coordinator child allowlists, ownership, safety gates, or the orchestration contract.
 
 ## Objective and source of truth
 
-Use `$ARGUMENTS` supplied by `/dispatch-all` as the explicit objective. If it is empty, use the current active L1 workflow objective. If neither exists, stop and request an objective from the operator.
+Use `$ARGUMENTS` supplied by `/northpalace-langfei-ni-token` as the explicit objective. If it is empty, use the current active L1 workflow objective. If neither exists, stop and request an objective from the operator.
 
 Before dispatch, read the effective `opencode.jsonc`, `rules/orchestration.md`, and relevant agent definitions. The runtime config is authoritative. The role maps below are the expected current topology; if config drift is detected, do not bypass it. Report the drift and adapt only within the effective current L1 allowlists.
 
