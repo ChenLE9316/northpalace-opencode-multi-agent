@@ -8,55 +8,56 @@
 
 這個儲存庫同時具備兩種用途：
 
-1. 一份**可直接套用到 OpenCode 的全域設定**；
-2. 一套**以 OpenCode Desktop 為主要操作介面的 Multi-Agent 參考架構**，核心包含受限委派、明確權責、唯讀規劃、驗證關卡，以及由父節點統一管理狀態。
+1. 一份可直接套用到 OpenCode Desktop 的全域設定；
+2. 一套以 OpenCode Desktop 為主要操作介面的 Multi-Agent 參考架構，核心包含受限委派、明確權責、唯讀規劃、驗證關卡，以及由父節點統一管理狀態。
 
-> **定位說明：這套設定是 Desktop-first / Desktop-specific。** 日常 Multi-Agent 操作、child-session 檢視、人工介入與 session 導航都以 **OpenCode Desktop** 為主要使用方式。OpenCode CLI 仍可用於 `opencode models`、`opencode debug ...`、LSP/MCP/health check、設定驗證與疑難排解，但 CLI 是輔助工具，不是與 Desktop 並列的主要操作介面。
+> **定位：Desktop-first / Desktop-specific。** 日常 Multi-Agent 操作、root / child-session 檢視、人工介入、session navigation 與 config reload 都以 **OpenCode Desktop** 為主要使用方式。OpenCode CLI 只作為 `opencode models`、`opencode debug ...`、LSP/MCP/health check、設定驗證與疑難排解的輔助介面。
 
-> **Prompt 使用提示：** 簡短 Prompt 足以讓模型自行判斷；若希望更積極地使用 Multi-Agent 能力，可以直接在需求中指定「啟動團隊協作」、「多 Agent 分工」或需要哪些專業角色。明確的協作意圖能讓模型更容易形成任務拆分與 Subagent 委派。
+> **Prompt 使用提示：** 簡短 Prompt 足以讓模型自行判斷；如果希望更積極使用 Multi-Agent，可以直接寫「啟動團隊協作」、「多 Agent 分工」或指定需要哪些專業角色。
 
-這套設計刻意讓 Multi-Agent 控制面保持可見，讓 operator 能在 OpenCode Desktop 直接檢視 root 與 child sessions，而不是把 orchestration 隱藏在另一套獨立 runtime 裡。
+這套設計刻意讓 Multi-Agent 控制面保持可見，operator 可以在 OpenCode Desktop 直接檢視 root 與 child sessions，而不是把 orchestration 隱藏在另一套獨立 runtime。
 
 ## 這套設定提供什麼
 
-- **2 個 L1 工作流擁有者**：`plan` 與 `build`
+- **2 個 L1 workflow owners**：`plan`、`build`
 - **34 個 specialist subagents**
-- **5 個 coordinator subagents**，可在受限條件下委派 L3 工作
-- 透過 `subagent_depth: 2` 限制為 **L1 → L2 → L3 最大深度**
-- **mixed-initiative 雙控制模式**：模型可以自行判斷 routing，使用者也可以用 `@agent` 與 `/command` 手動引導
-- **唯讀 Plan graph**，用於規劃、架構、研究與風險分析
-- **單一可修改的 Build root**，負責實作工作流
-- **由父節點中介溝通**，避免 sibling-to-sibling 直接共享狀態
-- **TaskEnvelope / ResultEnvelope** 規範，用於壓縮上下文傳遞
-- **one-writer-per-path policy**，降低平行修改衝突
-- **全新 review / security sessions**，提升獨立驗證效果
-- **受限重試與 root-cause tracking**
-- **19 個自訂 commands**，涵蓋 workflow、operator-only 全員委派、review、verification、health check、Rust/Tauri、backup 與 spec
-- **8 個可重複使用的 skills**，其中 `northpalace-langfei-ni-token` 僅能由 Human Operator 透過 `/northpalace-langfei-ni-token` 主動啟動
-- Playwright 與 Context7 MCP 整合
-- OpenCode Desktop child-session navigation 與 human-in-the-loop 操作
-- 針對 Windows / OpenCode Desktop 的 shell、環境與疑難排解指引
+- **5 個 coordinator subagents**
+- `subagent_depth: 2`，最大深度 **L1 → L2 → L3**
+- **mixed-initiative**：模型可以自主 routing，Human Operator 也可用 `@agent` / `/command` 主動指定
+- **唯讀 Plan autonomous graph**
+- **單一可修改 Build root**
+- parent-mediated communication
+- TaskEnvelope / ResultEnvelope
+- one-writer-per-path ownership policy
+- fresh review / security sessions
+- bounded retry / root-cause tracking
+- **19 個 custom commands**
+- **8 個 skills**，其中 `northpalace-langfei-ni-token` 僅能由 Human Operator 主動啟動
+- Playwright + Context7 MCP
+- OpenCode Desktop child-session observability
+- Windows / Git Bash / Desktop troubleshooting 指引
 
 ## 架構
 
 模型自主 orchestration 的標準路徑：
 
 ```text
-使用者
- ├─ Plan（L1，唯讀）
- │   ├─ 直接 specialist（L2）
- │   └─ coordinator（L2）
- │       └─ 唯讀 evidence / planning leaf（L3）
- │
- └─ Build（L1，可修改的根節點）
-     ├─ 直接 specialist（L2）
-     └─ coordinator（L2）
-         └─ implementation / verification leaf（L3）
+Human Operator
+     │
+     ├─ Plan (L1, read-only)
+     │   ├─ direct specialist (L2)
+     │   └─ coordinator (L2)
+     │       └─ read-only evidence/planning leaf (L3)
+     │
+     └─ Build (L1, mutating root)
+         ├─ direct specialist (L2)
+         └─ coordinator (L2)
+             └─ implementation/verification leaf (L3)
 ```
 
-這個層級是**依路由動態決定**，不是固定的職稱樹。小型工作可以直接把 specialist 當成 L2 呼叫；大型工作則可以先經過 coordinator，再把同一個 specialist 當成 L3 執行節點。
+L2 / L3 是一次 invocation 在 DAG 中的位置，不是永久職級。小型工作可以直接把 specialist 當 L2；大型工作可透過 coordinator 將部分 specialist 放在 L3。
 
-只有以下 5 個 specialist coordinator 可以繼續往下委派：
+只有以下 5 個 specialist coordinator 可以由模型繼續委派：
 
 - `agent-orchestrator`
 - `planning-agent`
@@ -64,223 +65,193 @@
 - `decision-analyst`
 - `release-manager`
 
-其他所有 specialist agents 都是 `task: deny` 的 leaf。
+其他 specialist 都是 `task: deny` leaf，不允許 L4。
 
-## 雙控制模式：模型自動判斷 + 使用者手動引導
-
-這套 stack 不是只能讓模型全自動跑，也不是只能由使用者逐步手動指定。它採用 **mixed-initiative** 設計：模型與使用者都可以主動決定下一個操作，但兩者的 authority 不相同。
+## 雙控制模式：模型自主 + Human Operator
 
 ```text
-                        Human Operator
-                             │
-          ┌──────────────────┼──────────────────┐
-          │                  │                  │
-      一般自然語言          @agent             /command
-          │                  │                  │
-          ▼                  ▼                  ▼
-     Plan / Build       直接指定 Agent       指定工作程序
-          │                  │                  │
-          │           operator-directed         │
-          │               routing               │
-          ▼                                     ▼
-   模型依風險與證據                         review / verify /
-   自行選擇 routing                        workflow / audit / ...
-          │
-     ┌────┴────┐
-     ▼         ▼
- direct L2  coordinator L2
-               │
-               ▼
-              L3
+                         Human Operator
+                              │
+           ┌──────────────────┼──────────────────┐
+           │                  │                  │
+      natural prompt        @agent            /command
+           │                  │                  │
+           ▼                  ▼                  ▼
+      Plan / Build       direct agent      fixed procedure
+           │
+           ▼
+    governed autonomous DAG
+           │
+      L2 → optional L3
 ```
 
-### 模型自行判斷
+### 模型自主 routing
 
-使用者可以只描述目標，不必指定每一個 Agent。`plan` / `build` 會依照任務風險、現有 evidence、ownership 與驗證需求，自行判斷要：
+`plan` / `build` 可以依任務風險、evidence、ownership 與 verification needs，自行決定：
 
-- 直接完成工作；
-- 呼叫一個 approved L2 specialist；
-- 透過 approved coordinator 拆成 bounded L3 tasks；
-- 啟動 review、security、test 或其他必要驗證。
+- 直接處理；
+- 呼叫 approved direct L2 specialist；
+- 透過 approved coordinator 建立 bounded L3；
+- 啟動 review / security / test 等驗證。
 
-模型主動建立的 Task delegation 必須遵守 `permission.task` allowlist、L1 → L2 → L3 深度、parent mediation、ownership 與其他 orchestration invariants。
+模型自己建立的 Task delegation 必須遵守 `permission.task`、L1→L2→L3、parent mediation、ownership、fresh review/security 與其他 orchestration invariants。
 
-### 使用者以 `@agent` 手動指定角色
+### Human Operator 直接指定
 
-使用者也可以在 OpenCode Desktop 中直接使用 `@agent` 指定想要的 Agent，跳過模型原本可能選擇的 routing。例如直接要求 `@rust-engineer`、`@architect`、`@review` 或其他已設定角色處理一個明確工作。
+Operator 可以在 OpenCode Desktop 使用 `@agent` 直接指定角色，或使用 `/command` 啟動程序。這是 **operator-directed routing**，不是模型自行擴張 delegation authority。
 
-這是 **operator-directed routing**，不是模型自己擴張 delegation authority。換句話說，`permission.task` 的 allowlist 主要限制的是**模型可以自主委派給誰**，不是拿來取消使用者直接選擇已設定 Agent 的操作能力。
+如果手動介入正在進行的 workflow，原本的 workflow id、owned paths、dependencies、evidence、安全 gate 與 acceptance/verification requirements 仍然有效，除非 operator 明確改 scope 或另開 standalone task。
 
-### 使用者以 `/command` 手動指定程序
-
-使用者可以用 `/command` 明確選擇一套預先定義的操作程序，例如：
-
-```text
-/workflow
-/northpalace-langfei-ni-token
-/review
-/audit
-/verify
-/verify-config
-/rust-test
-/tauri-verify
-```
-
-這類 command 是 operator-facing control surface：使用者可以不用等待模型自行判斷何時需要某個程序，而是直接啟動它。
-
-`/northpalace-langfei-ni-token` 是刻意設計成 **Human Operator only** 的全員委派入口。模型平常無法透過 `skill` tool 自行載入 `northpalace-langfei-ni-token`；只有你主動執行 `/northpalace-langfei-ni-token` 時，command 才會把該 procedure 注入當前 L1。它會依目前是 `plan` 或 `build` 使用不同的合法 agent graph，分成四波依序派發並在每波收斂結果後才進入下一波。
-
-目前 full sweep 的覆蓋範圍：
-
-- `plan`：17 個 Plan 可直接委派的 L2 roles，各執行一次；coordinator 在 sweep 中不再重複建立已排程的 L3。
-- `build`：18 個 Build direct L2 + 9 個只能經 `agent-orchestrator` 到達的 L3-only roles，共 27 個不同 subagents；`agent-orchestrator` 依 fan-out 上限分批補齊 L3-only roles。
-
-Human Operator 主動啟動不代表繞過權限：`permission.task`、`subagent_depth`、coordinator child allowlist、ownership、review/security freshness 與 safety gates 仍然有效。
-
-### 自動與手動可以混合使用
-
-三種入口不是互斥模式。典型操作可以是：
-
-```text
-使用者給目標
-→ Build 自動拆分與委派
-→ 使用者切換查看 child session
-→ 使用者用 @review 額外指定檢查
-→ /verify 執行明確驗證
-→ Build 整合 evidence 並繼續收斂
-```
-
-如果使用者手動介入的是一個**正在進行中的 workflow**，既有 workflow id、owned paths、dependencies、evidence、安全 gate 與 acceptance / verification requirements 仍然保持有效，除非使用者明確改變 scope、objective 或另開 standalone task。
-
-因此這套架構的核心原則是：
+核心原則：
 
 > **Model autonomy is governed; operator authority is preserved.**
->
-> 模型可以自行判斷與執行受治理的 Multi-Agent routing；使用者也始終可以透過 `@agent`、`/command`、session navigation 與明確指令直接引導系統。
 
 ## 模型路由
 
-這個公開版本中的所有 subagents 都使用 OpenCode Zen free 路由：
+公開 baseline 的 subagents 使用 OpenCode Zen free routes：
 
-- `opencode/deepseek-v4-flash-free` — orchestration、engineering、research、review、security、documentation、analysis，以及大多數 specialist 工作
+- `opencode/deepseek-v4-flash-free` — 大多數 orchestration、engineering、research、review、security、documentation、analysis roles
 - `opencode/mimo-v2.5-free` — `frontend-engineer`、`ui-designer`、`e2e-tester`、`screen-context-agent`
 
-inline `explore` 與 `general` subagents 也使用 `opencode/deepseek-v4-flash-free`。
+inline `explore`、`general` 也使用 `opencode/deepseek-v4-flash-free`。
 
-`build` 與 `plan` 是主要 L1 agents，因此刻意保留原本的 `opencode-go/deepseek-v4-flash` 路由。如果你想改成完全免費的 stack，可以把 `opencode.jsonc` 最上層的 `model` 與 `small_model` 改成你已透過 `opencode models` 驗證可用的 OpenCode Zen free 模型。
+`build`、`plan` 不各自覆寫 model，直接繼承 `opencode.jsonc` 的 global `opencode-go/deepseek-v4-flash`。
 
-> OpenCode 的免費 Zen 模型可能屬於限時免費方案。若要長期依賴某條模型路由，請先確認目前實際可用狀態。
->
-> **正式使用建議：** 公開版本保留 OpenCode Zen free 路由，主要是方便先直接試用並確認整套 Multi-Agent workflow 能在你的環境正常運作。如果是自己長期或正式使用，建議把目前的 free subagent 模型路由改成 **OpenCode Go 方案可用的付費模型**；更換後先用 `opencode models` 確認 model ID，再重新執行 `/verify-config`。
+### DeepSeek reasoning policy
 
-## 儲存庫結構
+Canonical baseline 採 **selective MAX + otherwise auto/default**，不是依 L1/L2/L3 粗暴分級。
+
+固定 `reasoningEffort: max`：
+
+- `agent-orchestrator`
+- `planning-agent`
+- `decision-analyst`
+- `architect`
+- `error-analyzer`
+- `security-auditor`
+- `review`
+- `refactorer`
+- `ci-debugger`
+
+其他 DeepSeek specialist 不寫 reasoning override；`build` / `plan` 也不寫 agent-level reasoning override。
+
+目前仍保留既有 DeepSeek `temperature` 欄位。由於 provider/runtime 是否實際採用該值必須以目前 route 的 runtime evidence 為準，`/verify-config` 會把 **configured option** 與 **observed effective behavior** 分開，不會只因 config 中存在欄位就宣稱它有效。
+
+> OpenCode Zen free models 可能是限時方案。公開 baseline 保留 free routes 是為了方便 clone 後測試整套 workflow；長期正式使用可換成目前 OpenCode Go 或其他已驗證的 paid routes。更換後用預設 `/verify-config` 驗證 deployment invariants；只有要確認「完全等同本 repo baseline」時才執行 `/verify-config canonical`。
+
+## Repository 結構
 
 ```text
 .
-├─ opencode.jsonc          # Runtime、permissions、L1 agents、inline subagents、MCP、LSP
-├─ tui.json               # Desktop/TUI 互動設定與 child-session 導航
-├─ AGENTS.md              # 全域共享行為、安全與隱私契約
-├─ agents/                # 34 個 specialist 定義
-├─ prompts/               # L1 build / plan prompts
-├─ rules/                 # Multi-Agent orchestration 契約
-├─ commands/              # 19 個操作 commands
-├─ skills/                # 8 個 reusable skills（含 operator-only NorthPalace Langfei Ni Token）
-├─ decisions/             # 版本化架構決策
-├─ handoffs/              # Runtime continuity checkpoints（本機內容預設不進 Git）
-└─ knowledge/             # Runtime curated knowledge（本機內容預設不進 Git）
+├─ opencode.jsonc          # Runtime / permissions / L1 / inline subagents / MCP / LSP
+├─ tui.json               # Desktop/TUI interaction + child-session navigation
+├─ AGENTS.md              # Shared behavior / safety / privacy / Desktop config-root rules
+├─ agents/                # 34 specialist definitions
+├─ prompts/               # Build / Plan L1 prompts
+├─ rules/                 # Orchestration contract
+├─ commands/              # 19 operator-facing commands
+├─ skills/                # 8 skills
+├─ decisions/             # Versioned architecture decisions
+├─ handoffs/              # Local runtime continuity checkpoints
+└─ knowledge/             # Local curated knowledge
 ```
 
 ## 安裝方式
 
-> **Bash 使用建議：** 這套設定在 `opencode.jsonc` 中預設使用 `shell: "bash"`，因此建議先準備可用的 Bash 環境。Windows 使用者建議安裝 **Git for Windows / Git Bash**（或其他相容 Bash），並確認 `bash` 可以從目前環境 / PATH 被 OpenCode 正常找到。這可以讓既有 shell commands、Windows shell skill 與相關工作流程維持一致的行為。
+> **Bash 建議：** `opencode.jsonc` 預設 `shell: "bash"`。Windows 建議安裝 **Git for Windows / Git Bash**（或相容 Bash），並確認 OpenCode Desktop 啟動環境可以解析 `bash`。
 
-### 方式 A — 作為 OpenCode Desktop 的全域設定
+### 方式 A — OpenCode Desktop 全域設定（推薦）
 
-請先備份你現有的 OpenCode 設定。
-
-Clone 這個儲存庫，然後把內容複製到 OpenCode 全域設定目錄：
+先備份既有設定，然後把 repo 內容複製到 OpenCode global config directory：
 
 - macOS / Linux：`~/.config/opencode/`
 - Windows：`%USERPROFILE%\.config\opencode\`
 
-這個儲存庫的根目錄本身就已經按照 OpenCode 全域設定目錄的結構整理好，因此**不要**再額外包一層 `.opencode/`。
+repo root 已按照 global config root 結構整理，不要再額外包一層 `.opencode/`。
 
-複製完成後，請完整重新啟動 **OpenCode Desktop**，讓 config-time agents、commands、skills、permissions、MCP 定義與 prompts 全部重新載入。
+完成後**完整重新啟動 OpenCode Desktop**，讓 agents、commands、skills、permissions、MCP、prompts 等 config-time artifacts 重新載入。
 
-### 方式 B — 保留為獨立設定資料夾
+### 方式 B — `OPENCODE_CONFIG_DIR` 獨立設定資料夾
 
-你也可以讓這個儲存庫保持獨立，並透過 `OPENCODE_CONFIG_DIR` 指向它。這種方式適合測試或驗證設定，而不覆蓋既有全域配置。
-
-Bash 範例：
+可保留 repo 為獨立 config directory，並使用 `OPENCODE_CONFIG_DIR` 指向它。
 
 ```bash
 export OPENCODE_CONFIG_DIR="/path/to/northpalace-opencode-multi-agent"
 opencode
 ```
 
-CLI 在這套 stack 中主要用於設定驗證、模型/LSP/MCP 檢查與疑難排解；主要 Multi-Agent 操作仍以 OpenCode Desktop 為準。
+但這套 stack 是 **Desktop-first**：如果要讓 OpenCode Desktop 也使用這個 override，`OPENCODE_CONFIG_DIR` 必須存在於**啟動 Desktop process 的環境**。只在另一個 CLI shell 裡臨時 `export`，不代表已經開著的 Desktop 會看到相同值。
 
-## 第一次啟動檢查清單
+如果無法確認 Desktop 是否繼承 override，優先使用方式 A；`/verify-config`、`/skill-check`、`/opencode-healthcheck` 會把 Desktop/CLI config-root mismatch 列為問題，而不是默默檢查錯的設定目錄。
 
-1. 確認 Bash 可用；Windows 建議使用 Git for Windows / Git Bash，並確認 OpenCode 可以解析 `bash`。
-2. 完成你所選 primary model 與 subagent models 所需的 provider 驗證。
-3. 使用 CLI 執行 `opencode models`，確認所有設定中的 model ID 都能正確解析。
-4. 確認 Node/npm 可用，讓固定版本的 MCP 套件能正常執行。
-5. 如果你需要 LSP workflow，請確認設定中的 LSP executable 都存在。
-6. 從一般專案啟動 OpenCode Desktop，執行 `/verify-config`。
-7. 任何 config / agent / skill / command 修改後，都請完整重新啟動 OpenCode Desktop。
+### Active config root 規則
 
-目前 MCP 定義固定以下版本：
+本 repo 的 config-management commands 使用同一個抽象：
+
+```text
+if OPENCODE_CONFIG_DIR is set
+    active config root = OPENCODE_CONFIG_DIR
+else
+    active config root = default OpenCode config directory
+```
+
+這也適用於 operator-only NorthPalace procedure、skills、LSP audit 與 backup source。
+
+## 第一次啟動檢查
+
+1. 確認 `bash` 可用；Windows 建議 Git Bash。
+2. 確認 primary/subagent model providers 已完成必要驗證。
+3. 用 auxiliary CLI 執行 `opencode models`，確認 model IDs 可解析。
+4. 確認 Node/npm 可用，讓 MCP pins 能執行。
+5. 需要 LSP 時確認對應 executable 可用。
+6. 從一般 project 開啟 OpenCode Desktop。
+7. 執行 `/verify-config`。
+8. 如要確認這份安裝仍完全等於 repo baseline，再執行 `/verify-config canonical`。
+9. config/agent/skill/command/MCP/environment 修改後，完整重啟 Desktop 再驗證。
+
+目前 MCP pins：
 
 - `@playwright/mcp@0.0.78`
 - `@upstash/context7-mcp@3.2.5`
 
 ## 使用方式
 
-### 1. 問題不明確或風險較高時，先從 Plan 開始
+### Plan
 
-使用 `plan` primary agent 進行架構設計、調查、需求整理、證據蒐集、風險分析或 implementation planning。
-
-Plan 以及由 Plan **自主委派**合法可達的 agent graph 都應保持唯讀。使用者明確的 `@agent` / `/command` 操作屬於 operator-directed control path，與模型自主 Task graph 分開理解。
-
-典型流程：
+問題不明確、跨模組、風險較高或需要 evidence/architecture 時，先用 `plan`。
 
 ```text
-使用者
+Human Operator
 → Plan
-→ planning-agent / product-manager / decision-analyst / 直接 specialist
-→ 可選的 L3 evidence leaves
-→ Plan 整合證據
-→ implementation handoff
+→ direct L2 / planning coordinator
+→ optional read-only L3
+→ Plan synthesis
+→ Build handoff when implementation is needed
 ```
 
-### 2. 使用 Build 進行實作
+Plan 與其 model-autonomous reachable graph 必須維持 read-only。
 
-每個 objective 使用 `build` 作為單一可修改的根節點。
+### Build
 
-小型工作可以直接叫一個 specialist：
+每個 objective 使用一個 `build` 作為唯一 mutating L1 root。
 
 ```text
 Build → rust-engineer
 ```
 
-大型工作可以透過 coordinator 進行分派：
+或：
 
 ```text
 Build
 → agent-orchestrator
-   ├─ rust-engineer
-   ├─ frontend-engineer
-   └─ test-writer
+   ├─ engineer leaf
+   ├─ engineer leaf
+   └─ verification leaf
 ```
 
-coordinator 負責 decomposition 與結果 aggregation；L1 Build agent 仍然是最後的驗收權威。
+每個 parent 同時 newly-active child fan-out 最多 **4**。如果一個 operator-defined logical wave 需要更多角色，維持同一 wave，但拆成 sequential sub-batches。
 
-### 3. 明確維持 ownership
-
-被委派的工作應清楚標示 owned paths。Sibling agents 不應直接交換 task IDs，也不應建立另一份互相競爭的 live task board。
-
-概念上：
+### Ownership
 
 ```text
 L1 scope
@@ -288,131 +259,204 @@ L1 scope
       └─ L3 owned paths
 ```
 
-這套 policy 以每條路徑同時間只有一個 active writer 為原則。這是 orchestration invariant，不是 OS 層級的 filesystem sandbox，因此 operator 仍然需要檢查 permissions 與 diffs。
+同一路徑同時間只有一個 active writer。這是 orchestration invariant，不是 OS/filesystem ACL。
 
-### 4. 完成前一定要驗證
+### Completion
 
-Child agent 回報成功，不代表整個 workflow 已經完成。Parent 必須整合證據，而只有 L1 才能接受並宣告工作完成。
+Child 回報成功不等於整個 workflow 完成。只有 owning L1 在整合 tests、review/security、ownership 與 acceptance evidence 後才能宣告 COMPLETE。
 
-在設定要求獨立 review / security 的情境下，請使用全新 session 進行驗證。
-
-## 常用 Commands
+## Commands
 
 | Command | 用途 |
 |---|---|
 | `/workflow` | 建立或整理 Multi-Agent workflow |
-| `/northpalace-langfei-ni-token` | **Human Operator only**：依目前 Plan / Build L1，以四波 sequential sweep 派發全部合法覆蓋的 subagents |
-| `/resume-workflow` | 從持久化 handoff / state boundary 恢復 workflow |
-| `/review` | 對目前變更執行獨立 review |
-| `/audit` | 進行 security / architecture 導向 audit |
-| `/verify` | 驗證目前 implementation |
-| `/verify-config` | 驗證 config、agent DAG、permissions、model routes、privacy 與 portability |
-| `/opencode-healthcheck` | 執行唯讀的 OpenCode / Desktop 環境健康檢查 |
-| `/backup-config` | 建立帶時間戳記且經驗證的 canonical config 備份 |
-| `/spec` | 建立或調整 implementation specification |
-| `/simplify` | 降低不必要的複雜度 |
-| `/skill-check` | 檢查 skill discovery / validity |
-| `/lsp-check` | 檢查設定中的 language servers |
-| `/rust-check` | Rust compile / check workflow |
-| `/rust-fmt` | Rust formatting workflow |
-| `/rust-lint` | Rust lint workflow |
-| `/rust-security` | Rust security 導向驗證 |
-| `/rust-test` | Rust test workflow |
-| `/tauri-verify` | Tauri 專用驗證流程 |
+| `/northpalace-langfei-ni-token` | Human Operator only：四波 full-subagent sweep |
+| `/resume-workflow` | 從 current context / handoff 恢復 workflow |
+| `/review` | fresh independent review |
+| `/audit` | security-focused audit |
+| `/verify` | implementation verification |
+| `/verify-config` | 驗證目前 Desktop deployment invariants，允許有意義的客製 model/topology |
+| `/verify-config canonical` | 額外要求完全符合此 repo baseline counts/routes/allowlists/reasoning policy |
+| `/opencode-healthcheck` | Desktop-first 環境健康檢查 |
+| `/backup-config` | 備份 active config root |
+| `/spec` | specification workflow |
+| `/simplify` | simplification scan |
+| `/skill-check` | skills / operator gate / config-root audit |
+| `/lsp-check` | effective Desktop LSP audit |
+| `/rust-check` | Rust compile/check |
+| `/rust-fmt` | Rust formatting |
+| `/rust-lint` | Rust lint |
+| `/rust-security` | Rust security verification |
+| `/rust-test` | Rust tests |
+| `/tauri-verify` | Tauri verification |
 
 ## Skills
 
-內建 skills 共 8 個。一般 skills 採 lazy-loaded；`northpalace-langfei-ni-token` 是例外，刻意對模型的 `skill` tool 設為 `deny`，只允許 Human Operator 執行 `/northpalace-langfei-ni-token` 時由 command 直接注入：
+內建 8 個 skills：
 
 - `agent-handoff`
 - `desktop-troubleshooting`
-- `northpalace-langfei-ni-token` — **NorthPalace Langfei Ni Token**，operator-only，四波 Plan / Build full-subagent sweep
+- `northpalace-langfei-ni-token`
 - `release-notes-drafter`
 - `spec-review`
 - `spec-writer`
 - `tauri-patterns`
 - `windows-shell`
 
-### NorthPalace Langfei Ni Token
+一般 skills lazy-load；`northpalace-langfei-ni-token` 是 operator-only 例外，對 model-facing `skill` tool 明確設為 `deny`。
 
-`northpalace-langfei-ni-token` 是這套 stack 的 **Human Operator only 全員委派 skill**。它不是一般情況下由模型自行選擇的 skill，也不是日常工作流的預設路徑；用途是在你明確希望所有合法可達角色都參與時，從目前的 `plan` 或 `build` L1 手動啟動一次高覆蓋四波 sweep。
+## NorthPalace Langfei Ni Token
 
-在 OpenCode Desktop 的 Plan 或 Build session 中執行：
+在 **OpenCode Desktop 的 Plan 或 Build session** 中主動執行：
 
 ```text
 /northpalace-langfei-ni-token <objective>
 ```
 
-如果不帶 `<objective>`，會使用目前 active L1 workflow 的 objective。此 skill 只接受 `plan` 或 `build` 作為執行入口；若在其他 subagent session 啟動，程序會停止而不進行委派。
+如果省略 `<objective>`，使用 active L1 workflow objective；若兩者都不存在，程序停止並要求 operator 補目標。
 
-它會依目前 L1 使用不同的覆蓋範圍：
+### Operator-only hard gate
 
-- **Plan**：四波覆蓋 17 個 Plan 可直接委派的 L2 roles；Plan coordinators 在 sweep 期間不重複建立已經排程的 L3。
-- **Build**：四波覆蓋 18 個 Build direct L2，再透過 `agent-orchestrator` 分批補齊 9 個 L3-only roles，共 27 個不同 subagents。
+`permission.skill` 對 `northpalace-langfei-ni-token` 為 `deny`，因此模型不能透過一般 skill discovery/load 自行啟動。
 
-四個 wave 是**依序執行**，不是一次同時把所有 session 全部展開。每一波必須先完成、失敗或明確 blocked，L1 收斂 evidence 與狀態後才進入下一波；不適用於目前 objective 的角色仍會被實際派發並回傳 `NOT_APPLICABLE`，因此最後可以產生可核對的 full-coverage matrix。
+command 也不再用 project-relative `@skills/...` 讀 procedure。它會透過 Bash 從 **active Desktop config root** 載入：
 
-為了確保只有人能主動使用，`opencode.jsonc` 對 `northpalace-langfei-ni-token` 設定 `permission.skill: deny`。模型不能透過一般 `skill` tool 自行 discovery / load / auto-trigger；只有 Human Operator 明確執行 `/northpalace-langfei-ni-token` 時，command 才會直接注入這個 procedure。
+```text
+OPENCODE_CONFIG_DIR
+        ↓ if unset
+default OpenCode config root
+        ↓
+skills/northpalace-langfei-ni-token/SKILL.md
+```
 
-這個人工入口也**不會繞過原本治理邊界**：`permission.task`、`subagent_depth: 2`、coordinator child allowlists、one-writer-per-path ownership、fresh review/security、verification 與外部副作用 approval 仍然有效。
+這避免目前 project worktree 的同名 `skills/...` shadow global operator procedure。
 
-除了 operator-only 的 `northpalace-langfei-ni-token` 之外，Agent 應只載入目前需要的 skill，不應把所有程序一次塞進 context。
+### 四個 logical waves
 
-## Human-in-the-loop / Desktop 操作方式
+仍然是 **exactly 4 waves**，不是把角色數量砍掉，也不是一次把所有 sessions 同時炸開。
 
-這套 stack 刻意保留 operator 控制權，並以 **OpenCode Desktop** 的 session 視圖作為主要 observability layer。
+每個 parent 同時最多 4 個 newly-active child tasks；超過 4 的 wave 會拆成 sequential sub-batches，整個 wave 完成並由 L1 reconcile 後才進下一 wave。
 
-除了讓 Plan / Build 自行判斷 routing，operator 也可以直接使用 `@agent` 指定角色、使用 `/command` 指定程序，並在自動與手動操作之間隨時切換。這些操作是設計的一部分，不是 autonomous DAG 的例外或失敗 fallback。
+覆蓋：
 
-這套設計假設高風險 publishing、破壞性 cleanup、force operations 與 external side effects 都需要明確批准。
+- **Plan**：17 個 direct L2 roles
+- **Build**：18 個 direct L2 + 9 個 Build→`agent-orchestrator` L3-only roles，共 27 個 distinct subagents
 
-## 隱私與可攜性
+Build 從 Wave 2 建立一個 stable `agent-orchestrator` L2 session；只要 owner/objective/evidence/parent 仍有效，Wave 3 / 4 resume 同一個 coordinator session，再建立新的 linked L3 children，不重複製造 coordinator session。
 
-- Runtime handoffs 與 curated knowledge 預設只保留在本機，Git 只追蹤對應的 `.gitkeep` placeholder。
-- 可持久化或可分享的 handoff、knowledge、decision 與文件，不應保存個人 home directory、OS username、Email、credential、絕對 workspace path 或其他 machine-specific identifier。
-- 檔案證據使用 repository-relative `path:line`；需要識別 workspace 時使用 sanitized workspace label 或 repository name。
-- `北宮冰玉` 是本專案公開保留的識別名稱，不屬於上述需要移除的 machine-specific metadata。
+### `NOT_APPLICABLE` 的正確語義
+
+ResultEnvelope execution status 只有：
+
+```text
+success | partial | blocked | failed
+```
+
+不適用的 role 回：
+
+```yaml
+status: success
+applicability: not_applicable
+changed_files: []
+```
+
+再附一個簡短 evidence-backed reason。Desktop 最終 coverage report 可以顯示成 `NOT_APPLICABLE`，但底層不會因此觸發 invalid-envelope retry。
+
+Human Operator 主動啟動也不會繞過 `permission.task`、`subagent_depth: 2`、coordinator allowlists、max fan-out、ownership、fresh review/security、verification 或 external-effect approval。
+
+## Lazy-loading / context budget
+
+這套 stack 不再用「整個 repo 所有 Markdown 總 bytes」假設它們同時進 context。
+
+`/verify-config` 分開檢查：
+
+- hot core：`AGENTS.md + Build/Plan prompts + orchestration rules`
+- `agents/`
+- `commands/`
+- `skills/`
+- operator-only NorthPalace skill
+- total runtime Markdown：**只報告，不作為 simultaneously-hot context 的 FAIL 條件**
+
+原因是 agents / commands / skills 本身是依 route / operator action / skill load 才進入有效上下文，NorthPalace full-sweep procedure 更是明確 operator-only。
+
+## Human-in-the-loop / Desktop
+
+OpenCode Desktop session view 是主要 observability layer。Operator 可以：
+
+- 觀察 root / child sessions；
+- 切換到 subagent session 檢查實際執行；
+- 用 `@agent` 改 routing；
+- 用 `/command` 啟動特定 procedure；
+- 在自動 delegation 與手動操作之間切換。
+
+CLI 不取代這個操作面；它只提供 diagnostics / verification evidence。
 
 ## 安全模型
 
-設定內包含常見 credential files 的 deny rules、高風險 Playwright capability 限制，以及部分破壞性 shell commands 的保護規則。
+設定包含 native `read` credential-path deny rules、高風險 Playwright capability restrictions、部分 destructive/publish shell command ask gates，以及 orchestration-level ownership/safety rules。
 
-但它**不應被視為完整 hardened process sandbox 或 filesystem sandbox**。能使用 Bash 的 agents 仍然可以執行一般 process，而 owned-path rules 屬於 orchestration policy，不是動態 filesystem ACL。
+但這**不是 hardened process sandbox / filesystem sandbox**：
 
-如果要用在 unattended 或 multi-user 環境，請先自行重新檢查並強化這些安全邊界。
+- `read` tool deny 可以限制 native read capability；
+- Bash-capable agent 仍可啟動一般 process，因此不能宣稱 secrets 在 OS/filesystem 層「絕對不可讀」；
+- one-writer-per-path 是 governance policy，不是動態 ACL；
+- browser interaction 也可能具有外部 side effect，因此高風險 external actions 仍需要 operator approval。
 
-## 客製這套 Stack
+這個 baseline 是為 **supervised OpenCode Desktop developer workstation** 設計，不是 unattended hostile multi-user sandbox。
+
+## 客製化與 `/verify-config`
 
 你可以調整：
 
-- agent frontmatter 中的 model routes
-- Build / Plan 的 L2 allowlists
+- model routes
+- Build / Plan L2 allowlists
 - coordinator child allowlists
 - MCP pins
 - LSP commands
-- command set
+- commands
 - skills
 - TUI keybinds
 
-如果修改 topology，除非你是刻意重新設計整套架構，否則建議保持以下 invariants：
+一般客製化後執行：
 
-- 只有 `plan` 與 `build` 擁有 L1 workflows
-- 不允許 L4 nesting
-- 不允許 coordinator cycles
-- Plan 的**模型自主可達 graph**必須維持唯讀
-- subagents 不使用 `question`
-- 只有核准的 coordinators 可以由模型往 L3 委派
-- 每個設定中的 agent 都應存在預期的合法 autonomous route 或明確 operator-facing use case
-- 使用者明確的 `@agent` / `/command` 是 operator-directed control，不應被誤判為模型 routing violation
+```text
+/verify-config
+```
 
-結構修改後請執行 `/verify-config`。
+它檢查 deployment invariants，不會因為你把 free model 換成已驗證 paid route 就強迫你改回 canonical baseline。
+
+如果你是在維護這個 repository 本身，想確認 counts/routes/topology/reasoning policy 都沒有 drift，執行：
+
+```text
+/verify-config canonical
+```
+
+不論是否客製，建議維持：
+
+- L1 只有 `plan` / `build`
+- no L4
+- no coordinator cycle
+- Plan autonomous graph read-only
+- subagents `question: deny`
+- approved coordinators only
+- parent-mediated communication
+- one writer per path
+- fresh review/security
+- active Desktop config root 與 auxiliary CLI 不互相漂移
+
+## 隱私與可攜性
+
+- Runtime handoffs / curated knowledge 預設本機保存，Git 只追蹤 `.gitkeep`。
+- Shareable artifacts 不保存 personal home directory、OS username、email、credential、absolute workspace path、machine-specific identifiers。
+- Evidence 使用 repository-relative `path:line`，需要 workspace identity 時使用 sanitized label。
+- `北宮冰玉` 是公開保留的專案識別名稱，不是 machine-specific metadata。
 
 ## 專案識別
 
-**NorthPalace OpenCode Multi-Agent** 是以 **NorthPalace** 為命名空間發布的個人化、具明確設計取向、以 **OpenCode Desktop** 為主要操作介面的 mixed-initiative Multi-Agent configuration / framework layer。
+**NorthPalace OpenCode Multi-Agent** 是以 **NorthPalace** 為命名空間、以 **OpenCode Desktop** 為主要操作介面的 mixed-initiative Multi-Agent configuration / governance layer。
 
-它建立在 OpenCode runtime 之上，不取代 OpenCode runtime；CLI 是設定驗證與診斷的輔助介面，Desktop 才是本專案主要的人機操作面。模型可以在受治理的 DAG 內自主 routing，而 Human Operator 可以透過 `@agent`、`/command` 與 session navigation 直接引導行為。
+它建立在 OpenCode runtime 之上，不取代 OpenCode runtime。
 
-## 授權條款
+## 授權
 
-採用 MIT License，詳見 `LICENSE`。
+MIT License，詳見 `LICENSE`。
