@@ -31,7 +31,7 @@ If a role has no applicable work, it still participates. Return a valid ResultEn
 
 Run exactly four logical waves. Do not start wave N+1 until every task in wave N has returned, failed, or been explicitly marked blocked under the normal retry policy.
 
-A wave may contain multiple **sequential sub-batches**. No parent may create more than four newly active child tasks at once. Completing one sub-batch does not advance the wave; L1 reconciles the entire logical wave before continuing.
+A wave may contain multiple **sequential sub-batches**. No parent may create more than four newly active child tasks at once. A coordinator has its own child fan-out limit; its L3 children do not consume the L1 parent's four direct-child slots. Completing one sub-batch does not advance the wave; L1 reconciles the entire logical wave before continuing.
 
 For every task:
 
@@ -130,39 +130,43 @@ No implementation starts until L1 reconciles the full Wave 1 baseline.
 
 ### Build Wave 2 — primary implementation domains + L3 engineering group A
 
-Sub-batch A, direct L2 tasks concurrently:
+Sub-batch A, create at most four direct L2 children concurrently:
 
 1. `general` — bounded implementation gap not better owned by another specialist, or analysis-only if no safe path partition exists.
 2. `frontend-engineer` — frontend/UI implementation scope where applicable.
 3. `rust-engineer` — Rust implementation scope where applicable.
-4. `tauri-engineer` — Tauri/runtime integration scope where applicable.
-
-Sub-batch B:
-
-5. Create the stable `agent-orchestrator` L2 session and give it one coordinator-only package for these L3-only roles, maximum fan-out four:
+4. Create the stable `agent-orchestrator` L2 session and give it one coordinator-only package for these L3-only roles, maximum AO fan-out four:
    - `ai-ml-engineer`
    - `cli-engineer`
    - `db-engineer`
    - `rag-engineer`
 
-Give every mutating worker disjoint owned paths, or explicitly force analysis/proposal mode when safe path ownership cannot be established. Reconcile all Wave 2 results before Wave 3.
+The AO L3 group may run while the three direct L2 workers are active because each parent independently remains within its fan-out limit.
+
+Sub-batch B:
+
+5. `tauri-engineer` — Tauri/runtime integration scope where applicable.
+
+Give every mutating worker disjoint owned paths, including a coherent AO-owned superset for its L3 writers, or explicitly force analysis/proposal mode when safe path ownership cannot be established. Reconcile all Wave 2 results before Wave 3.
 
 ### Build Wave 3 — platform completion, tests, refactoring, and CI + L3 engineering group B
 
-Sub-batch A, direct L2 tasks concurrently:
+Sub-batch A, create/resume at most four direct L2 children concurrently:
 
 1. `electron-engineer` — Electron-specific work or valid `not_applicable` result.
 2. `test-runner` — execute the smallest relevant verification set and report exact results.
 3. `e2e-tester` — user-journey/E2E verification or bounded E2E changes with explicit ownership.
-4. `knowledge-curator` — update only explicitly granted knowledge/decision paths when warranted; otherwise analysis-only or valid `not_applicable` result.
-
-Sub-batch B:
-
-5. Resume the same Wave 2 `agent-orchestrator` session with a new coordinator package for:
+4. Resume the same Wave 2 `agent-orchestrator` session with a new coordinator package for:
    - `devops-engineer`
    - `refactorer`
    - `test-writer`
    - `ci-debugger`
+
+The resumed AO may fan out its four fresh L3 children while the other three direct L2 tasks are active, subject to disjoint ownership and dependency readiness.
+
+Sub-batch B:
+
+5. `knowledge-curator` — update only explicitly granted knowledge/decision paths when warranted; otherwise analysis-only or valid `not_applicable` result.
 
 Reconcile all edits and verification evidence before Wave 4. Do not allow late overlapping writes to leak into the final gate.
 
