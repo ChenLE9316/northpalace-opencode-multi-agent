@@ -326,12 +326,6 @@ Agent 應只載入目前需要的 skill，不應把所有程序一次塞進 cont
 
 除了讓 Plan / Build 自行判斷 routing，operator 也可以直接使用 `@agent` 指定角色、使用 `/command` 指定程序，並在自動與手動操作之間隨時切換。這些操作是設計的一部分，不是 autonomous DAG 的例外或失敗 fallback。
 
-TUI/Desktop 設定包含 child-session navigation，因此你可以直接檢查被委派的 session，而不是只在 root 等待結果回傳：
-
-- `Ctrl+Alt+Right` — 下一個 child session
-- `Ctrl+Alt+Left` — 上一個 child session
-- `Ctrl+Alt+N` — 建立新 session
-
 這套設計假設高風險 publishing、破壞性 cleanup、force operations 與 external side effects 都需要明確批准。
 
 ## 隱私與可攜性
