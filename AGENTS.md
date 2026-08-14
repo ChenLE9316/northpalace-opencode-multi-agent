@@ -12,8 +12,10 @@ These project-agnostic instructions apply to every OpenCode session and agent un
 
 ## Configuration ownership
 
+- This stack is OpenCode Desktop-first. Desktop owns normal Multi-Agent operation, session inspection, operator steering, and config-time reload behavior; CLI is an auxiliary interface for models/debug/LSP/MCP/health checks, configuration verification, and troubleshooting.
 - `opencode.jsonc` owns global runtime settings and the inline `build`, `plan`, `explore`, and `general` definitions.
 - Each `agents/*.md` frontmatter and body is the runtime source for that named specialist. Never define one agent in both locations.
+- Resolve the active config root as `OPENCODE_CONFIG_DIR` when it is set; otherwise use the platform default OpenCode config directory (`~/.config/opencode` in this stack). Config-management commands must inspect that active root instead of silently assuming the default path.
 - Runtime may regenerate `package.json`, its lockfile, and `node_modules/` in this config directory for the matching `@opencode-ai/plugin` SDK. Treat manifests as runtime-owned version evidence; exclude `node_modules/` from backups and version control.
 - Config-time files are loaded at startup; after changing config, agents, prompts, rules, skills, commands, plugins, MCP, or environment flags, fully restart OpenCode Desktop.
 
@@ -32,6 +34,7 @@ These project-agnostic instructions apply to every OpenCode session and agent un
 ## Tool and safety boundaries
 
 - High-risk Playwright tools are globally denied: `playwright_browser_run_code_unsafe`, `playwright_browser_file_upload`, `playwright_browser_drop`, and `playwright_browser_evaluate`. Only `e2e-tester`, `electron-engineer`, and `tauri-engineer` may explicitly re-enable `evaluate`.
+- Native read-tool secret denies reduce accidental disclosure but are not a filesystem/process sandbox. Shell-capable agents must never claim secrets are globally unreadable merely because the `read` tool denies credential paths.
 - Preserve unrelated changes. Ask before destructive cleanup, publishing, pushing, force operations, external side effects, or other irreversible actions. Use the smallest complete verification set.
 
 ## Orchestration
