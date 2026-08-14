@@ -66,7 +66,7 @@ Human Operator 另外可以：
 | `explore` | subagent | `opencode/deepseek-v4-flash-free` | 60 | `edit/bash/task/question: deny` | 快速、本地、唯讀 codebase exploration |
 | `general` | subagent | `opencode/deepseek-v4-flash-free` | 90 | `task/question: deny`；edit/Bash 繼承 global policy | bounded general-purpose implementation worker |
 
-`build` 與 `plan` 目前沒有各自覆寫 `model`，所以兩者實際都繼承 global `opencode-go/deepseek-v4-flash` route。
+`build` 與 `plan` 目前沒有各自覆寫 `model` 或 `reasoningEffort`，所以兩者實際都繼承 global `opencode-go/deepseek-v4-flash` route，推理強度交由目前 provider/runtime 自動處理。
 
 ## 4. 模型自主委派樹
 
@@ -187,42 +187,42 @@ Coordinator-to-coordinator delegation 不在任何 allowlist 中；每個 coordi
 
 「Autonomous route」只表示模型透過 Task tool 的合法 route；所有 specialist 目前都是 `hidden: false`，使用者仍可透過 OpenCode 的 `@agent` 手動選擇。
 
-| # | Specialist | Model | Steps / Temp | 權限類型 | Autonomous route | 實際 prompt 職責摘要 |
+| # | Specialist | Model | Steps / Temp / Reasoning | 權限類型 | Autonomous route | 實際 prompt 職責摘要 |
 |---:|---|---|---|---|---|---|
-| 1 | `a11y-specialist` | DeepSeek | 70 / 0.15 | RO | P | 依 observable code/interaction 檢查 WCAG 2.2 AA、keyboard、focus、semantics、screen reader；只報 evidence 與最小修正建議 |
-| 2 | `agent-orchestrator` | DeepSeek | 90 / 0.3 | COORD-RO | B | 只在 genuinely independent work packages 上建立 bounded second-level DAG；管理 child envelopes、registry、ownership、retry 與 aggregation，不自行改檔或做 final gate |
-| 3 | `ai-ml-engineer` | DeepSeek | 90 / 0.2 | WRITE | AO | 模型載入、quantization、inference、memory/latency/throughput/quality 的實作與量測；不預設 CUDA/framework/provider |
-| 4 | `api-designer` | DeepSeek | 80 / 0.2 | RO | P, PM | 設計 API/protocol schema、errors、versioning、authorization、idempotency、compatibility 與 contract tests；不實作 |
-| 5 | `architect` | DeepSeek | 80 / 0.3 | RO | P, B | 從既有 repository 分析 ownership/dependency/state/trust boundaries，提出 alternatives、trade-offs、migration、rollback、verification |
-| 6 | `ci-debugger` | DeepSeek | 70 / 0.1 | WRITE | AO | 讀 GitHub Actions/CI log，分類 test/dependency/environment/network/config failures，做最小可驗證修正 |
-| 7 | `cli-engineer` | DeepSeek | 60 / 0.2 | WRITE | AO | CLI routing、args/config precedence、exit codes、stdout/stderr、help、machine-readable output、signals、compatibility |
-| 8 | `db-engineer` | DeepSeek | 90 / 0.15 | WRITE | AO | schema、SQLite migration、transaction、index、retention、integrity、interruption/recovery；強調 data preservation |
-| 9 | `decision-analyst` | DeepSeek | 80 / 0.2 | COORD-RO | P | multi-criteria decision analysis：options、weighted criteria、evidence scoring、uncertainty、sensitivity、ranked recommendation |
-| 10 | `dependency-checker` | DeepSeek | 80 / 0.1 | RO | P, B, DA, RM | manifest/lockfile 的 version drift、advisory、license、provenance、upgrade impact；不自行升級 dependency |
-| 11 | `devops-engineer` | DeepSeek | 70 / 0.2 | WRITE | AO | CI/CD、packaging、monitoring、IaC；不自主 push/publish/deploy/rotate secrets/destroy infra |
-| 12 | `discussion-facilitator` | DeepSeek | 80 / 0.3 | RO | P, PA, PM, DA | 至少三個 technical/business/social/ethical/economic/political/security perspectives，找 assumptions/bias/gaps，做平衡 synthesis |
-| 13 | `doc-generator` | DeepSeek | 70 / 0.2 | WRITE | AO | 依已實作行為更新 README/API/architecture/CHANGELOG 類技術文件；不虛構 command/API/compatibility/release facts |
-| 14 | `e2e-tester` | MiMo | 80 / 0.2, reasoning `high` | WRITE | B, AO | 使用既有 E2E runner 驗證 user journey；偏好 accessibility snapshot/stable assertions；可按要求寫/改測試；額外允許 `playwright_browser_evaluate` |
-| 15 | `electron-engineer` | DeepSeek | 90 / 0.2 | WRITE | B, AO | Electron main/preload/renderer boundary、IPC、lifecycle、packaging、安全；額外允許 `playwright_browser_evaluate` |
-| 16 | `error-analyzer` | DeepSeek | 80 / 0.1 | RO | P, B | 從 exact error/stack/log/repro 追 root cause，區分 code/dependency/environment/config/network/data，提出最小修復與驗證 |
-| 17 | `frontend-engineer` | MiMo | 90 / 0.2, reasoning `high` | WRITE | B, AO | React/TypeScript UI state、protocol client、responsive component、keyboard/accessibility、loading/error recovery |
-| 18 | `handoff-drafter` | DeepSeek | 60 / 0.1 | RO | P, B | 依 `agent-handoff` schema 從 parent evidence 產生 handoff draft；自己不寫檔 |
-| 19 | `knowledge-curator` | DeepSeek | 70 / 0.2 | SCOPED | B | 跨 session 整理 knowledge/decisions；edit 只允許 `knowledge/**` 與 `decisions/**`，Bash deny，且需 Build 授予 owned paths |
-| 20 | `multi-angle-researcher` | DeepSeek | 80 / 0.3 | RO | P, PA, PM, DA | 從 technical/business/social/security/policy/ethical 等多維度做 primary-source research，標示 confidence/gaps/trade-offs |
-| 21 | `planning-agent` | DeepSeek | 80 / 0.3 | COORD-RO | P | evidence-based implementation decomposition：ownership、dependency、risk、rollback、verification；只能往 read-only child research/evidence 分支 |
-| 22 | `product-manager` | DeepSeek | 80 / 0.3 | COORD-RO | P | user/problem/scope/non-goal/metric/acceptance/rollout/edge cases；可委派 research/discussion/api design |
-| 23 | `rag-engineer` | DeepSeek | 90 / 0.2 | WRITE | AO | ingestion、normalization、chunking、embedding、index、retrieval、reranking、citation、deletion、evaluation 與 provenance |
-| 24 | `refactorer` | DeepSeek | 90 / 0.1 | WRITE | AO | 在 preservation of observable behavior 前提下做 bounded structural refactor，不偷帶 feature work |
-| 25 | `release-manager` | DeepSeek | 70 / 0.2 | COORD-WRITE | B | SemVer、changelog、GitHub release coordination、post-release tags/binaries verification；publish 前要求 security/dependency evidence |
-| 26 | `researcher` | DeepSeek | 80 / 0.3 | RO | P, B, PA, PM, DA | local evidence 不足時查 official docs/upstream/standards/release notes；分開 sourced facts 與 interpretation |
-| 27 | `review` | DeepSeek | 80 / 0.1 | RO | P, B | fresh independent change review：correctness、regression、missing tests、security/config drift；finding 必須有 file/line/failure scenario/remediation |
-| 28 | `rust-engineer` | DeepSeek | 90 / 0.15 | WRITE | B, AO | Rust workspace/toolchain/features/FFI/unsafe/build scripts-aware implementation；避免亂升 dependency/lockfile/generated files，執行 scoped Rust verification |
-| 29 | `screen-context-agent` | MiMo | 60 / 0.3, reasoning `low` | RO | P | 只分析 task 明確提供的 screenshot/selected text/clipboard/window metadata；observable facts 與 interpretation 分開 |
-| 30 | `security-auditor` | DeepSeek | 80 / 0.1 | RO | P, B, RM | attacker-controlled input、auth、path、command、storage、logs、network、UI disclosure、supply-chain trust boundary review |
-| 31 | `tauri-engineer` | DeepSeek | 90 / 0.15 | WRITE | B, AO | Tauri commands、capabilities、IPC、state、window lifecycle、system integration、packaging；額外允許 `playwright_browser_evaluate` |
-| 32 | `test-runner` | DeepSeek | 80 / 0.1 | RUN | B, AO | 偵測 project-native test framework、執行 targeted tests、分類失敗、在 repository 支援時量 coverage；不 edit product code |
-| 33 | `test-writer` | DeepSeek | 80 / 0.15 | WRITE | AO | 由 contract/invariant/failure/regression 寫 unit/integration/contract/security/UI/E2E tests，保持 deterministic |
-| 34 | `ui-designer` | MiMo | 70 / 0.3, reasoning `high` | RO | P | read-only UI/UX design-system 與 journey review：hierarchy、layout、density、states、keyboard、responsive、tokens、friction、acceptance criteria |
+| 1 | `a11y-specialist` | DeepSeek | 70 / 0.15 / auto | RO | P | 依 observable code/interaction 檢查 WCAG 2.2 AA、keyboard、focus、semantics、screen reader；只報 evidence 與最小修正建議 |
+| 2 | `agent-orchestrator` | DeepSeek | 90 / 0.3 / `max` | COORD-RO | B | 只在 genuinely independent work packages 上建立 bounded second-level DAG；管理 child envelopes、registry、ownership、retry 與 aggregation，不自行改檔或做 final gate |
+| 3 | `ai-ml-engineer` | DeepSeek | 90 / 0.2 / auto | WRITE | AO | 模型載入、quantization、inference、memory/latency/throughput/quality 的實作與量測；不預設 CUDA/framework/provider |
+| 4 | `api-designer` | DeepSeek | 80 / 0.2 / auto | RO | P, PM | 設計 API/protocol schema、errors、versioning、authorization、idempotency、compatibility 與 contract tests；不實作 |
+| 5 | `architect` | DeepSeek | 80 / 0.3 / `max` | RO | P, B | 從既有 repository 分析 ownership/dependency/state/trust boundaries，提出 alternatives、trade-offs、migration、rollback、verification |
+| 6 | `ci-debugger` | DeepSeek | 70 / 0.1 / `max` | WRITE | AO | 讀 GitHub Actions/CI log，分類 test/dependency/environment/network/config failures，做最小可驗證修正 |
+| 7 | `cli-engineer` | DeepSeek | 60 / 0.2 / auto | WRITE | AO | CLI routing、args/config precedence、exit codes、stdout/stderr、help、machine-readable output、signals、compatibility |
+| 8 | `db-engineer` | DeepSeek | 90 / 0.15 / auto | WRITE | AO | schema、SQLite migration、transaction、index、retention、integrity、interruption/recovery；強調 data preservation |
+| 9 | `decision-analyst` | DeepSeek | 80 / 0.2 / `max` | COORD-RO | P | multi-criteria decision analysis：options、weighted criteria、evidence scoring、uncertainty、sensitivity、ranked recommendation |
+| 10 | `dependency-checker` | DeepSeek | 80 / 0.1 / auto | RO | P, B, DA, RM | manifest/lockfile 的 version drift、advisory、license、provenance、upgrade impact；不自行升級 dependency |
+| 11 | `devops-engineer` | DeepSeek | 70 / 0.2 / auto | WRITE | AO | CI/CD、packaging、monitoring、IaC；不自主 push/publish/deploy/rotate secrets/destroy infra |
+| 12 | `discussion-facilitator` | DeepSeek | 80 / 0.3 / auto | RO | P, PA, PM, DA | 至少三個 technical/business/social/ethical/economic/political/security perspectives，找 assumptions/bias/gaps，做平衡 synthesis |
+| 13 | `doc-generator` | DeepSeek | 70 / 0.2 / auto | WRITE | AO | 依已實作行為更新 README/API/architecture/CHANGELOG 類技術文件；不虛構 command/API/compatibility/release facts |
+| 14 | `e2e-tester` | MiMo | 80 / 0.2 / `high` | WRITE | B, AO | 使用既有 E2E runner 驗證 user journey；偏好 accessibility snapshot/stable assertions；可按要求寫/改測試；額外允許 `playwright_browser_evaluate` |
+| 15 | `electron-engineer` | DeepSeek | 90 / 0.2 / auto | WRITE | B, AO | Electron main/preload/renderer boundary、IPC、lifecycle、packaging、安全；額外允許 `playwright_browser_evaluate` |
+| 16 | `error-analyzer` | DeepSeek | 80 / 0.1 / `max` | RO | P, B | 從 exact error/stack/log/repro 追 root cause，區分 code/dependency/environment/config/network/data，提出最小修復與驗證 |
+| 17 | `frontend-engineer` | MiMo | 90 / 0.2 / `high` | WRITE | B, AO | React/TypeScript UI state、protocol client、responsive component、keyboard/accessibility、loading/error recovery |
+| 18 | `handoff-drafter` | DeepSeek | 60 / 0.1 / auto | RO | P, B | 依 `agent-handoff` schema 從 parent evidence 產生 handoff draft；自己不寫檔 |
+| 19 | `knowledge-curator` | DeepSeek | 70 / 0.2 / auto | SCOPED | B | 跨 session 整理 knowledge/decisions；edit 只允許 `knowledge/**` 與 `decisions/**`，Bash deny，且需 Build 授予 owned paths |
+| 20 | `multi-angle-researcher` | DeepSeek | 80 / 0.3 / auto | RO | P, PA, PM, DA | 從 technical/business/social/security/policy/ethical 等多維度做 primary-source research，標示 confidence/gaps/trade-offs |
+| 21 | `planning-agent` | DeepSeek | 80 / 0.3 / `max` | COORD-RO | P | evidence-based implementation decomposition：ownership、dependency、risk、rollback、verification；只能往 read-only child research/evidence 分支 |
+| 22 | `product-manager` | DeepSeek | 80 / 0.3 / auto | COORD-RO | P | user/problem/scope/non-goal/metric/acceptance/rollout/edge cases；可委派 research/discussion/api design |
+| 23 | `rag-engineer` | DeepSeek | 90 / 0.2 / auto | WRITE | AO | ingestion、normalization、chunking、embedding、index、retrieval、reranking、citation、deletion、evaluation 與 provenance |
+| 24 | `refactorer` | DeepSeek | 90 / 0.1 / `max` | WRITE | AO | 在 preservation of observable behavior 前提下做 bounded structural refactor，不偷帶 feature work |
+| 25 | `release-manager` | DeepSeek | 70 / 0.2 / auto | COORD-WRITE | B | SemVer、changelog、GitHub release coordination、post-release tags/binaries verification；publish 前要求 security/dependency evidence |
+| 26 | `researcher` | DeepSeek | 80 / 0.3 / auto | RO | P, B, PA, PM, DA | local evidence 不足時查 official docs/upstream/standards/release notes；分開 sourced facts 與 interpretation |
+| 27 | `review` | DeepSeek | 80 / 0.1 / `max` | RO | P, B | fresh independent change review：correctness、regression、missing tests、security/config drift；finding 必須有 file/line/failure scenario/remediation |
+| 28 | `rust-engineer` | DeepSeek | 90 / 0.15 / auto | WRITE | B, AO | Rust workspace/toolchain/features/FFI/unsafe/build scripts-aware implementation；避免亂升 dependency/lockfile/generated files，執行 scoped Rust verification |
+| 29 | `screen-context-agent` | MiMo | 60 / 0.3 / `low` | RO | P | 只分析 task 明確提供的 screenshot/selected text/clipboard/window metadata；observable facts 與 interpretation 分開 |
+| 30 | `security-auditor` | DeepSeek | 80 / 0.1 / `max` | RO | P, B, RM | attacker-controlled input、auth、path、command、storage、logs、network、UI disclosure、supply-chain trust boundary review |
+| 31 | `tauri-engineer` | DeepSeek | 90 / 0.15 / auto | WRITE | B, AO | Tauri commands、capabilities、IPC、state、window lifecycle、system integration、packaging；額外允許 `playwright_browser_evaluate` |
+| 32 | `test-runner` | DeepSeek | 80 / 0.1 / auto | RUN | B, AO | 偵測 project-native test framework、執行 targeted tests、分類失敗、在 repository 支援時量 coverage；不 edit product code |
+| 33 | `test-writer` | DeepSeek | 80 / 0.15 / auto | WRITE | AO | 由 contract/invariant/failure/regression 寫 unit/integration/contract/security/UI/E2E tests，保持 deterministic |
+| 34 | `ui-designer` | MiMo | 70 / 0.3 / `high` | RO | P | read-only UI/UX design-system 與 journey review：hierarchy、layout、density、states、keyboard、responsive、tokens、friction、acceptance criteria |
 
 ### Model shorthand
 
@@ -233,6 +233,22 @@ Coordinator-to-coordinator delegation 不在任何 allowlist 中；每個 coordi
 
 - 30 使用 DeepSeek route
 - 4 使用 MiMo route：`frontend-engineer`、`ui-designer`、`e2e-tester`、`screen-context-agent`
+
+### DeepSeek reasoning policy
+
+DeepSeek specialist 採 **selective MAX + otherwise auto/default**，不依 L2/L3 階級粗暴分級。只有 decision amplification、architecture/root-cause/security/review gate，或 L3 semantic/root-cause risk 明顯較高的角色固定 `reasoningEffort: max`：
+
+- `agent-orchestrator`
+- `planning-agent`
+- `decision-analyst`
+- `architect`
+- `error-analyzer`
+- `security-auditor`
+- `review`
+- `refactorer`
+- `ci-debugger`
+
+其餘 DeepSeek specialist 不寫 `reasoningEffort`，交由 provider/runtime 自動處理。`build`、`plan` 也不做 agent-level reasoning override。MiMo 原有的 per-agent reasoning 設定保持不變。
 
 ## 7. Subagent 群架構：這是說明 taxonomy，不是 runtime team
 
@@ -340,7 +356,7 @@ Coordinator-to-coordinator delegation 不在任何 allowlist 中；每個 coordi
 
 ## 10. `/command` 與 Agent DAG 的關係
 
-18 個 custom commands 是 operator-facing procedure layer，不應全部硬塞進 autonomous specialist DAG。
+19 個 custom commands 是 operator-facing procedure layer，不應全部硬塞進 autonomous specialist DAG。
 
 例如 command frontmatter 可以指定 `agent`，也可以用 `subtask: true` 讓該 command 以 subagent invocation 執行。這屬於 OpenCode command runtime 的行為，不等同於 `permission.task` 所描述的 model-created specialist edge。
 
