@@ -61,12 +61,12 @@ Human Operator 另外可以：
 
 | Agent | Mode | Model route | Steps | 主要權限 / 行為 | 角色 |
 |---|---|---|---:|---|---|
-| `build` | primary | `opencode-go/deepseek-v4-flash`（由 global `model` 繼承） | 200 | 可修改；global Bash policy；只可自主 Task 到明確 Build allowlist | 唯一 mutating L1 workflow owner；decompose、integrate、verify、review、accept |
-| `plan` | primary | `opencode-go/deepseek-v4-flash`（由 global `model` 繼承） | 100 | `edit: deny`；Bash 預設 `ask`，部分 read-only Git 指令 allow；只可自主 Task 到 Plan allowlist | read-only L1 planning / architecture / evidence owner |
+| `build` | primary | `opencode/deepseek-v4-flash-free`（由 global `model` 繼承） | 200 | 可修改；global Bash policy；只可自主 Task 到明確 Build allowlist | 唯一 mutating L1 workflow owner；decompose、integrate、verify、review、accept |
+| `plan` | primary | `opencode/deepseek-v4-flash-free`（由 global `model` 繼承） | 100 | `edit: deny`；Bash 預設 `ask`，部分 read-only Git 指令 allow；只可自主 Task 到 Plan allowlist | read-only L1 planning / architecture / evidence owner |
 | `explore` | subagent | `opencode/deepseek-v4-flash-free` | 60 | `edit/bash/task/question: deny` | 快速、本地、唯讀 codebase exploration |
 | `general` | subagent | `opencode/deepseek-v4-flash-free` | 90 | `task/question: deny`；edit/Bash 繼承 global policy | bounded general-purpose implementation worker |
 
-`build` 與 `plan` 目前沒有各自覆寫 `model` 或 `reasoningEffort`，所以兩者實際都繼承 global `opencode-go/deepseek-v4-flash` route，推理強度交由目前 provider/runtime 自動處理。
+`build` 與 `plan` 目前沒有各自覆寫 `model` 或 `reasoningEffort`，所以兩者實際都繼承 global `opencode/deepseek-v4-flash-free` route，推理強度交由目前 provider/runtime 自動處理。
 
 ## 4. 模型自主委派樹
 
@@ -360,14 +360,14 @@ DeepSeek specialist 採 **selective MAX + otherwise auto/default**，不依 L2/L
 
 例如 command frontmatter 可以指定 `agent`，也可以用 `subtask: true` 讓該 command 以 subagent invocation 執行。這屬於 OpenCode command runtime 的行為，不等同於 `permission.task` 所描述的 model-created specialist edge。
 
-目前 `/tauri-verify` 就明確設定：
+目前 `/tauri-verify` 明確設定：
 
 ```yaml
-agent: build
+agent: test-runner
 subtask: true
 ```
 
-因此它是使用者手動啟動的一個隔離 verification procedure；不應把這條 command invocation 直接畫成 `agent-orchestrator` 或五 coordinator 的自主 child allowlist。
+因此它是使用者手動啟動的隔離 read-only verification procedure：`test-runner` 能執行 shell 驗證，但 `edit: deny`、`task: deny`，不會把 primary Build 強制改扮成 verification subagent。這條 operator-directed command invocation 不應被畫成 `agent-orchestrator` 或五 coordinator 的自主 child allowlist。
 
 ## 11. 系統沒有宣稱的東西
 
