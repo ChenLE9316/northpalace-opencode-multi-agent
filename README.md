@@ -11,7 +11,7 @@
 1. 一份可直接套用到 OpenCode Desktop 的全域設定；
 2. 一套以 OpenCode Desktop 為主要操作介面的 Multi-Agent 參考架構，核心包含受限委派、明確權責、唯讀規劃、驗證關卡，以及由父節點統一管理狀態。
 
-> **定位：Desktop-first / Desktop-specific。** 日常 Multi-Agent 操作、root / child-session 檢視、人工介入、session navigation 與 config reload 都以 **OpenCode Desktop** 為主要使用方式。OpenCode CLI 只作為 `opencode models`、`opencode debug ...`、LSP/MCP/health check、設定驗證與疑難排解的輔助介面。
+> **定位：Desktop-first / Desktop-specific。** 日常 Multi-Agent 操作、root / child-session 檢視、人工介入、session navigation 與 config reload 都以 **OpenCode Desktop** 為主要使用方式。OpenCode CLI 只作為 `opencode models`、`opencode debug ...`、LSP/MCP/health check、設定驗證與疑難排解的輔助介面。`tui.json` 則是 OpenCode **TUI-specific** 的可選設定，不能拿來證明 Desktop GUI 的快捷鍵行為。
 
 > **Prompt 使用提示：** 簡短 Prompt 足以讓模型自行判斷；如果希望更積極使用 Multi-Agent，可以直接寫「啟動團隊協作」、「多 Agent 分工」或指定需要哪些專業角色。
 
@@ -108,14 +108,32 @@ Operator 可以在 OpenCode Desktop 使用 `@agent` 直接指定角色，或使�
 
 ## 模型路由
 
-公開 baseline 的 subagents 使用 OpenCode Zen free routes：
+公開 canonical baseline 以「clone 後不先要求 paid L1 route」為目標：
 
-- `opencode/deepseek-v4-flash-free` — 大多數 orchestration、engineering、research、review、security、documentation、analysis roles
-- `opencode/mimo-v2.5-free` — `frontend-engineer`、`ui-designer`、`e2e-tester`、`screen-context-agent`
+- global `model` / `small_model`：`opencode/deepseek-v4-flash-free`
+- `build`、`plan`：不各自覆寫 model，直接繼承 global DeepSeek free route
+- inline `explore`、`general`：`opencode/deepseek-v4-flash-free`
+- 30 個 DeepSeek specialist：`opencode/deepseek-v4-flash-free`
+- 4 個 MiMo specialist：`opencode/mimo-v2.5-free`
+  - `frontend-engineer`
+  - `ui-designer`
+  - `e2e-tester`
+  - `screen-context-agent`
 
-inline `explore`、`general` 也使用 `opencode/deepseek-v4-flash-free`。
+這些 route 是 **public bootstrap/reference defaults**，不是長期 production model recommendation。Free route 的可用性、價格、資料政策與 provider 行為都可能改變；每次模型路由變更都應重新以 `opencode models` 與實際 runtime evidence 驗證。
 
-`build`、`plan` 不各自覆寫 model，直接繼承 `opencode.jsonc` 的 global `opencode-go/deepseek-v4-flash`。
+### Free route 隱私警告
+
+`share: disabled` 控制的是 OpenCode 的分享行為，**不是模型 provider 的 zero-retention 保證**。
+
+依目前 OpenCode Zen 公開政策，`DeepSeek V4 Flash Free` 與 `MiMo-V2.5 Free` 在免費期間屬於資料使用例外：收集到的資料可能被用於改進模型。這代表 canonical free baseline 比較適合：
+
+- 非敏感 demo；
+- workflow / DAG 驗證；
+- 學習與公開程式碼；
+- clone 後快速確認整套設定可解析。
+
+處理私有、商業、專有、機密、客戶或其他敏感程式碼時，請先換成符合自己 retention / privacy 要求的 **verified paid/private route**。長期正式使用也建議使用目前已驗證的 OpenCode Go 或其他合適 provider route，而不是把 free route 視為永久依賴。
 
 ### DeepSeek reasoning policy
 
@@ -137,14 +155,12 @@ Canonical baseline 採 **selective MAX + otherwise auto/default**，不是依 L1
 
 目前仍保留既有 DeepSeek `temperature` 欄位。由於 provider/runtime 是否實際採用該值必須以目前 route 的 runtime evidence 為準，`/verify-config` 會把 **configured option** 與 **observed effective behavior** 分開，不會只因 config 中存在欄位就宣稱它有效。
 
-> OpenCode Zen free models 可能是限時方案。公開 baseline 保留 free routes 是為了方便 clone 後測試整套 workflow；長期正式使用可換成目前 OpenCode Go 或其他已驗證的 paid routes。更換後用預設 `/verify-config` 驗證 deployment invariants；只有要確認「完全等同本 repo baseline」時才執行 `/verify-config canonical`。
-
 ## Repository 結構
 
 ```text
 .
 ├─ opencode.jsonc          # Runtime / permissions / L1 / inline subagents / MCP / LSP
-├─ tui.json               # Desktop/TUI interaction + child-session navigation
+├─ tui.json               # Optional OpenCode TUI settings and TUI keybinds
 ├─ AGENTS.md              # Shared behavior / safety / privacy / Desktop config-root rules
 ├─ agents/                # 34 specialist definitions
 ├─ prompts/               # Build / Plan L1 prompts
@@ -155,6 +171,8 @@ Canonical baseline 採 **selective MAX + otherwise auto/default**，不是依 L1
 ├─ handoffs/              # Local runtime continuity checkpoints
 └─ knowledge/             # Local curated knowledge
 ```
+
+`package.json` / lockfile in the config root are treated as OpenCode runtime-owned plugin SDK evidence. Runtime may regenerate or realign them after an OpenCode update; do not treat that manifest version alone as the architecture source of truth, and do not commit `node_modules/`.
 
 ## 安裝方式
 
@@ -180,7 +198,11 @@ export OPENCODE_CONFIG_DIR="/path/to/northpalace-opencode-multi-agent"
 opencode
 ```
 
+OpenCode 會把這個 custom directory 當成 config root 來源之一，因此其中的 `AGENTS.md`、`opencode.jsonc`、agents、commands、skills 等可被 runtime 載入。
+
 但這套 stack 是 **Desktop-first**：如果要讓 OpenCode Desktop 也使用這個 override，`OPENCODE_CONFIG_DIR` 必須存在於**啟動 Desktop process 的環境**。只在另一個 CLI shell 裡臨時 `export`，不代表已經開著的 Desktop 會看到相同值。
+
+另外，如果 custom config root 位於目前 project/worktree 之外，模型後續使用 native `read` tool 讀取其中 `rules/`、`knowledge/`、`decisions/`、`handoffs/` 等檔案時，仍會套用 `external_directory` permission。Canonical baseline 對未知外部目錄維持 `ask`，因此 Method B 可能比預設全域安裝多一次 operator permission prompt；這是 supervised friction，不是 config 載入失敗，也不應用 `external_directory: * = allow` 粗暴消除。
 
 如果無法確認 Desktop 是否繼承 override，優先使用方式 A；`/verify-config`、`/skill-check`、`/opencode-healthcheck` 會把 Desktop/CLI config-root mismatch 列為問題，而不是默默檢查錯的設定目錄。
 
@@ -200,8 +222,8 @@ else
 ## 第一次啟動檢查
 
 1. 確認 `bash` 可用；Windows 建議 Git Bash。
-2. 確認 primary/subagent model providers 已完成必要驗證。
-3. 用 auxiliary CLI 執行 `opencode models`，確認 model IDs 可解析。
+2. 確認 primary/subagent model provider 已完成必要驗證。
+3. 用 auxiliary CLI 執行 `opencode models`，確認 canonical model IDs 可解析。
 4. 確認 Node/npm 可用，讓 MCP pins 能執行。
 5. 需要 LSP 時確認對應 executable 可用。
 6. 從一般 project 開啟 OpenCode Desktop。
@@ -288,7 +310,16 @@ Child 回報成功不等於整個 workflow 完成。只有 owning L1 在整合 t
 | `/rust-lint` | Rust lint |
 | `/rust-security` | Rust security verification |
 | `/rust-test` | Rust tests |
-| `/tauri-verify` | Tauri verification |
+| `/tauri-verify` | isolated read-only Tauri verification via `test-runner` |
+
+`/tauri-verify` 特別使用：
+
+```yaml
+agent: test-runner
+subtask: true
+```
+
+因此它的 read-only 語義不只靠 prompt：`test-runner` 本身 `edit: deny`、`task: deny`，只負責執行與回報驗證。需要修正時回到 owning Build L1，而不是讓 verifier 自己改檔。
 
 ## Skills
 
@@ -319,7 +350,7 @@ Child 回報成功不等於整個 workflow 完成。只有 owning L1 在整合 t
 
 `permission.skill` 對 `northpalace-langfei-ni-token` 為 `deny`，因此模型不能透過一般 skill discovery/load 自行啟動。
 
-command 也不再用 project-relative `@skills/...` 讀 procedure。它會透過 Bash 從 **active Desktop config root** 載入：
+command 不使用 project-relative `@skills/...` 讀 procedure。它透過 Bash 從 **active Desktop config root** 載入：
 
 ```text
 OPENCODE_CONFIG_DIR
@@ -329,7 +360,7 @@ default OpenCode config root
 skills/northpalace-langfei-ni-token/SKILL.md
 ```
 
-這避免目前 project worktree 的同名 `skills/...` shadow global operator procedure。
+這避免目前 project worktree 的同名 `skills/...` shadow global operator procedure。缺檔時只輸出 path-sanitized sentinel，不把 resolved personal home/config absolute path 注入模型 prompt。
 
 ### 四個 logical waves
 
@@ -366,7 +397,7 @@ Human Operator 主動啟動也不會繞過 `permission.task`、`subagent_depth: 
 
 ## Lazy-loading / context budget
 
-這套 stack 不再用「整個 repo 所有 Markdown 總 bytes」假設它們同時進 context。
+這套 stack 不用「整個 repo 所有 Markdown 總 bytes」假設它們同時進 context。
 
 `/verify-config` 分開檢查：
 
@@ -377,7 +408,7 @@ Human Operator 主動啟動也不會繞過 `permission.task`、`subagent_depth: 
 - operator-only NorthPalace skill
 - total runtime Markdown：**只報告，不作為 simultaneously-hot context 的 FAIL 條件**
 
-原因是 agents / commands / skills 本身是依 route / operator action / skill load 才進入有效上下文，NorthPalace full-sweep procedure 更是明確 operator-only。
+原因是 agents / commands / skills 本身是依 route / operator action / skill load 才進入有效上下文，NorthPalace full-sweep procedure更是明確 operator-only。
 
 ## Human-in-the-loop / Desktop
 
@@ -391,11 +422,26 @@ OpenCode Desktop session view 是主要 observability layer。Operator 可以：
 
 CLI 不取代這個操作面；它只提供 diagnostics / verification evidence。
 
+`tui.json` 中的 `session_child_cycle` 等 keybind 是 **OpenCode TUI** 設定。它可以服務 CLI/TUI 操作，但不應拿來宣稱 OpenCode Desktop GUI 使用同一組快捷鍵。
+
 ## 安全模型
 
 設定包含 native `read` credential-path deny rules、高風險 Playwright capability restrictions、部分 destructive/publish shell command ask gates，以及 orchestration-level ownership/safety rules。
 
-但這**不是 hardened process sandbox / filesystem sandbox**：
+Canonical baseline 額外對常見外部副作用 shell route 加入 operator `ask`，包括代表性的：
+
+- `git push`
+- GitHub PR merge / release create / release delete / repo delete
+- `docker push`
+- `kubectl apply/delete`
+- `helm upgrade`
+- `terraform apply/destroy`
+- package publish
+- destructive filesystem cleanup
+
+這些 pattern 是常見高風險路徑的 defense-in-depth，不代表所有可能的外部副作用都已被列舉完。AGENTS / command contract 中的 external-effect approval 規則仍然有效。
+
+這**不是 hardened process sandbox / filesystem sandbox**：
 
 - `read` tool deny 可以限制 native read capability；
 - Bash-capable agent 仍可啟動一般 process，因此不能宣稱 secrets 在 OS/filesystem 層「絕對不可讀」；
@@ -423,7 +469,7 @@ CLI 不取代這個操作面；它只提供 diagnostics / verification evidence�
 /verify-config
 ```
 
-它檢查 deployment invariants，不會因為你把 free model 換成已驗證 paid route 就強迫你改回 canonical baseline。
+它檢查 deployment invariants，不會因為你把 free model 換成已驗證 paid/private route 就強迫你改回 canonical baseline。
 
 如果你是在維護這個 repository 本身，想確認 counts/routes/topology/reasoning policy 都沒有 drift，執行：
 
@@ -444,12 +490,16 @@ CLI 不取代這個操作面；它只提供 diagnostics / verification evidence�
 - fresh review/security
 - active Desktop config root 與 auxiliary CLI 不互相漂移
 
+如果當次檢查明確排除 Desktop runtime，`/verify-config` 應把 model smoke、Web Search registration、Desktop version、LSP/MCP runtime 等項目標成 `UNVERIFIED`，而不是假裝它們已經通過。
+
 ## 隱私與可攜性
 
 - Runtime handoffs / curated knowledge 預設本機保存，Git 只追蹤 `.gitkeep`。
 - Shareable artifacts 不保存 personal home directory、OS username、email、credential、absolute workspace path、machine-specific identifiers。
+- Operator skill 的缺檔 sentinel 不回顯 resolved absolute config/file path。
 - Evidence 使用 repository-relative `path:line`，需要 workspace identity 時使用 sanitized label。
 - `北宮冰玉` 是公開保留的專案識別名稱，不是 machine-specific metadata。
+- Free model route 的 provider retention / training policy 與 OpenCode `share` 設定是不同層級；敏感程式碼先確認 provider policy。
 
 ## 專案識別
 
