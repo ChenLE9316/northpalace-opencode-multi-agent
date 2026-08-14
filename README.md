@@ -31,8 +31,8 @@
 - **one-writer-per-path policy**，降低平行修改衝突
 - **全新 review / security sessions**，提升獨立驗證效果
 - **受限重試與 root-cause tracking**
-- **18 個自訂 commands**，涵蓋 workflow、review、verification、health check、Rust/Tauri、backup 與 spec
-- **7 個可重複使用的 skills**
+- **19 個自訂 commands**，涵蓋 workflow、operator-only 全員委派、review、verification、health check、Rust/Tauri、backup 與 spec
+- **8 個可重複使用的 skills**，其中 `four-wave-dispatch` 僅能由 Human Operator 透過 `/dispatch-all` 主動啟動
 - Playwright 與 Context7 MCP 整合
 - OpenCode Desktop child-session navigation 與 human-in-the-loop 操作
 - 針對 Windows / OpenCode Desktop 的 shell、環境與疑難排解指引
@@ -117,6 +117,7 @@
 
 ```text
 /workflow
+/dispatch-all
 /review
 /audit
 /verify
@@ -126,6 +127,15 @@
 ```
 
 這類 command 是 operator-facing control surface：使用者可以不用等待模型自行判斷何時需要某個程序，而是直接啟動它。
+
+`/dispatch-all` 是刻意設計成 **Human Operator only** 的全員委派入口。模型平常無法透過 `skill` tool 自行載入 `four-wave-dispatch`；只有你主動執行 `/dispatch-all` 時，command 才會把該 procedure 注入當前 L1。它會依目前是 `plan` 或 `build` 使用不同的合法 agent graph，分成四波依序派發並在每波收斂結果後才進入下一波。
+
+目前 full sweep 的覆蓋範圍：
+
+- `plan`：17 個 Plan 可直接委派的 L2 roles，各執行一次；coordinator 在 sweep 中不再重複建立已排程的 L3。
+- `build`：18 個 Build direct L2 + 9 個只能經 `agent-orchestrator` 到達的 L3-only roles，共 27 個不同 subagents；`agent-orchestrator` 依 fan-out 上限分批補齊 L3-only roles。
+
+Human Operator 主動啟動不代表繞過權限：`permission.task`、`subagent_depth`、coordinator child allowlist、ownership、review/security freshness 與 safety gates 仍然有效。
 
 ### 自動與手動可以混合使用
 
@@ -173,8 +183,8 @@ inline `explore` 與 `general` subagents 也使用 `opencode/deepseek-v4-flash-f
 ├─ agents/                # 34 個 specialist 定義
 ├─ prompts/               # L1 build / plan prompts
 ├─ rules/                 # Multi-Agent orchestration 契約
-├─ commands/              # 18 個操作 commands
-├─ skills/                # 7 個 lazy-loaded 可重複使用 skills
+├─ commands/              # 19 個操作 commands
+├─ skills/                # 8 個 reusable skills（含 operator-only four-wave dispatch）
 ├─ decisions/             # 版本化架構決策
 ├─ handoffs/              # Runtime continuity checkpoints（本機內容預設不進 Git）
 └─ knowledge/             # Runtime curated knowledge（本機內容預設不進 Git）
@@ -288,6 +298,7 @@ Child agent 回報成功，不代表整個 workflow 已經完成。Parent 必須
 | Command | 用途 |
 |---|---|
 | `/workflow` | 建立或整理 Multi-Agent workflow |
+| `/dispatch-all` | **Human Operator only**：依目前 Plan / Build L1，以四波 sequential sweep 派發全部合法覆蓋的 subagents |
 | `/resume-workflow` | 從持久化 handoff / state boundary 恢復 workflow |
 | `/review` | 對目前變更執行獨立 review |
 | `/audit` | 進行 security / architecture 導向 audit |
@@ -308,17 +319,18 @@ Child agent 回報成功，不代表整個 workflow 已經完成。Parent 必須
 
 ## Skills
 
-內建 skills 是 lazy-loaded、可重複使用的工作程序：
+內建 skills 共 8 個。一般 skills 採 lazy-loaded；`four-wave-dispatch` 是例外，刻意對模型的 `skill` tool 設為 `deny`，只允許 Human Operator 執行 `/dispatch-all` 時由 command 直接注入：
 
 - `agent-handoff`
 - `desktop-troubleshooting`
+- `four-wave-dispatch` — operator-only，四波 Plan / Build full-subagent sweep
 - `release-notes-drafter`
 - `spec-review`
 - `spec-writer`
 - `tauri-patterns`
 - `windows-shell`
 
-Agent 應只載入目前需要的 skill，不應把所有程序一次塞進 context。
+除了 operator-only 的 `four-wave-dispatch` 之外，Agent 應只載入目前需要的 skill，不應把所有程序一次塞進 context。
 
 ## Human-in-the-loop / Desktop 操作方式
 
