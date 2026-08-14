@@ -192,6 +192,8 @@ inline `explore` 與 `general` subagents 也使用 `opencode/deepseek-v4-flash-f
 
 ## 安裝方式
 
+> **Bash 使用建議：** 這套設定在 `opencode.jsonc` 中預設使用 `shell: "bash"`，因此建議先準備可用的 Bash 環境。Windows 使用者建議安裝 **Git for Windows / Git Bash**（或其他相容 Bash），並確認 `bash` 可以從目前環境 / PATH 被 OpenCode 正常找到。這可以讓既有 shell commands、Windows shell skill 與相關工作流程維持一致的行為。
+
 ### 方式 A — 作為 OpenCode Desktop 的全域設定
 
 請先備份你現有的 OpenCode 設定。
@@ -220,12 +222,13 @@ CLI 在這套 stack 中主要用於設定驗證、模型/LSP/MCP 檢查與疑難
 
 ## 第一次啟動檢查清單
 
-1. 完成你所選 primary model 與 subagent models 所需的 provider 驗證。
-2. 使用 CLI 執行 `opencode models`，確認所有設定中的 model ID 都能正確解析。
-3. 確認 Node/npm 可用，讓固定版本的 MCP 套件能正常執行。
-4. 如果你需要 LSP workflow，請確認設定中的 LSP executable 都存在。
-5. 從一般專案啟動 OpenCode Desktop，執行 `/verify-config`。
-6. 任何 config / agent / skill / command 修改後，都請完整重新啟動 OpenCode Desktop。
+1. 確認 Bash 可用；Windows 建議使用 Git for Windows / Git Bash，並確認 OpenCode 可以解析 `bash`。
+2. 完成你所選 primary model 與 subagent models 所需的 provider 驗證。
+3. 使用 CLI 執行 `opencode models`，確認所有設定中的 model ID 都能正確解析。
+4. 確認 Node/npm 可用，讓固定版本的 MCP 套件能正常執行。
+5. 如果你需要 LSP workflow，請確認設定中的 LSP executable 都存在。
+6. 從一般專案啟動 OpenCode Desktop，執行 `/verify-config`。
+7. 任何 config / agent / skill / command 修改後，都請完整重新啟動 OpenCode Desktop。
 
 目前 MCP 定義固定以下版本：
 
