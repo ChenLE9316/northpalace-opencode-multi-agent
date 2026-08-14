@@ -330,6 +330,29 @@ Child agent 回報成功，不代表整個 workflow 已經完成。Parent 必須
 - `tauri-patterns`
 - `windows-shell`
 
+### NorthPalace Langfei Ni Token
+
+`northpalace-langfei-ni-token` 是這套 stack 的 **Human Operator only 全員委派 skill**。它不是一般情況下由模型自行選擇的 skill，也不是日常工作流的預設路徑；用途是在你明確希望所有合法可達角色都參與時，從目前的 `plan` 或 `build` L1 手動啟動一次高覆蓋四波 sweep。
+
+在 OpenCode Desktop 的 Plan 或 Build session 中執行：
+
+```text
+/northpalace-langfei-ni-token <objective>
+```
+
+如果不帶 `<objective>`，會使用目前 active L1 workflow 的 objective。此 skill 只接受 `plan` 或 `build` 作為執行入口；若在其他 subagent session 啟動，程序會停止而不進行委派。
+
+它會依目前 L1 使用不同的覆蓋範圍：
+
+- **Plan**：四波覆蓋 17 個 Plan 可直接委派的 L2 roles；Plan coordinators 在 sweep 期間不重複建立已經排程的 L3。
+- **Build**：四波覆蓋 18 個 Build direct L2，再透過 `agent-orchestrator` 分批補齊 9 個 L3-only roles，共 27 個不同 subagents。
+
+四個 wave 是**依序執行**，不是一次同時把所有 session 全部展開。每一波必須先完成、失敗或明確 blocked，L1 收斂 evidence 與狀態後才進入下一波；不適用於目前 objective 的角色仍會被實際派發並回傳 `NOT_APPLICABLE`，因此最後可以產生可核對的 full-coverage matrix。
+
+為了確保只有人能主動使用，`opencode.jsonc` 對 `northpalace-langfei-ni-token` 設定 `permission.skill: deny`。模型不能透過一般 `skill` tool 自行 discovery / load / auto-trigger；只有 Human Operator 明確執行 `/northpalace-langfei-ni-token` 時，command 才會直接注入這個 procedure。
+
+這個人工入口也**不會繞過原本治理邊界**：`permission.task`、`subagent_depth: 2`、coordinator child allowlists、one-writer-per-path ownership、fresh review/security、verification 與外部副作用 approval 仍然有效。
+
 除了 operator-only 的 `northpalace-langfei-ni-token` 之外，Agent 應只載入目前需要的 skill，不應把所有程序一次塞進 context。
 
 ## Human-in-the-loop / Desktop 操作方式
