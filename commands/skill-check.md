@@ -12,7 +12,8 @@ Read-only Desktop skill audit. Resolve the active config root from `OPENCODE_CON
 4. Run `opencode debug skill`; require every installed user skill to be detected and report built-in skills separately.
 5. Resolve effective `permission.skill`: require `northpalace-langfei-ni-token` to be explicitly `deny` for model-facing skill loading while the other intended user skills remain available.
 6. Confirm `commands/northpalace-langfei-ni-token.md` is the documented operator-only activation path and loads its procedure from the active config root through config-root-aware shell injection. Fail if it uses a project-relative bare `@skills/northpalace-langfei-ni-token/SKILL.md` reference.
-7. Report whether the running OpenCode Desktop process appears to inherit the same config-root selection as the auxiliary CLI. If this cannot be observed, return `UNVERIFIED` rather than guessing.
-8. Return a concise Traditional Chinese table: skill, frontmatter, name match, runtime detection, effective model access, operator-only gate when applicable.
+7. Require the operator command's missing-skill sentinel to be path-sanitized: it may identify the active-config-root failure class, but must not echo `$FILE`, a resolved personal home directory, OS username, or another unnecessary absolute path into the injected prompt.
+8. Report whether the running OpenCode Desktop process appears to inherit the same config-root selection as the auxiliary CLI. If this cannot be observed, return `UNVERIFIED` rather than guessing.
+9. Return a concise Traditional Chinese table: skill, frontmatter, name match, runtime detection, effective model access, operator-only gate when applicable.
 
 Do not modify files, print personal absolute paths unnecessarily, or infer detection from `opencode agent list`. Config-time corrections require a full OpenCode Desktop restart.
