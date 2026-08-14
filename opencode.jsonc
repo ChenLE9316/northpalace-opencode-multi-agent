@@ -110,7 +110,10 @@
       "~/.config/opencode/handoffs/**": "allow"
     },
     "doom_loop": "ask",
-    "skill": "allow",
+    "skill": {
+      "*": "allow",
+      "four-wave-dispatch": "deny"
+    },
     "question": "allow",
   },
   "agent": {
