@@ -4,6 +4,7 @@ mode: subagent
 model: opencode/deepseek-v4-flash-free
 steps: 70
 temperature: 0.1
+reasoningEffort: max
 color: "#f59e0b"
 hidden: false
 permission:
