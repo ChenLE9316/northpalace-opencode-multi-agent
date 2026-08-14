@@ -7,7 +7,8 @@ Authoritative, lazy-loaded rules for multi-agent and multi-session work. Keep wo
 - L1 is exactly `plan` or `build`; only L1 owns workflows, interacts with the user, integrates results, and accepts completion. One objective has at most one mutating Build root.
 - L2 is a specialist called by L1. L3 is a child called by an approved L2 coordinator. Resolved `subagent_depth` must equal 2, and every L3 target must explicitly deny `task`; L4 is forbidden.
 - The only specialist coordinators are `agent-orchestrator`, `planning-agent`, `product-manager`, `decision-analyst`, and `release-manager`. Their allowlists contain leaves only; self-delegation, coordinator-to-coordinator edges, and cycles are invalid.
-- Use `agent-orchestrator` only for genuinely independent packages. Maximum concurrent fan-out is 4, and parallel work must have disjoint ownership or disjoint research questions.
+- Use `agent-orchestrator` only for genuinely independent packages. Maximum concurrent fan-out is 4. No parent should create more than four newly active child tasks at once; a logical operator-defined wave may contain multiple sequential sub-batches while remaining one wave.
+- Parallel work must have disjoint ownership or disjoint research questions.
 
 ## Mixed-initiative control
 
@@ -19,7 +20,8 @@ Authoritative, lazy-loaded rules for multi-agent and multi-session work. Keep wo
 ## Envelope contract and budgets
 
 - `TaskEnvelope`: workflow/task/parent ids, phase, objective, owned paths, evidence, constraints, expected output, verification, stop conditions, and when relevant dependencies, search budget, attempt/root-cause id, and resume policy.
-- `ResultEnvelope`: status (`success|partial|blocked|failed`), changed/released/retained paths, evidence, commands/results, verification, risks, clarification needs, root-cause id, and next owner.
+- `ResultEnvelope`: status (`success|partial|blocked|failed`), applicability (`applicable|not_applicable`, default `applicable`), changed/released/retained paths, evidence, commands/results, verification, risks, clarification needs, root-cause id, and next owner.
+- `not_applicable` is not an execution failure and never becomes a fifth status. A valid no-work result uses `status: success`, `applicability: not_applicable`, no changed files, and one concise evidence-backed reason.
 - Keep routine TaskEnvelopes within 15 lines, complex/high-risk ones within 25, and ResultEnvelopes within 12 plus referenced artifacts. Supply evidence slices instead of copied files or logs.
 - Default delegated research budget is 3 web searches, 5 fetched pages, and 3 Context7 queries. A parent may explicitly raise it; two searches without new evidence stop the branch.
 - An empty or invalid ResultEnvelope is failed. Retry once in a fresh session with the same evidence; a second invalid result blocks the branch.
@@ -34,7 +36,7 @@ Authoritative, lazy-loaded rules for multi-agent and multi-session work. Keep wo
 
 ## Registry, dependencies, and ownership
 
-- L1 maintains the canonical session registry: ids, owner, phase, objective, owned paths, status, attempt/root cause, dependencies, latest evidence, freshness, and resume policy. Task-tool runtime metadata is authoritative for lineage and session ids; never replace it with an agent's self-reported ids. A coordinator returns only its child registry for L1 reconciliation.
+- L1 maintains the canonical session registry: ids, owner, phase, objective, owned paths, status, applicability, attempt/root cause, dependencies, latest evidence, freshness, and resume policy. Task-tool runtime metadata is authoritative for lineage and session ids; never replace it with an agent's self-reported ids. A coordinator returns only its child registry for L1 reconciliation.
 - Grant → hold → release is explicit. `owned(L3) ⊆ owned(L2) ⊆ L1 scope`; dispatch rejects overlapping active writers, and return requires `changed_files ⊆ owned_paths`.
 - Failed or blocked work retains ownership until its parent explicitly releases or reassigns it. Dependency results are accepted before dependent results regardless of arrival order.
 - Cancellation closes the creator-owned session; discard late results. Only L1 closes a workflow after all root tasks are accepted.
