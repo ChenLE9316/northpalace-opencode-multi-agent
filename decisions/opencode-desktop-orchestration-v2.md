@@ -15,14 +15,19 @@ Use an OpenCode-native, parent-mediated L1 → L2 → L3 architecture. `plan` an
 
 ## Chosen Design
 
+- Keep OpenCode Desktop as the primary operation, child-session inspection, operator-steering, and session-navigation surface; CLI remains auxiliary for model/debug/LSP/MCP/health checks and troubleshooting.
 - Keep all 34 specialists, with five L2 coordinators: agent-orchestrator, planning-agent, product-manager, decision-analyst, and release-manager.
 - Permit one mutating Build root per objective; Plan and its reachable graph remain read-only for model-initiated delegation.
 - Treat model routing and operator routing as distinct control paths: task allowlists bound autonomous model delegation, while explicit user `@agent` and `/command` selections are operator-directed invocations.
 - Human steering can replace a model routing choice, inspect or enter child sessions, and launch bounded commands without being treated as an illegal autonomous DAG edge; active workflow ownership, safety, evidence, and acceptance invariants still apply unless the user explicitly changes scope.
 - Communicate autonomous agent-to-agent work through parent-owned Task/Result envelopes; siblings do not exchange task ids or share a live workflow board.
+- Keep execution status (`success|partial|blocked|failed`) separate from applicability (`applicable|not_applicable`); a valid no-work result is successful but not applicable.
+- Cap concurrent child fan-out per parent at four. Operator-defined full sweeps may keep four logical waves while using sequential sub-batches inside a wave.
+- For the Build full sweep, keep one valid `agent-orchestrator` L2 session and resume it across later waves instead of creating a new coordinator session for each L3 package.
+- Resolve the active Desktop config root from `OPENCODE_CONFIG_DIR` when set, otherwise the default config directory. Global operator commands must not resolve canonical config artifacts relative to the current project worktree.
 - Persist handoffs only on continuity triggers; record only major decisions in bounded Markdown.
-- Enable Exa Web Search for L1/L2/L3 with query redaction, source citations, and per-task budgets.
-- Centralize common policy in AGENTS.md and keep specialist bodies concise.
+- Enable Web Search for L1/L2/L3 with query redaction, source citations, and per-task budgets.
+- Centralize common policy in AGENTS.md and keep specialist bodies concise; budget hot core context separately from lazy-loaded agents, commands, and skills.
 - Preserve runtime-regenerated `@opencode-ai/plugin` manifests as version evidence while excluding its `node_modules/` tree from backups and version control.
 - Keep provider credentials runtime-managed and out of config; validate every configured model route with `opencode models` and fresh smoke tests after routing changes.
 - Treat AgentRelay as design evidence only; do not install it, register it as MCP, or make it a state source.
@@ -32,6 +37,7 @@ Use an OpenCode-native, parent-mediated L1 → L2 → L3 architecture. `plan` an
 - Runtime depth enforcement gives a deterministic no-L4 boundary for model-created nested delegation.
 - Mixed-initiative control preserves operator agency without giving models broader autonomous permissions: the model may decide how to work inside its allowlists, while the user can directly select a configured capability when desired.
 - Parent mediation and one writer per path avoid duplicate state and cross-session races during autonomous or manually steered active workflows.
+- Config-root-aware operator procedures avoid project-worktree shadowing when this repository is installed as global Desktop configuration.
 - Native Markdown and runtime metadata are sufficient at the current scale; SQLite, leases, and terminal relay would duplicate state and add Windows risk.
 - Centralization reduces prompt duplication while preserving role-specific permissions and verified model routing.
 
@@ -46,6 +52,7 @@ Use an OpenCode-native, parent-mediated L1 → L2 → L3 architecture. `plan` an
 
 ## Verification
 
-- Static loaders, agent/skill counts, permission DAG, model routes, L1/L2/L3 sessions, Web Search registration, scoped knowledge write, and L4 rejection were tested on OpenCode CLI 1.18.16 before publication; rerun `/verify-config` after installing this public package.
+- Static loaders, agent/skill counts, permission DAG, model routes, L1/L2/L3 sessions, Web Search registration, scoped knowledge write, and L4 rejection were tested on OpenCode CLI 1.18.16 before publication; current command/file-reference semantics were additionally cross-checked against OpenCode v1.18.18 source. This does not replace a fresh Desktop runtime test.
 - Verify both control paths after configuration changes: autonomous L1 routing through approved Task edges, plus explicit operator `@agent` and `/command` invocation without granting the model additional delegation authority.
+- Use `/verify-config` for deployment invariants and `/verify-config canonical` only when checking an unmodified published baseline.
 - Desktop must be fully restarted before its new runtime can be considered verified.
