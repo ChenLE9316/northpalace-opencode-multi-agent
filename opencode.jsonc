@@ -233,7 +233,7 @@
         "-y",
         "@playwright/mcp@0.0.78"
       ],
-      "enabled": true
+      "enabled": false
     },
     "context7": {
       "type": "local",
