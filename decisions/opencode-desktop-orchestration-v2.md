@@ -30,7 +30,7 @@ Use an OpenCode-native, parent-mediated L1 → L2 → L3 architecture. `plan` an
 - Centralize common policy in AGENTS.md and keep specialist bodies concise; budget hot core context separately from lazy-loaded agents, commands, and skills.
 - Preserve runtime-regenerated `@opencode-ai/plugin` manifests as version evidence while excluding its `node_modules/` tree from backups and version control.
 - Keep provider credentials runtime-managed and out of config; validate every configured model route with `opencode models` and fresh smoke tests after routing changes.
-- Treat AgentRelay as design evidence only; do not install it, register it as MCP, or make it a state source.
+- AgentRelay was evaluated as an external coordination architecture; NorthPalace does not depend on, integrate, or adopt its runtime or state model.
 
 ## Reasons
 
@@ -46,7 +46,6 @@ Use an OpenCode-native, parent-mediated L1 → L2 → L3 architecture. `plan` an
 - Fully autonomous-only control: removes useful Desktop operator steering and makes direct agent/command workflows unnecessarily indirect.
 - Fully manual-only control: discards risk-adaptive model routing and bounded autonomous delegation.
 - Full clean rewrite: unnecessary regression risk for already validated agents.
-- AgentRelay integration: third-party, pre-1.0, and unnecessary for the selected native model.
 - Shared workflow board or complete event log: creates competing state sources and Markdown growth.
 - L4 nesting or coordinator cycles: increases token use and weakens ownership clarity.
 
