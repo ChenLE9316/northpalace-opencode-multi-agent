@@ -113,6 +113,7 @@
     "playwright_browser_drop": "deny",
     "playwright_browser_evaluate": "deny",
     "context7_*": "allow",
+    "cua-driver_*": "ask",
     "external_directory": {
       "*": "ask",
       "~/.config/opencode/rules/**": "allow",
@@ -242,6 +243,17 @@
         "@upstash/context7-mcp@3.2.5"
       ],
       "enabled": true
+    },
+    "cua-driver": {
+      "type": "local",
+      "command": [
+        "cua-driver",
+        "mcp"
+      ],
+      "environment": {
+        "CUA_DRIVER_RS_TELEMETRY_ENABLED": "0"
+      },
+      "enabled": false
     }
   },
   "watcher": {
