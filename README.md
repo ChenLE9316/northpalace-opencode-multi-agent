@@ -176,7 +176,7 @@ Canonical baseline 採 **selective MAX + otherwise auto/default**，不是依 L1
 └─ knowledge/             # Local curated knowledge
 ```
 
-`package.json` / lockfile in the config root are treated as OpenCode runtime-owned plugin SDK evidence. Runtime may regenerate or realign them after an OpenCode update；do not treat that manifest version alone as the architecture source of truth, and do not commit `node_modules/`.
+`package.json` / lockfile in the config root are treated as OpenCode runtime-owned plugin SDK evidence. Runtime may regenerate or realign them after an OpenCode update; do not treat that manifest version alone as the architecture source of truth, and do not commit `node_modules/`.
 
 ## 安裝方式
 
