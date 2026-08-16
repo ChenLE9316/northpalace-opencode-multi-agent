@@ -33,7 +33,7 @@
 - bounded retry / root-cause tracking
 - **19 個 custom commands**
 - **8 個 skills**，其中 `northpalace-langfei-ni-token` 僅能由 Human Operator 主動啟動
-- Playwright + Context7 MCP
+- Context7 / Playwright / CUA Driver MCP integrations
 - OpenCode Desktop child-session observability
 - Windows / Git Bash / Desktop troubleshooting 指引
 
@@ -226,17 +226,18 @@ else
 1. 確認 `bash` 可用；Windows 建議 Git Bash。
 2. 確認 primary/subagent model provider 已完成必要驗證。
 3. 用 auxiliary CLI 執行 `opencode models`，確認 canonical model IDs 可解析。
-4. 確認 Node/npm 可用，讓 MCP pins 能執行。
+4. 確認 Node/npm 可用於 npm-based MCP；若啟用 CUA Driver，另確認 `cua-driver` executable 可用。
 5. 需要 LSP 時確認對應 executable 可用。
 6. 從一般 project 開啟 OpenCode Desktop。
 7. 執行 `/verify-config`。
 8. 如要確認這份安裝仍完全等於 repo baseline，再執行 `/verify-config canonical`。
 9. config/agent/skill/command/MCP/environment 修改後，完整重啟 Desktop 再驗證。
 
-目前 MCP pins：
+目前 MCP integrations：
 
-- `@playwright/mcp@0.0.78`
-- `@upstash/context7-mcp@3.2.5`
+- Context7 — `@upstash/context7-mcp@3.2.5` — **enabled by default**
+- Playwright — `@playwright/mcp@0.0.78` — **disabled by default**
+- CUA Driver — `cua-driver mcp` — **disabled by default**；`cua-driver_*` 預設為 operator `ask`
 
 ## 使用方式
 
