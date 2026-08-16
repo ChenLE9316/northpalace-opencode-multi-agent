@@ -135,6 +135,8 @@ Operator 可以在 OpenCode Desktop 使用 `@agent` 直接指定角色，或使�
 
 **Free 方案主要用於架構與執行驗證；若要以完整規模實際運行，並獲得更適合長時間、多 Agent 與大 Context 工作負載的穩定體驗，建議使用 OpenCode Go。**
 
+> **OpenCode Go 額度提醒：** OpenCode Go 的可用額度／用量政策可能不定時受到 OpenCode 服務端與上游模型供應商 API 容量或策略調整影響，並非固定不變。日常使用建議定期查看帳號後台顯示的即時用量與剩餘額度；如果需要更可控的容量、成本或供應策略，也可以改用自己管理的模型供應商 / API route。
+
 處理私有、商業、專有、機密、客戶或其他敏感程式碼時，請先換成符合自己 retention / privacy 要求的 **verified paid/private route**。長期正式使用也建議使用目前已驗證的 OpenCode Go 或其他合適 provider route，而不是把 free route 視為永久依賴。
 
 ### DeepSeek reasoning policy
@@ -174,7 +176,7 @@ Canonical baseline 採 **selective MAX + otherwise auto/default**，不是依 L1
 └─ knowledge/             # Local curated knowledge
 ```
 
-`package.json` / lockfile in the config root are treated as OpenCode runtime-owned plugin SDK evidence. Runtime may regenerate or realign them after an OpenCode update; do not treat that manifest version alone as the architecture source of truth, and do not commit `node_modules/`.
+`package.json` / lockfile in the config root are treated as OpenCode runtime-owned plugin SDK evidence. Runtime may regenerate or realign them after an OpenCode update；do not treat that manifest version alone as the architecture source of truth, and do not commit `node_modules/`.
 
 ## 安裝方式
 
