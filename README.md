@@ -158,7 +158,6 @@ Canonical baseline 採 **selective MAX + otherwise auto/default**，不是依 L1
 其他 DeepSeek specialist 不寫 reasoning override；`build` / `plan` 也不寫 agent-level reasoning override。
 
 目前仍保留既有 DeepSeek `temperature` 欄位。由於 provider/runtime 是否實際採用該值必須以目前 route 的 runtime evidence 為準，`/verify-config` 會把 **configured option** 與 **observed effective behavior** 分開，不會只因 config 中存在欄位就宣稱它有效。
-
 ## Repository 結構
 
 ```text
@@ -318,7 +317,6 @@ Child 回報成功不等於整個 workflow 完成。只有 owning L1 在整合 t
 | `/tauri-verify` | isolated read-only Tauri verification via `test-runner` |
 
 `/tauri-verify` 特別使用：
-
 ```yaml
 agent: test-runner
 subtask: true
@@ -378,7 +376,7 @@ skills/northpalace-langfei-ni-token/SKILL.md
 - **Plan**：17 個 direct L2 roles
 - **Build**：18 個 direct L2 + 9 個 Build→`agent-orchestrator` L3-only roles，共 27 個 distinct subagents
 
-Build 從 Wave 2 建立一個 stable `agent-orchestrator` L2 session；只要 owner/objective/evidence/parent 仍有效，Wave 3 / 4 resume 同一個 coordinator session，再建立新的 linked L3 children，不重複製造 coordinator session。
+Build 從 Wave 2 建立初始 `agent-orchestrator` L2 lineage；Wave 3 / 4 在既有 coordinator context 仍有價值時優先 resume 同一個 `task_id`，若 context stale、invalid，或 fresh start 在當前 wave 更合適，則可在同一 Build parent 下建立 linked replacement，並記錄原因。`agent-orchestrator` 在 27-role coverage 中仍只計為一個 distinct role。
 
 ### `NOT_APPLICABLE` 的正確語義
 
