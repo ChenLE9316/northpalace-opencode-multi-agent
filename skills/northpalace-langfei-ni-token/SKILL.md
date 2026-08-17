@@ -23,7 +23,7 @@ Use `$ARGUMENTS` supplied by `/northpalace-langfei-ni-token` as the explicit obj
 
 Before dispatch, read the effective `opencode.jsonc`, `rules/orchestration.md`, and relevant agent definitions. The effective runtime config is authoritative. The role maps below are the expected canonical topology; if config drift is detected, do not bypass it. Report the drift and adapt only within the effective current L1 allowlists.
 
-`all` means every distinct subagent intentionally reachable in the current L1 sweep defined below. Every listed role must receive one substantive task for the objective. `agent-orchestrator` is counted once for Build coverage, but its same L2 session is resumed across Waves 2–4 because nine Build-only L3 roles must be covered under a maximum concurrent fan-out of four.
+`all` means every distinct subagent intentionally reachable in the current L1 sweep defined below. Every listed role must receive one substantive task for the objective. `agent-orchestrator` is counted once for Build coverage. Its L2 continuation may reuse the same `task_id` across Waves 2–4 when prior context remains useful; if context is stale or a fresh start is tactically better, create a linked replacement under the same Build parent and record the reason. The canonical sweep uses a four-child concurrent budget per parent.
 
 If a role has no applicable work, it still participates. Return a valid ResultEnvelope with `status: success`, `applicability: not_applicable`, no changed files, and one concise evidence-backed reason. The operator report may render this as `NOT_APPLICABLE`, but `NOT_APPLICABLE` is not a fifth ResultEnvelope status.
 
@@ -31,7 +31,7 @@ If a role has no applicable work, it still participates. Return a valid ResultEn
 
 Run exactly four logical waves. Do not start wave N+1 until every task in wave N has returned, failed, or been explicitly marked blocked under the normal retry policy.
 
-A wave may contain multiple **sequential sub-batches**. No parent may create more than four newly active child tasks at once. A coordinator has its own child fan-out limit; its L3 children do not consume the L1 parent's four direct-child slots. Completing one sub-batch does not advance the wave; L1 reconciles the entire logical wave before continuing.
+A wave may contain multiple **sequential sub-batches**. This canonical procedure uses a four-child concurrent budget per parent: no parent may create more than four newly active child tasks at once. A coordinator has its own child budget; its L3 children do not consume the L1 parent's four direct-child slots. Completing one sub-batch does not advance the wave; L1 reconciles the entire logical wave before continuing.
 
 For every task:
 
@@ -108,7 +108,7 @@ Plan then produces the final synthesis: recommended plan, unresolved risks, reje
 
 Build covers its 18 direct L2 targets plus nine roles reachable only through `agent-orchestrator`.
 
-Create one `agent-orchestrator` L2 session in Wave 2. Resume that same coordinator session in Waves 3 and 4 while owner, objective, evidence, and parent remain valid. The coordinator creates fresh linked L3 child tasks for each specialist group and never exceeds four concurrent children. Count `agent-orchestrator` once in the 27-role coverage matrix.
+Create one `agent-orchestrator` L2 session in Wave 2. In Waves 3 and 4, let the model decide whether reusing that coordinator `task_id` is useful. Prefer continuation when prior context materially helps; if the context is stale, invalid, or a fresh start is tactically better, create a new linked `agent-orchestrator` task under the same Build parent and record the reason. Never use a prior `task_id` to bypass Task permissions, depth, ownership, or fresh-review boundaries, and never autonomously reuse it across a different agent identity or parent.
 
 `release-manager` participates without child delegation during this sweep because `security-auditor` and `dependency-checker` are already dispatched directly in Wave 1.
 
@@ -135,13 +135,13 @@ Sub-batch A, create at most four direct L2 children concurrently:
 1. `general` — bounded implementation gap not better owned by another specialist, or analysis-only if no safe path partition exists.
 2. `frontend-engineer` — frontend/UI implementation scope where applicable.
 3. `rust-engineer` — Rust implementation scope where applicable.
-4. Create the stable `agent-orchestrator` L2 session and give it one coordinator-only package for these L3-only roles, maximum AO fan-out four:
+4. Create the initial `agent-orchestrator` L2 session and give it one coordinator-only package for these L3-only roles, maximum AO active-child budget four:
    - `ai-ml-engineer`
    - `cli-engineer`
    - `db-engineer`
    - `rag-engineer`
 
-The AO L3 group may run while the three direct L2 workers are active because each parent independently remains within its fan-out limit.
+The AO L3 group may run while the three direct L2 workers are active because each parent independently remains within its canonical four-child budget.
 
 Sub-batch B:
 
@@ -156,13 +156,13 @@ Sub-batch A, create/resume at most four direct L2 children concurrently:
 1. `electron-engineer` — Electron-specific work or valid `not_applicable` result.
 2. `test-runner` — execute the smallest relevant verification set and report exact results.
 3. `e2e-tester` — user-journey/E2E verification or bounded E2E changes with explicit ownership.
-4. Resume the same Wave 2 `agent-orchestrator` session with a new coordinator package for:
+4. Continue the current `agent-orchestrator` lineage using the existing `task_id` when useful, or a linked fresh AO replacement when the model judges that better, with a new coordinator package for:
    - `devops-engineer`
    - `refactorer`
    - `test-writer`
    - `ci-debugger`
 
-The resumed AO may fan out its four fresh L3 children while the other three direct L2 tasks are active, subject to disjoint ownership and dependency readiness.
+The active AO may fan out its four fresh L3 children while the other three direct L2 tasks are active, subject to disjoint ownership and dependency readiness.
 
 Sub-batch B:
 
@@ -177,7 +177,7 @@ Dispatch concurrently, maximum four active L2 tasks:
 1. `review` — fresh independent review; never resume an implementer session as reviewer.
 2. `release-manager` — release-readiness assessment only; no publish/release/deploy and no child delegation unless the operator separately authorizes the external effect.
 3. `handoff-drafter` — continuity/handoff assessment; persist only when normal handoff triggers are met.
-4. Resume the same `agent-orchestrator` session with its final coordinator package:
+4. Continue the current `agent-orchestrator` lineage using the existing `task_id` when useful, or a linked fresh AO replacement when tactically better, with its final coordinator package:
    - `doc-generator`
 
 After all Wave 4 results return, Build performs final verification and produces a 27-role coverage matrix. Do not declare completion solely because all roles were invoked; L1 acceptance still depends on evidence, tests, review, ownership reconciliation, and the objective's acceptance criteria.
