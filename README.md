@@ -158,6 +158,7 @@ Canonical baseline 採 **selective MAX + otherwise auto/default**，不是依 L1
 其他 DeepSeek specialist 不寫 reasoning override；`build` / `plan` 也不寫 agent-level reasoning override。
 
 目前仍保留既有 DeepSeek `temperature` 欄位。由於 provider/runtime 是否實際採用該值必須以目前 route 的 runtime evidence 為準，`/verify-config` 會把 **configured option** 與 **observed effective behavior** 分開，不會只因 config 中存在欄位就宣稱它有效。
+
 ## Repository 結構
 
 ```text
@@ -317,6 +318,7 @@ Child 回報成功不等於整個 workflow 完成。只有 owning L1 在整合 t
 | `/tauri-verify` | isolated read-only Tauri verification via `test-runner` |
 
 `/tauri-verify` 特別使用：
+
 ```yaml
 agent: test-runner
 subtask: true
