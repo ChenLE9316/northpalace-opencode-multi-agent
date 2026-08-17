@@ -23,7 +23,7 @@ Use an OpenCode-native, parent-mediated L1 → L2 → L3 architecture. `plan` an
 - Communicate autonomous agent-to-agent work through parent-owned Task/Result envelopes; siblings do not exchange task ids or share a live workflow board.
 - Keep execution status (`success|partial|blocked|failed`) separate from applicability (`applicable|not_applicable`); a valid no-work result is successful but not applicable.
 - Cap concurrent child fan-out per parent at four. Operator-defined full sweeps may keep four logical waves while using sequential sub-batches inside a wave.
-- For the Build full sweep, keep one valid `agent-orchestrator` L2 session and resume it across later waves instead of creating a new coordinator session for each L3 package.
+- For the Build full sweep, preserve one `agent-orchestrator` lineage across later waves: prefer continuation when prior context materially helps, but allow a linked same-parent replacement when context is stale, invalid, or a fresh start is tactically better; count `agent-orchestrator` once in sweep coverage.
 - Resolve the active Desktop config root from `OPENCODE_CONFIG_DIR` when set, otherwise the default config directory. Global operator commands must not resolve canonical config artifacts relative to the current project worktree.
 - Persist handoffs only on continuity triggers; record only major decisions in bounded Markdown.
 - Enable Web Search for L1/L2/L3 with query redaction, source citations, and per-task budgets.
