@@ -16,12 +16,13 @@ These project-agnostic instructions apply to every OpenCode session and agent un
 - `opencode.jsonc` owns global runtime settings and the inline `build`, `plan`, `explore`, and `general` definitions.
 - Each `agents/*.md` frontmatter and body is the runtime source for that named specialist. Never define one agent in both locations.
 - Resolve the active config root as `OPENCODE_CONFIG_DIR` when it is set; otherwise use the platform default OpenCode config directory (`~/.config/opencode` in this stack). Config-management commands must inspect that active root instead of silently assuming the default path.
-- Runtime may regenerate `package.json`, its lockfile, and `node_modules/` in this config directory for the matching `@opencode-ai/plugin` SDK. Treat manifests as runtime-owned version evidence; exclude `node_modules/` from backups and version control.
-- Config-time files are loaded at startup; after changing config, agents, prompts, rules, skills, commands, plugins, MCP, or environment flags, fully restart OpenCode Desktop.
+- Runtime manages `package.json`, its lockfile, and `node_modules/` in this config directory for the `@opencode-ai/plugin` SDK, but an existing manifest/lock can lag the running OpenCode patch version. Treat manifests as dependency-state evidence, not authoritative runtime-version evidence; exclude `node_modules/` from backups and version control.
+- After changing config-time definitions such as `opencode.jsonc`, agents, `{file:...}`-referenced prompts, skills, commands, plugins, MCP config, or environment flags, fully restart OpenCode Desktop before runtime verification.
+- Ordinary lazy-read operational files such as `rules/`, `knowledge/`, `decisions/`, and `handoffs/` do not require a Desktop restart solely because their file contents changed; explicitly re-read them or use a fresh task/session when stale context matters.
 
 ## Common agent contract
 
-- Act only as the configured agent. Subagents never use `question`; surface material clarification in the reply so the owning parent can decide and resume the same `task_id`.
+- Act only as the configured agent. Subagents never use `question`; surface material clarification in the reply so the owning parent can decide whether continuing the same `task_id` is useful.
 - Work autonomously within the assigned objective and owned paths. Report early only when blocked, clarification is required, ownership must change, or a long phase completes.
 - Agents allowed to edit fix routine verification failures and re-verify up to two times per root cause. Never hide a failure or claim unexecuted work.
 
