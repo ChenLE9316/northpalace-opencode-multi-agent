@@ -15,6 +15,7 @@ NorthPalace treats OpenCode runtime semantics as an architecture dependency. The
 | Shell | host process capability; not an ownership/filesystem sandbox | same trust assumption; raw shell permission is not a path lock |
 | Skill activation | model-facing skill deny plus explicit operator command | also require `slash: false` and `opencode/autoinvoke: false` |
 | Project precedence | project config may override global safety/agents | project config also has higher precedence than the custom overlay; preflight is mandatory |
+| Project code | plugins/tools/MCP are capability code/surface | plugins can transform/intercept agents/tools; pre-start review is mandatory |
 | Command precedence | project definitions may affect effective behavior | project commands override global definitions; collision checks are mandatory |
 | TUI config | `tui.json` | V2 migrates toward global `cli.json` |
 | LSP | current V1 integration is part of the tested baseline | treat V2 LSP/runtime support as version-specific and verify before claiming it |
@@ -25,11 +26,11 @@ NorthPalace treats OpenCode runtime semantics as an architecture dependency. The
 
 Plan keeps arbitrary Bash denied. Its only shell exceptions are exact metadata-only Git queries; repository file/blob/diff content and remote URLs stay on native evidence paths so credential-path read denies are not bypassed through Git shell commands.
 
-## Project precedence trust boundary
+## Project precedence and pre-start trust boundary
 
-NorthPalace is commonly installed globally, but OpenCode intentionally lets project configuration override global/default configuration. That is useful for normal project customization and dangerous for a governance baseline if an unreviewed project changes critical fields.
+NorthPalace is commonly installed globally, but OpenCode intentionally lets project configuration override global/default configuration. It also auto-loads project plugins and exposes project custom tools; those are not passive repository text. A project plugin can modify/intercept runtime behavior, and a custom tool or MCP server expands the callable capability surface.
 
-Before treating a project as NorthPalace-governed, run:
+Therefore **preflight must run before opening an unreviewed project in a NorthPalace-governed runtime**, not only from an in-session `/verify-config` after project extensions have already loaded:
 
 ```bash
 node scripts/check-project-overrides.mjs --project "$PWD"
@@ -42,12 +43,18 @@ The preflight rejects project-level changes that can alter the canonical securit
 - non-Build default L1;
 - re-enabled autoupdate or non-disabled sharing;
 - project compaction overrides that change registry/checkpoint assumptions;
+- configured project plugins;
+- project MCP capability expansion pending review;
+- auto-loaded `.opencode/plugins/` code;
+- `.opencode/tools/` custom tool code;
 - protected agent-id overrides or new `*-engineer` definitions that can become AO-reachable;
 - operator command/skill id shadowing.
 
-Project-local `AGENTS.md` is reported as a **WARN/trust boundary**, not automatically rejected, because legitimate repositories commonly contain project instructions. Treat that content as active project policy, not as ordinary untrusted evidence. Hard runtime denies remain the protection against a project instruction trying to expand prohibited capabilities.
+Project-local `AGENTS.md`, other project commands, project skills, or `instructions` are reported as **WARN/trust boundaries** rather than automatically rejected, because legitimate repositories commonly contain project policy. Treat them as active project instructions/operator procedures, not ordinary untrusted evidence. Hard runtime denies remain the protection against instructions trying to expand prohibited capabilities.
 
-Project model/LSP configuration that does not touch these critical governance fields remains allowed. Intentional critical overrides require explicit review and a corresponding NorthPalace deployment policy update rather than silent inheritance.
+Project model/LSP configuration that does not touch these critical governance fields remains allowed. Intentional plugins/tools/MCP/critical overrides require explicit review and a corresponding deployment policy update rather than silent inheritance.
+
+For a repository you do not already trust, run the preflight externally **before** starting OpenCode Desktop in that project. An in-session command cannot retroactively make an already-loaded project plugin harmless.
 
 ## V2 beta launch
 
@@ -57,11 +64,11 @@ The V2 overlay is intentionally separate:
 ./scripts/opencode2-northpalace.sh
 ```
 
-The launcher preserves the current working directory, runs deterministic governance + project-override preflight, sets `OPENCODE_CONFIG` to the V2 overlay, marks `NORTHPALACE_RUNTIME_TARGET=v2`, and starts `opencode2`. If preflight detects a critical project override, launch stops instead of assuming the overlay wins.
+The launcher preserves the current working directory, runs deterministic governance + project-override preflight, sets `OPENCODE_CONFIG` to the V2 overlay, marks `NORTHPALACE_RUNTIME_TARGET=v2`, and starts `opencode2`. If preflight detects a critical project override/capability extension, launch stops instead of assuming the overlay wins.
 
 The V2 migration layer intentionally normalizes supported V1 global/project configuration in memory, so the V1 canonical file can remain the shared base. The overlay exists only for V1 fields with changed/unsupported V2 semantics such as depth and compaction. Because project config has higher precedence than the custom config file, preflight and effective-runtime verification are both required.
 
-If a Desktop V2 process is used instead, its process environment must receive the same overlay and its active project must pass the same preflight; running this CLI launcher does not prove the Desktop GUI inherited either condition.
+If a Desktop V2 process is used instead, its process environment must receive the same overlay and its active project must pass the same **external pre-start** preflight; running this CLI launcher does not prove the Desktop GUI inherited either condition.
 
 V2 is a beta compatibility target, not the published production baseline. Never report V2 depth, command isolation, skill gating, or compaction as verified from static files alone; require version-correct runtime evidence.
 
@@ -76,10 +83,10 @@ A shell-capable writer can cause indirect filesystem mutations through formatter
 Treat every OpenCode upgrade as a compatibility event:
 
 1. run `node scripts/validate-governance.mjs --canonical` against the repository baseline;
-2. run `node scripts/check-project-overrides.mjs --project "$PWD"` in the target project;
+2. before opening an unreviewed target project, run `node scripts/check-project-overrides.mjs --project "$PWD"` externally;
 3. run `/verify-config v1` or `/verify-config v2` using the matching binary;
 4. verify actual depth rejection, fresh Task delegation, effective permissions, Web Search/MCP registration, and command/skill behavior;
-5. confirm active project config/instructions and operator command/skill ids do not silently replace the intended governance contract;
+5. confirm active project config/instructions/plugins/tools/operator ids do not silently replace or extend the intended governance contract;
 6. only then mark the Desktop runtime verified.
 
 Static validation must return `UNVERIFIED`, not `OK`, for runtime behavior it could not observe.
