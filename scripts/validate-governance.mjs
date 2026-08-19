@@ -140,8 +140,22 @@ check(plan?.mode === 'primary', 'plan remains a primary L1');
 check(config.agent?.build?.mode === 'primary', 'build remains a primary L1');
 check(plan?.permission?.edit === 'deny', 'Plan native edit is denied');
 check(plan?.permission?.bash?.['*'] === 'deny', 'Plan arbitrary Bash is hard-denied');
-for (const safe of ['git status*', 'git diff*', 'git log*', 'git show*', 'git grep *', 'git rev-parse*', 'git ls-files*', 'git branch --show-current*', 'git remote -v*', 'git remote get-url*', 'git describe*']) {
-  check(plan?.permission?.bash?.[safe] === 'allow', `Plan safe Git evidence route is allowed: ${safe}`);
+const planMetadataGit = [
+  'git status',
+  'git status --short*',
+  'git status --porcelain*',
+  'git diff --name-only*',
+  'git diff --stat*',
+  'git rev-parse HEAD',
+  'git ls-files',
+  'git branch --show-current',
+  'git describe',
+];
+for (const safe of planMetadataGit) {
+  check(plan?.permission?.bash?.[safe] === 'allow', `Plan metadata-only Git route is allowed: ${safe}`);
+}
+for (const forbidden of ['git diff*', 'git log*', 'git show*', 'git grep*', 'git remote*', 'git rev-parse*', 'git ls-files*', 'git branch --show-current*', 'git describe*']) {
+  check(plan?.permission?.bash?.[forbidden] !== 'allow', `Plan has no broad/content-bearing Git allow rule: ${forbidden}`);
 }
 
 const globalBash = config.permission?.bash || {};
