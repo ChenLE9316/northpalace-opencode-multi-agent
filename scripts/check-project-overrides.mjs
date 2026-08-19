@@ -88,6 +88,12 @@ function listMarkdownIDs(dir) {
     .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
     .map((entry) => entry.name.replace(/\.md$/, ''));
 }
+function meaningfulEntries(dir) {
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir, { withFileTypes: true })
+    .filter((entry) => !entry.name.startsWith('.'))
+    .map((entry) => entry.name);
+}
 
 if (start === configRoot) {
   console.log('[OK] project override preflight skipped for the NorthPalace config repository itself.');
@@ -131,6 +137,14 @@ for (const file of configFiles) {
     `${name} does not weaken canonical share=disabled`);
   check(cfg.compaction === undefined,
     `${name} does not override NorthPalace compaction/checkpoint assumptions`);
+  check(cfg.plugin === undefined && cfg.plugins === undefined,
+    `${name} does not load project plugins before governance verification`);
+  check(cfg.mcp === undefined,
+    `${name} does not add project MCP capability surface before governance review`);
+
+  if (cfg.instructions !== undefined) {
+    warn(`${name} adds project instruction files; review them as active policy context.`);
+  }
 
   const agentMaps = [cfg.agent, cfg.agents].filter((value) => value && typeof value === 'object' && !Array.isArray(value));
   for (const map of agentMaps) {
@@ -143,15 +157,27 @@ for (const file of configFiles) {
   for (const map of [cfg.command, cfg.commands]) {
     if (map && typeof map === 'object' && !Array.isArray(map)) {
       check(!Object.hasOwn(map, operatorID), `${name} does not override operator command id`);
+      if (Object.keys(map).length > 0) warn(`${name} defines project commands; explicit command execution is a project trust boundary.`);
     }
   }
-
-  if (cfg.mcp?.playwright?.enabled === true) warn(`${name} enables Playwright; three specialists intentionally gain evaluate capability.`);
-  if (cfg.mcp?.['cua-driver']?.enabled === true) warn(`${name} enables CUA server; canonical model tool permission remains hard deny and must be verified effectively.`);
 }
 
 for (const dir of dirs) {
   const oc = path.join(dir, '.opencode');
+
+  const pluginDir = path.join(oc, 'plugins');
+  const pluginEntries = meaningfulEntries(pluginDir);
+  if (pluginEntries.length > 0) {
+    failures.push(`${label(pluginDir)} contains auto-loaded project plugins; review/remove them before NorthPalace-governed startup`);
+  }
+
+  for (const toolsDir of [path.join(oc, 'tools'), path.join(oc, 'tool')]) {
+    const toolEntries = meaningfulEntries(toolsDir);
+    if (toolEntries.length > 0) {
+      failures.push(`${label(toolsDir)} contains project custom tools; review their code/permissions before NorthPalace-governed startup`);
+    }
+  }
+
   for (const agentsDir of [path.join(oc, 'agents'), path.join(oc, 'agent'), path.join(oc, 'modes'), path.join(oc, 'mode')]) {
     for (const id of listMarkdownIDs(agentsDir)) {
       check(!protectedAgentIDs.has(id) && !/-engineer$/.test(id),
@@ -159,13 +185,19 @@ for (const dir of dirs) {
     }
   }
   for (const commandsDir of [path.join(oc, 'commands'), path.join(oc, 'command')]) {
-    if (fs.existsSync(path.join(commandsDir, `${operatorID}.md`))) {
+    const commandIDs = listMarkdownIDs(commandsDir);
+    if (commandIDs.length > 0) warn(`${label(commandsDir)} contains project commands; treat them as operator-invoked project policy/code.`);
+    if (commandIDs.includes(operatorID)) {
       failures.push(`${label(path.join(commandsDir, `${operatorID}.md`))} shadows the operator-only command id`);
     }
   }
   for (const skillsDir of [path.join(oc, 'skills'), path.join(oc, 'skill')]) {
-    if (fs.existsSync(path.join(skillsDir, operatorID, 'SKILL.md'))) {
-      failures.push(`${label(path.join(skillsDir, operatorID, 'SKILL.md'))} shadows the operator-only skill id`);
+    if (fs.existsSync(skillsDir)) {
+      const skillIDs = fs.readdirSync(skillsDir, { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name);
+      if (skillIDs.length > 0) warn(`${label(skillsDir)} contains project skills; review autoinvoke/slash behavior as active project policy.`);
+      if (skillIDs.includes(operatorID) && fs.existsSync(path.join(skillsDir, operatorID, 'SKILL.md'))) {
+        failures.push(`${label(path.join(skillsDir, operatorID, 'SKILL.md'))} shadows the operator-only skill id`);
+      }
     }
   }
   if (fs.existsSync(path.join(dir, 'AGENTS.md'))) {
