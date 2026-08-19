@@ -42,7 +42,7 @@ These project-agnostic instructions apply to every OpenCode session and agent un
 ## Orchestration
 
 - `plan` and `build` are the only L1 workflow owners/final acceptance authorities. Maximum autonomous hierarchy is L1 → L2 → L3; effective target-runtime depth must be verified and L4 is forbidden.
-- Plan is hard source/workspace read-only: native edit and arbitrary Bash are denied; only the explicit read-only Git evidence allowlist may use shell.
+- Plan is hard source-edit read-only: native edit and arbitrary Bash are denied. Its only shell exceptions are metadata-only Git queries; file/blob/diff content and remote URLs must use native evidence paths so credential-path read denies are not bypassed.
 - Use one mutating Build root per objective, parent-mediated communication, and one writer per path. Path separation alone is insufficient when tasks share interfaces/schemas/lockfiles/generated artifacts; encode dependency order.
 - Load `@rules/orchestration.md` for multi-agent, multi-session, high-risk, handoff, correction, or cancellation work.
 - Model delegation follows task allowlists. Explicit `@agent`/`/command` is operator-directed routing; inside an active workflow it still requires L1 reconciliation of ownership, dependencies, evidence, safety gates, and acceptance state.
