@@ -48,8 +48,13 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Syntax-check validator
-        run: node --check scripts/validate-governance.mjs
+      - name: Syntax-check validators
+        run: |
+          node --check scripts/validate-governance.mjs
+          node --check scripts/check-project-overrides.mjs
 
       - name: Validate canonical governance
         run: node scripts/validate-governance.mjs --canonical --project "$GITHUB_WORKSPACE"
+
+      - name: Validate project-precedence checker self-case
+        run: node scripts/check-project-overrides.mjs --project "$GITHUB_WORKSPACE"
