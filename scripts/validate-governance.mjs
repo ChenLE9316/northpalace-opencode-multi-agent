@@ -142,18 +142,23 @@ check(plan?.permission?.edit === 'deny', 'Plan native edit is denied');
 check(plan?.permission?.bash?.['*'] === 'deny', 'Plan arbitrary Bash is hard-denied');
 const planMetadataGit = [
   'git status',
-  'git status --short*',
-  'git status --porcelain*',
-  'git diff --name-only*',
-  'git diff --stat*',
+  'git status --short',
+  'git status --porcelain',
+  'git diff --name-only',
+  'git diff --stat',
   'git rev-parse HEAD',
   'git ls-files',
   'git branch --show-current',
   'git describe',
 ];
 for (const safe of planMetadataGit) {
-  check(plan?.permission?.bash?.[safe] === 'allow', `Plan metadata-only Git route is allowed: ${safe}`);
+  check(plan?.permission?.bash?.[safe] === 'allow', `Plan exact metadata-only Git route is allowed: ${safe}`);
 }
+const planAllowedGitKeys = Object.entries(plan?.permission?.bash || {})
+  .filter(([key, value]) => key !== '*' && value === 'allow')
+  .map(([key]) => key)
+  .sort();
+check(sameSet(planAllowedGitKeys, [...planMetadataGit].sort()), 'Plan Git shell allowlist contains only exact metadata commands');
 for (const forbidden of ['git diff*', 'git log*', 'git show*', 'git grep*', 'git remote*', 'git rev-parse*', 'git ls-files*', 'git branch --show-current*', 'git describe*']) {
   check(plan?.permission?.bash?.[forbidden] !== 'allow', `Plan has no broad/content-bearing Git allow rule: ${forbidden}`);
 }
