@@ -165,7 +165,7 @@
       }
     },
     "plan": {
-      "description": "Hard read-only primary agent for architecture, risk analysis, and implementation planning.",
+      "description": "Hard source-edit read-only primary agent for architecture, risk analysis, and implementation planning.",
       "mode": "primary",
       "prompt": "{file:./prompts/plan.md}",
       "steps": 100,
@@ -174,17 +174,15 @@
         "edit": "deny",
         "bash": {
           "*": "deny",
-          "git status*": "allow",
-          "git diff*": "allow",
-          "git log*": "allow",
-          "git show*": "allow",
-          "git grep *": "allow",
-          "git rev-parse*": "allow",
-          "git ls-files*": "allow",
-          "git branch --show-current*": "allow",
-          "git remote -v*": "allow",
-          "git remote get-url*": "allow",
-          "git describe*": "allow"
+          "git status": "allow",
+          "git status --short*": "allow",
+          "git status --porcelain*": "allow",
+          "git diff --name-only*": "allow",
+          "git diff --stat*": "allow",
+          "git rev-parse HEAD": "allow",
+          "git ls-files": "allow",
+          "git branch --show-current": "allow",
+          "git describe": "allow"
         },
         "task": {
           "*": "deny",
