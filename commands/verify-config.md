@@ -17,19 +17,24 @@ Interpret `$ARGUMENTS` as whitespace-separated flags:
 
 Examples: `/verify-config`, `/verify-config canonical`, `/verify-config v2`, `/verify-config v2 canonical`.
 
-Resolve the active config root from `OPENCODE_CONFIG_DIR` when set, otherwise the default NorthPalace/OpenCode config root. Resolve the deterministic validator from that root; do not silently validate a different clone.
+Resolve the active config root from `OPENCODE_CONFIG_DIR` when set, otherwise the default NorthPalace/OpenCode config root. Resolve deterministic scripts from that root; do not silently validate a different clone.
 
-## Gate 1 — deterministic static validation
+## Gate 1 — deterministic static + project-precedence validation
 
 Run first:
 
 ```bash
 node <active-config-root>/scripts/validate-governance.mjs --deployment --project "$PWD"
+node <active-config-root>/scripts/check-project-overrides.mjs --project "$PWD"
 ```
 
-Use `--canonical` instead of `--deployment` when `$ARGUMENTS` contains `canonical`.
+Use `--canonical` instead of `--deployment` for the first command when `$ARGUMENTS` contains `canonical`.
 
-A validator failure is `FAIL`; do not continue to a final `OK` by reinterpreting the same invariant in prose. The validator covers canonical/runtime config structure, Plan hard-read-only Bash, hard-denied external effects, DAG/leaf topology, AO wildcard resolution in canonical mode, knowledge-curator scope, command/skill counts, `/tauri-verify`, operator-skill V2 gates, final-snapshot sweep rules, V2 overlay presence, and critical project-local command/skill collisions.
+A deterministic failure is `FAIL`; do not continue to a final `OK` by reinterpreting the same invariant in prose.
+
+The baseline validator covers config structure, exact metadata-only Plan Git shell rules, hard-denied external effects, DAG/leaf topology, AO wildcard resolution in canonical mode, knowledge-curator scope, command/skill counts, `/tauri-verify`, operator-skill V2 gates, final-snapshot sweep rules, and V2 overlay presence.
+
+The project-precedence validator covers project JSON/JSONC permission/depth/default-agent/share/autoupdate/compaction overrides, protected or AO-reachable agent-id overrides, operator command/skill shadowing, and active project instruction warnings. Project-level model/LSP settings that do not alter critical governance fields are not rejected.
 
 ## Gate 2 — runtime identity before runtime claims
 
@@ -37,14 +42,16 @@ A validator failure is `FAIL`; do not continue to a final `OK` by reinterpreting
 
 - Require `opencode --version` to succeed.
 - Use `opencode debug config`, `opencode agent list`, `opencode debug skill`, `opencode models`, and other V1 diagnostics only when they are available in the installed V1 build.
-- Require effective `subagent_depth=2`; `plan`/`build` primary modes; Plan arbitrary Bash deny; current Task DAG; model routes; permissions; MCP/LSP/Web Search registration as applicable.
+- Require effective `subagent_depth=2`; `plan`/`build` primary modes; Plan arbitrary Bash deny plus only exact metadata Git exceptions; current Task DAG; model routes; permissions; MCP/LSP/Web Search registration as applicable.
+- Confirm the effective merged configuration still reflects NorthPalace hard denies after project precedence. A static global file is not enough.
 - Do not infer the Desktop GUI version/state from the auxiliary CLI. If Desktop version/config-root inheritance cannot be observed, report it `UNVERIFIED`.
 
 ### V2
 
 - Require `opencode2 --version` to succeed; never substitute `opencode --version` or `opencode debug config`.
 - Require `compat/v2/opencode.overlay.jsonc` to contain `experimental.subagent_depth=2`, V2 `compaction.keep.tokens`/`buffer`, and `autoupdate=false`.
-- Confirm the V2 process is launched with the compatibility overlay (`OPENCODE_CONFIG`) or equivalent Desktop-process environment. The presence of the file alone does not prove the runtime loaded it.
+- Confirm the V2 process is launched with the compatibility overlay (`OPENCODE_CONFIG`) or equivalent Desktop-process environment **and** that the active project passes the project-precedence preflight. Project config can override the custom overlay, so overlay presence alone is not proof.
+- Supported V1 global/project config is normalized by the V2 migration layer; do not require a full native-V2 rewrite merely for syntax. Do require behavior-correct runtime evidence for critical permissions/agents/depth.
 - Do **not** treat top-level V1 `subagent_depth`, V1 `compaction.tail_turns/prune`, command `subtask`, or V1 `doom_loop` semantics as V2 runtime evidence.
 - When the installed V2 build lacks a documented/effective-config introspection for a claim, mark that claim `UNVERIFIED` and use a bounded runtime smoke rather than invoking V1 diagnostics.
 - Verify nested delegation by an actual rejection/allowance smoke appropriate to depth 2 before marking `NO-L4` runtime enforcement `OK`.
@@ -53,6 +60,7 @@ A validator failure is `FAIL`; do not continue to a final `OK` by reinterpreting
 
 - Confirm canonical high-risk external-effect/destructive shell routes and `cua-driver_*` are hard `deny`. `ask` is interactive friction only and must never be reported as a hard Human Operator gate.
 - Confirm global Playwright `run_code_unsafe`, file upload, drop, and evaluate are denied; report only `e2e-tester`, `electron-engineer`, and `tauri-engineer` as intentional evaluate re-enablement when Playwright is enabled.
+- Confirm Plan shell exceptions are exact metadata-only Git commands; no broad `git diff*`, `git log*`, `git show*`, `git grep*`, or `git remote*` content/URL path may be re-enabled.
 - Confirm native credential-path read denies, while explicitly stating that Bash/process-capable agents are not filesystem-sandboxed.
 - For representative writer verification, require Task/Result evidence to declare expected generated/lock/artifact effects and inspect post-command status/diff. Ownership is governance, not OS locking.
 
@@ -64,11 +72,12 @@ A validator failure is `FAIL`; do not continue to a final `OK` by reinterpreting
 - Confirm cancellation does not claim rollback: already-written filesystem state must be reconciled before ownership is reassigned; late results are discarded.
 - Confirm L1 registry checkpoint/handoff policy covers compaction/steps risk, long interruption, blocked work, and fragile reconstruction after large fan-out.
 
-## Gate 5 — commands, skills, and project precedence
+## Gate 5 — commands, skills, project instructions, and precedence
 
 - `/tauri-verify` must execute as Build with `subtask:false` and explicitly create a fresh `test-runner` Task. Do not claim Cargo/test processes are filesystem read-only.
 - `northpalace-langfei-ni-token` must remain denied to model-facing skill loading. Its SKILL frontmatter must also carry `slash:false` and `metadata.opencode/autoinvoke:false` for V2.
-- Fail if the active project contains `.opencode/commands/northpalace-langfei-ni-token.md` or `.opencode/skills/northpalace-langfei-ni-token/SKILL.md` unless the operator explicitly reviewed that collision. Project precedence is a trust boundary; a global command cannot protect itself after a project definition has already shadowed it.
+- Fail on project config/agent/command/skill overrides that the project-precedence validator marks critical unless the operator explicitly reviews and changes the deployment policy.
+- Treat project-local `AGENTS.md` as active project instruction context. Its presence is a trust-boundary WARN rather than an automatic failure; inspect conflicts with NorthPalace governance and rely on hard runtime denies for non-negotiable capability boundaries.
 - Treat fixed command shell interpolation as trusted configuration code. Never pass untrusted `$ARGUMENTS`, repository text, or fetched content into such interpolation.
 
 ## Gate 6 — canonical full sweep and final snapshot
