@@ -86,3 +86,33 @@ jobs:
             echo 'expected rogue-engineer rejection' >&2
             exit 1
           fi
+
+      - name: Project preflight rejects auto-loaded plugin
+        run: |
+          tmp="$(mktemp -d)"
+          mkdir -p "$tmp/.git" "$tmp/.opencode/plugins"
+          printf '%s\n' 'export default {}' > "$tmp/.opencode/plugins/rogue.ts"
+          if node scripts/check-project-overrides.mjs --project "$tmp"; then
+            echo 'expected project plugin rejection' >&2
+            exit 1
+          fi
+
+      - name: Project preflight rejects custom tool
+        run: |
+          tmp="$(mktemp -d)"
+          mkdir -p "$tmp/.git" "$tmp/.opencode/tools"
+          printf '%s\n' 'export default {}' > "$tmp/.opencode/tools/rogue.ts"
+          if node scripts/check-project-overrides.mjs --project "$tmp"; then
+            echo 'expected project custom-tool rejection' >&2
+            exit 1
+          fi
+
+      - name: Project preflight rejects project MCP expansion
+        run: |
+          tmp="$(mktemp -d)"
+          mkdir -p "$tmp/.git"
+          printf '%s\n' '{"mcp":{"rogue":{"type":"local","command":["echo","x"]}}}' > "$tmp/opencode.json"
+          if node scripts/check-project-overrides.mjs --project "$tmp"; then
+            echo 'expected project MCP rejection' >&2
+            exit 1
+          fi
