@@ -1,0 +1,55 @@
+name: Governance Validation
+
+on:
+  pull_request:
+    paths:
+      - "opencode.jsonc"
+      - "AGENTS.md"
+      - "AGENT_ARCHITECTURE.md"
+      - "RUNTIME_COMPATIBILITY.md"
+      - "agents/**"
+      - "prompts/**"
+      - "rules/**"
+      - "commands/**"
+      - "skills/**"
+      - "compat/**"
+      - "scripts/**"
+      - "package.json"
+      - ".github/workflows/governance-validation.yml"
+  push:
+    branches: [main]
+    paths:
+      - "opencode.jsonc"
+      - "AGENTS.md"
+      - "AGENT_ARCHITECTURE.md"
+      - "RUNTIME_COMPATIBILITY.md"
+      - "agents/**"
+      - "prompts/**"
+      - "rules/**"
+      - "commands/**"
+      - "skills/**"
+      - "compat/**"
+      - "scripts/**"
+      - "package.json"
+      - ".github/workflows/governance-validation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate-governance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Syntax-check validator
+        run: node --check scripts/validate-governance.mjs
+
+      - name: Validate canonical governance
+        run: node scripts/validate-governance.mjs --canonical --project "$GITHUB_WORKSPACE"

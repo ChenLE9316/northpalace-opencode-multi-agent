@@ -1,15 +1,15 @@
 ---
 name: agent-handoff
-description: Multi-agent and multi-session handoff template. Use for Desktop/session transitions, long interruptions, compaction risk, or blocked work that must resume.
+description: Multi-agent/session handoff and registry-checkpoint template for Desktop transitions, interruption, compaction risk, blocked work, or fragile state reconstruction.
 license: MIT
 compatibility: opencode
 ---
 
 # Agent Handoff
 
-## Trigger and Output
+## Trigger and output
 
-Use only for a Plan/Build transition leaving the conversation, new Desktop session, long interruption, compaction/steps risk, or blocked work. Draft `handoffs/<workflow-id>.md`; validate the id against `[A-Za-z0-9][A-Za-z0-9-]{0,63}` and reject separators or traversal. The L1 owner validates and writes the file. Default to 40 lines; never exceed 60; link evidence and logs instead of copying them.
+Use for a Plan/Build transition leaving the conversation, new Desktop session, long interruption, compaction/steps risk, blocked work, or when large fan-out/route change makes L1 registry reconstruction fragile. Draft `handoffs/<workflow-id>.md`; validate `[A-Za-z0-9][A-Za-z0-9-]{0,63}` and reject traversal/separators. L1 validates/writes it. Default 40 lines, maximum 60; link evidence/logs instead of copying them.
 
 ## Template
 
@@ -17,33 +17,37 @@ Use only for a Plan/Build transition leaving the conversation, new Desktop sessi
 # Handoff: <workflow-id> — <topic>
 **Workflow ID**: <id>
 **From / To**: <owner> → <next owner>
-**Date / Workspace**: <ISO date> · <sanitized repository or workspace label>
+**Date / Workspace**: <ISO date> · <sanitized repository/workspace label>
 
 ## Current State
-- Phase, progress, active task ids, owners, status, resume policy
+- Phase, progress, active/cancelled task ids, owners, status, applicability, resume/fresh policy
 
 ## Done / In Progress / Todo
 - Done with repository-relative `path:line` evidence
-- Active item and blocker
-- Remaining items with risk/dependency
+- Active/blocked item and dependency
+- Remaining items with risk/order
 
 ## Decisions and Invariants
-- Decision reference or concise rationale; never duplicate a decision file
+- Decision reference or concise rationale; do not duplicate decision files
 
 ## Risks / Unverified
-- Remaining risk and unexecuted verification
+- Remaining risk, unexecuted verification, runtime-target uncertainty
 
-## Failed Attempts — do not repeat without new evidence
-- Root-cause id, attempts, new evidence, disposition
+## Failed / Cancelled Attempts — do not repeat without new evidence
+- Root-cause id, attempts, cancellation state, filesystem reconciliation, new evidence, disposition
 
 ## Ownership
-- Retained and released repository-relative paths with task ids
+- Retained/released paths with task ids
+- Declared generated/lock/artifact side effects and any unexpected mutation awaiting L1 reconciliation
 
 ## Resume Candidates
-- Same-session task ids still valid; fresh tasks required for another agent/review
+- Same valid agent/session ids; fresh task required for another owner/review/security
 
 ## Git / File Evidence
-- Repository-relative paths, branch, HEAD, changed files, diff stat when Git evidence was supplied
+- Repository-relative paths, branch, HEAD, changed/generated files, diff stat when supplied
+
+## Final-Gate State
+- Writers settled? stable snapshot? final verification? fresh review/security? correction required?
 
 ## Next 1–3 Steps
 1. Smallest immediate action
@@ -53,8 +57,9 @@ Use only for a Plan/Build transition leaving the conversation, new Desktop sessi
 
 ## Rules
 
-- English, concise, evidence-backed, and explicit about Done versus Unverified.
-- Never fabricate state, commits, commands, verification, or runtime facts.
-- Never store secrets, full environment values, hidden reasoning, unnecessary logs, email addresses, personal home directories, OS usernames, or absolute workspace paths.
-- Use repository-relative `path:line` evidence. When workspace identity matters, use a sanitized repository/workspace label that contains no user profile or machine identifier.
-- Reuse a task id only for the same valid agent session; another owner gets a new linked task.
+- English, concise, evidence-backed; distinguish Done, Unverified, Blocked, Cancelled, and Not Applicable.
+- Cancellation is not rollback. Never mark a cancelled writer clean until already-written filesystem state was inspected/reconciled.
+- Never fabricate state, commits, commands, verification, runtime enforcement, or task ids.
+- Never store secrets, full env values, hidden reasoning, unnecessary logs, email, personal home paths, OS usernames, or absolute workspace paths.
+- Use repository-relative evidence and sanitized workspace labels.
+- Reuse a task id only for the same valid agent/session when context materially helps; another owner gets a new linked task. Independent review/security is fresh.

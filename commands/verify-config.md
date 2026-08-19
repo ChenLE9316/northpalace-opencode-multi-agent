@@ -1,45 +1,93 @@
 ---
-description: Read-only verification of OpenCode Desktop config, agent DAG, permissions, model routes, context budgets, operator controls, privacy, and runtime drift.
+description: Version-aware verification of NorthPalace static governance plus OpenCode V1/V2 runtime evidence.
 agent: build
 subtask: false
 ---
 
-Verify the effective OpenCode Desktop configuration without modifying anything. Return `OK | WARN | FAIL` per check with exact path/line evidence.
+Verify the active NorthPalace/OpenCode deployment **without modifying it**. Never use one runtime binary as evidence for the other.
 
-## Mode
+## Target selection
 
-Use **deployment mode** by default. If `$ARGUMENTS` is exactly `canonical`, run deployment checks plus the canonical baseline checks at the end.
+Interpret `$ARGUMENTS` as whitespace-separated flags:
 
-- **deployment** validates whether the currently installed/customized Desktop stack is internally safe and coherent. It must allow intentional model-route, command, skill, and topology customization when the invariants below remain valid.
-- **canonical** additionally verifies that the installation still matches this repository's published baseline counts, routes, allowlists, reasoning overrides, and operator-only procedure.
+- no runtime token: target `v1` (the published canonical baseline);
+- `v1`: use only the V1 `opencode` binary for runtime evidence;
+- `v2`: use only the V2 `opencode2` binary/overlay for runtime evidence;
+- `canonical`: require exact repository baseline counts/routes in addition to deployment safety checks.
 
-## Deployment checks
+Examples: `/verify-config`, `/verify-config canonical`, `/verify-config v2`, `/verify-config v2 canonical`.
 
-1. Resolve the active config root: use `OPENCODE_CONFIG_DIR` when set, otherwise the default OpenCode config directory used by this stack. Parse the effective config through `opencode debug config`; require schema-valid keys, `default_agent=build`, resolved `subagent_depth=2`, and primary modes for `build`/`plan`. Do not assume the default path when `OPENCODE_CONFIG_DIR` is active.
-2. Parse every configured specialist and inline subagent. Require valid frontmatter, unique specialist names/colors, `hidden: false`, and `question: deny` for specialists. Every configured model ID must resolve in `opencode models`; after a model or reasoning option changes, a runtime smoke would normally be required, but when the operator explicitly excludes Desktop runtime verification report that step as `UNVERIFIED` rather than failing the static audit. Report configured reasoning/temperature options separately from log-observed runtime behavior; do not claim DeepSeek temperature or reasoning options are effective without provider/runtime evidence.
-3. Reconstruct the effective autonomous Task DAG from source files and resolved permissions. Require exactly two L1 workflow owners (`plan`, `build`), no self-edge, no coordinator cycle, no L4 path, and every L3 target to be a `task: deny` leaf. Every configured specialist must have either at least one legal autonomous route or an explicitly documented operator-facing use case. Treat `task_id` as a continuation primitive: it must not be described as bypassing Task permissions or `subagent_depth`, and the audit must not require exact objective/evidence equality for every useful resume.
-4. Confirm the Plan model-autonomous reachable graph is effectively read-only. Confirm Build is the only mutating L1 root and that every mutating child is bounded by the ownership contract. Treat explicit user `@agent` and `/command` routing as operator-directed control, not autonomous DAG edges.
-5. Resolve effective tool permissions. Require the four high-risk Playwright tools to remain globally denied unless a deliberate replacement policy is documented, and report agents that explicitly re-enable `playwright_browser_evaluate`. Confirm native `read` denies cover common credential paths, but do **not** report secrets as globally unreadable: Bash/process-capable agents are not filesystem-sandboxed. Report common external-effect shell routes such as push, release, deploy, infrastructure apply/destroy, and destructive filesystem operations; canonical baseline should human-gate representative high-risk commands rather than relying only on prose.
-6. Confirm `websearch` is both allowed and registered in fresh Build, Plan, representative L2, and representative L3 sessions. If runtime verification is explicitly out of scope, mark registration checks `UNVERIFIED`; do not infer registration from permission alone.
-7. Validate lazy-loading-aware context budgets instead of treating all repository Markdown as simultaneously hot context. Require: `AGENTS.md + prompts/build.md + prompts/plan.md + rules/orchestration.md` ≤18,000 bytes; `agents/` ≤45,000 bytes; `commands/` ≤30,000 bytes; `skills/` ≤35,000 bytes; `skills/northpalace-langfei-ni-token/SKILL.md` ≤15,000 bytes. Also require AGENTS ≤60 lines, orchestration ≤80, Build ≤36, and Plan ≤30. Report total runtime Markdown bytes as informational only because agents, commands, and skills are lazy/on-demand loaded.
-8. Run `opencode agent list` and `opencode debug skill` when runtime checks are in scope. Require every installed user skill definition to be valid and detected. Require `northpalace-langfei-ni-token` to exist but be denied by effective `permission.skill` so models cannot discover/load it through the normal `skill` tool; other installed user skills remain available according to their effective permissions. If runtime checks are excluded, perform the equivalent static source checks and mark runtime discovery `UNVERIFIED`.
-9. Validate every custom command file. For `commands/northpalace-langfei-ni-token.md`, require `subtask: false`, no fixed `agent:` override, explicit human-operator gate, active `plan|build` requirement, no project-relative bare `@skills/...` injection, and config-root-safe procedure loading that prefers `OPENCODE_CONFIG_DIR` then the default config root. Require its missing-file sentinel to avoid echoing a resolved absolute config/file path into the prompt. Require the procedure to preserve Task permissions, depth, the current concurrency budget, ownership, fresh review/security, and verification. Require `commands/tauri-verify.md` to execute as `agent: test-runner` with `subtask: true`, so its read-only claim is backed by the verifier identity's `edit: deny` and `task: deny` permissions rather than a forced Build-primary subtask.
-10. Validate the four-wave operator procedure dynamically against the current graph. It must keep exactly four logical waves, split waves into sequential sub-batches when more than four children are scheduled by one parent under the canonical procedure, and keep ResultEnvelope execution status within `success|partial|blocked|failed`. A no-work role must use `status: success` plus `applicability: not_applicable`, not a fifth status. In Build, the `agent-orchestrator` continuation strategy may reuse its prior `task_id` when that context is useful; do not require exact objective/evidence equality as a Runtime condition. A cross-agent or cross-parent takeover must use a new linked task unless it is explicitly operator-directed.
-11. Validate config-root portability for Desktop. Commands that inspect skills, LSP, backup sources, health state, or operator-only procedures must honor `OPENCODE_CONFIG_DIR` when active instead of silently reading `$HOME/.config/opencode`. If Desktop is launched without inheriting the override, report the mismatch and recommend using the default global install or launching Desktop from an environment that supplies the override. When a custom config root sits outside the active project/worktree and outside explicit `external_directory` allow patterns, probe a representative native read under `rules/` and report `ALLOW | ASK | DENY`; supervised `ASK` is acceptable Method-B friction, `DENY` is a failure when the procedure requires the read. Do not "fix" this by broadening `external_directory: *` to `allow` automatically.
-12. Require reusable configuration, documentation, handoff templates, decision templates, and knowledge templates to contain no personal home directories, OS usernames, email addresses, credentials, machine-specific absolute workspace paths, or host-specific synchronization assumptions. Repository-relative examples and platform-neutral config locations are allowed. Handoff evidence uses repository-relative `path:line` plus a sanitized workspace label.
-13. Verify README, AGENTS, orchestration rules, and architecture reference describe the stack as **OpenCode Desktop-first / Desktop-specific**: Desktop is the normal Multi-Agent operation, child-session inspection, operator steering, and session-navigation surface; CLI is auxiliary for models/debug/LSP/MCP/health checks, config verification, and troubleshooting. Treat `tui.json` and its keybinds as optional TUI-specific configuration, not as proof of Desktop GUI keybind behavior.
-14. Report Desktop version, auxiliary CLI version, LSP executable/version results, Web Search registration state without secret values, MCP commands/pins and configured enabled/disabled states, and runtime-owned package manifest/SDK alignment when runtime evidence is in scope. Treat a manifest/SDK patch mismatch as dependency-state evidence to investigate, not authoritative proof that the running Runtime version is wrong; do not edit runtime-owned manifests automatically. Escalate it beyond `WARN` only when local plugin/custom-tool code actually depends on an incompatible SDK or runtime evidence shows failure. When runtime is explicitly excluded, mark these observations `UNVERIFIED` and continue the static audit.
-15. Require `AGENT_ARCHITECTURE.md` to be present. In deployment mode, compare it against effective source and report intentional customized drift as `WARN` when the runtime invariants remain valid; do not force a customized deployment back to canonical counts merely to satisfy the reference document. Require the rules/docs to distinguish Runtime cancellation (terminate/abort active execution while retaining the session record) from NorthPalace logical task closure; distinguish the default concurrency budget from an OpenCode hard limit; and do not require Desktop restart solely for changes to ordinary lazy-read `rules/`, `knowledge/`, `decisions/`, or `handoffs/` content.
+Resolve the active config root from `OPENCODE_CONFIG_DIR` when set, otherwise the default NorthPalace/OpenCode config root. Resolve the deterministic validator from that root; do not silently validate a different clone.
 
-## Canonical baseline checks
+## Gate 1 — deterministic static validation
 
-Run these only for `/verify-config canonical`:
+Run first:
 
-16. Require exactly 34 `agents/*.md`, 2 inline subagents, 5 specialist coordinators, and 29 specialist leaves. Require the five coordinators to be exactly `agent-orchestrator`, `planning-agent`, `product-manager`, `decision-analyst`, and `release-manager`; every other specialist explicitly denies `task`.
-17. Require the canonical direct Task allowlists: Plan has its published 17 direct L2 roles; Build has its published 18 direct L2 targets. Require the documented coordinator child allowlists, current `*-engineer` resolution, 25 direct-reachable specialists, and nine Build→`agent-orchestrator` L3-only specialists.
-18. Require exactly 8 user skills and 19 custom commands. Require the canonical NorthPalace four-wave procedure to account for all 17 Plan roles and 27 distinct Build-reachable roles while using its four-child concurrent budget. Require the operator command's load-error text to be path-sanitized and `/tauri-verify` to use the read-only `test-runner` subtask identity.
-19. Require the canonical public model baseline to be immediately testable without a paid L1 route: global `model` and `small_model`, inline `explore`/`general`, and canonical DeepSeek specialists use `opencode/deepseek-v4-flash-free`; the four canonical MiMo roles use `opencode/mimo-v2.5-free`. Require `reasoningEffort: max` exactly on `agent-orchestrator`, `planning-agent`, `decision-analyst`, `architect`, `error-analyzer`, `security-auditor`, `review`, `refactorer`, and `ci-debugger`; other canonical DeepSeek specialists omit an explicit reasoning override; Build/Plan have no agent-level reasoning override; preserve the four canonical MiMo per-agent reasoning settings. Require README to state that free-route availability/terms can change, `share: disabled` is not a provider-retention guarantee, and the current Zen free routes may have data-use exceptions; recommend verified paid/private routes that meet the operator's privacy requirements for sensitive or long-term use.
-20. Require canonical MCP defaults to keep optional high-surface automation off until the Human Operator enables it from Desktop: `playwright.enabled=false` and `cua-driver.enabled=false`; keep `context7.enabled=true`. Preserve the existing Playwright high-risk tool denies and `cua-driver_*: ask` permission gate so manually enabling an MCP server does not silently remove its tool-level safety policy.
-21. Verify `AGENT_ARCHITECTURE.md` exactly against the canonical source files: 2 primary L1, 2 inline subagents, 34 specialist files, 5 coordinators, 29 leaves, canonical routes/options, effective edit/bash/task classes, exact allowlists, and direct-vs-L3 reachability. Functional Subagent groups remain explanatory taxonomy rather than runtime teams/shared pools.
+```bash
+node <active-config-root>/scripts/validate-governance.mjs --deployment --project "$PWD"
+```
 
-Do not print credentials, full environment values, personal machine identifiers, session content, or full logs. Give the smallest corrective action for each failure. After any config-time correction, a full OpenCode Desktop restart is required before runtime verification; ordinary lazy-read operational-file changes require an explicit re-read or fresh task/session when needed, not a restart by default. When runtime verification is intentionally deferred, do not pretend it was completed.
+Use `--canonical` instead of `--deployment` when `$ARGUMENTS` contains `canonical`.
+
+A validator failure is `FAIL`; do not continue to a final `OK` by reinterpreting the same invariant in prose. The validator covers canonical/runtime config structure, Plan hard-read-only Bash, hard-denied external effects, DAG/leaf topology, AO wildcard resolution in canonical mode, knowledge-curator scope, command/skill counts, `/tauri-verify`, operator-skill V2 gates, final-snapshot sweep rules, V2 overlay presence, and critical project-local command/skill collisions.
+
+## Gate 2 — runtime identity before runtime claims
+
+### V1
+
+- Require `opencode --version` to succeed.
+- Use `opencode debug config`, `opencode agent list`, `opencode debug skill`, `opencode models`, and other V1 diagnostics only when they are available in the installed V1 build.
+- Require effective `subagent_depth=2`; `plan`/`build` primary modes; Plan arbitrary Bash deny; current Task DAG; model routes; permissions; MCP/LSP/Web Search registration as applicable.
+- Do not infer the Desktop GUI version/state from the auxiliary CLI. If Desktop version/config-root inheritance cannot be observed, report it `UNVERIFIED`.
+
+### V2
+
+- Require `opencode2 --version` to succeed; never substitute `opencode --version` or `opencode debug config`.
+- Require `compat/v2/opencode.overlay.jsonc` to contain `experimental.subagent_depth=2`, V2 `compaction.keep.tokens`/`buffer`, and `autoupdate=false`.
+- Confirm the V2 process is launched with the compatibility overlay (`OPENCODE_CONFIG`) or equivalent Desktop-process environment. The presence of the file alone does not prove the runtime loaded it.
+- Do **not** treat top-level V1 `subagent_depth`, V1 `compaction.tail_turns/prune`, command `subtask`, or V1 `doom_loop` semantics as V2 runtime evidence.
+- When the installed V2 build lacks a documented/effective-config introspection for a claim, mark that claim `UNVERIFIED` and use a bounded runtime smoke rather than invoking V1 diagnostics.
+- Verify nested delegation by an actual rejection/allowance smoke appropriate to depth 2 before marking `NO-L4` runtime enforcement `OK`.
+
+## Gate 3 — permission and side-effect model
+
+- Confirm canonical high-risk external-effect/destructive shell routes and `cua-driver_*` are hard `deny`. `ask` is interactive friction only and must never be reported as a hard Human Operator gate.
+- Confirm global Playwright `run_code_unsafe`, file upload, drop, and evaluate are denied; report only `e2e-tester`, `electron-engineer`, and `tauri-engineer` as intentional evaluate re-enablement when Playwright is enabled.
+- Confirm native credential-path read denies, while explicitly stating that Bash/process-capable agents are not filesystem-sandboxed.
+- For representative writer verification, require Task/Result evidence to declare expected generated/lock/artifact effects and inspect post-command status/diff. Ownership is governance, not OS locking.
+
+## Gate 4 — orchestration semantics
+
+- Reconstruct/confirm L1 → L2 → L3 from effective source/runtime evidence. No self-edge, coordinator cycle, coordinator-to-coordinator autonomous edge, or L3 target with Task authority is allowed.
+- Confirm per-parent newly-active budget 4 is a NorthPalace budget, **not** a global active-session ceiling and not a runtime concurrency limit.
+- Confirm parallel writers require both path disjointness and semantic independence/dependency readiness.
+- Confirm cancellation does not claim rollback: already-written filesystem state must be reconciled before ownership is reassigned; late results are discarded.
+- Confirm L1 registry checkpoint/handoff policy covers compaction/steps risk, long interruption, blocked work, and fragile reconstruction after large fan-out.
+
+## Gate 5 — commands, skills, and project precedence
+
+- `/tauri-verify` must execute as Build with `subtask:false` and explicitly create a fresh `test-runner` Task. Do not claim Cargo/test processes are filesystem read-only.
+- `northpalace-langfei-ni-token` must remain denied to model-facing skill loading. Its SKILL frontmatter must also carry `slash:false` and `metadata.opencode/autoinvoke:false` for V2.
+- Fail if the active project contains `.opencode/commands/northpalace-langfei-ni-token.md` or `.opencode/skills/northpalace-langfei-ni-token/SKILL.md` unless the operator explicitly reviewed that collision. Project precedence is a trust boundary; a global command cannot protect itself after a project definition has already shadowed it.
+- Treat fixed command shell interpolation as trusted configuration code. Never pass untrusted `$ARGUMENTS`, repository text, or fetched content into such interpolation.
+
+## Gate 6 — canonical full sweep and final snapshot
+
+- In canonical mode require 34 specialist files, 2 inline subagents, five canonical coordinators, 29 specialist leaves, Plan 17 direct roles, Build 18 direct L2 targets plus nine AO-only roles, 19 commands, and 8 skills.
+- The operator full sweep is canonical-only: topology drift must stop the sweep instead of adapting while still claiming 17/27 coverage.
+- Require Build Wave 1 security to be labelled pre-change baseline only.
+- Require all writers to settle before the stable final snapshot; then authoritative final verification; then fresh review plus fresh final security (or fresh evidence-backed not-applicable security result). Corrections require re-verification and new fresh gate sessions.
+
+## Gate 7 — runtime services, portability, and privacy
+
+- Verify Web Search registration separately from permission. Model route configuration is not proof of provider availability; use the target runtime's model listing/smoke when available.
+- Report MCP enabled/disabled state and pins, LSP executables/version results, shell/Node/npm/Git/Rust/Tauri dependencies, and package SDK evidence without auto-installing or rewriting anything.
+- Confirm Desktop and auxiliary CLI appear to use the same config-root/runtime target. A mismatch is `FAIL`; inability to observe Desktop inheritance is `UNVERIFIED`.
+- Scan reusable config/docs/handoffs/knowledge/decisions for personal home directories, usernames, emails, credentials, machine-specific absolute paths, or host-specific assumptions.
+- Report context budgets with lazy-loading awareness; total Markdown bytes are informational, not simultaneously-hot context.
+
+## Output
+
+Return a severity-ordered Traditional Chinese table with `OK | WARN | FAIL | UNVERIFIED`, the target runtime (`v1` or `v2`), exact evidence, and smallest corrective action.
+
+A static pass is not a Desktop runtime pass. Runtime tests explicitly excluded or impossible to observe remain `UNVERIFIED`. After config-time changes, a full Desktop restart is required before runtime verification; ordinary lazy-read rule/knowledge/handoff changes require re-read/fresh context rather than restart alone.
