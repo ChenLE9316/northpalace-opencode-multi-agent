@@ -1,73 +1,81 @@
 ---
 name: desktop-troubleshooting
-description: Desktop application (OpenCode Desktop / Tauri / Electron) common issue troubleshooting guide. Covers ResizeObserver warnings, PTY connection drops, unsupported terminal modes, window state corruption, sidecar launch failures, etc. Use when maintaining desktop apps, debugging UI flashes, or when Terminal does not capture commands.
+description: Desktop application (OpenCode Desktop / Tauri / Electron) troubleshooting guide for runtime identity, PTY, logs, config-root drift, upgrades, and sidecars.
 license: MIT
 compatibility: opencode
 ---
 
 # Desktop Troubleshooting
 
-> For general Windows shell behavior (paths, quoting, CRLF, exit codes, encoding), see the `windows-shell` skill instead.
+> For Windows path/quoting/CRLF/encoding behavior, use `windows-shell`. For OpenCode V1/V2 semantics, read `RUNTIME_COMPATIBILITY.md` first.
 
-## Log Paths
+## First rule after an OpenCode upgrade
 
-| Platform | Location |
+Do not diagnose a V2 process with V1 evidence or vice versa. Identify the Desktop/runtime target first:
+
+- V1 auxiliary binary: `opencode`
+- V2 beta auxiliary binary: `opencode2`
+
+Then confirm Desktop and auxiliary CLI inherited the same config root/runtime overlay. If process inheritance is not observable, mark it `UNVERIFIED` instead of assuming agreement.
+
+## Common log locations
+
+| Platform | Typical Desktop location |
 |---|---|
 | Windows | `%AppData%\ai.opencode.desktop\logs\` |
 | macOS | `~/Library/Application Support/ai.opencode.desktop/logs/` |
 | Linux | `~/.config/ai.opencode.desktop/logs/` |
 
-Each launch creates a `<timestamp>/` subdirectory (`main.log`, `renderer.log`, `crash.log`).
+Treat paths as typical runtime evidence, not immutable API. Prefer the active Desktop build's observed state when it differs.
 
-## Common Issues
+## Common issues
 
-### 1. ResizeObserver loop completed with undelivered notifications
+### ResizeObserver warnings
 
-- Symptom: renderer.log repeatedly shows this warning
-- Cause: UI relayout callback not finishing before next frame; window resize, layout thrashing, or third-party components over-subscribing resize
-- Action: mostly warning-level noise; if accompanied by lag, report upstream with log timestamp; temporarily wrap resize callback in `requestAnimationFrame`
+Usually renderer relayout noise. Correlate with actual lag/visual failure before treating it as root cause; report upstream with bounded evidence.
 
-### 2. PTY session not found
+### PTY session not found
 
-- Symptom: Terminal tool returns "PTY session not found"
-- Cause: previous session recycled (restart/timeout) while a tool call still references the old session id
-- Action: reopen the Terminal tool; never reuse session ids across restarts
+A previous PTY/session was recycled or the Desktop restarted. Reopen the Terminal/tool and never reuse runtime ids across restarts.
 
-### 3. Ghostty VT unimplemented mode: 9001
+### Terminal escape-mode warnings
 
-- Symptom: renderer.log shows `ghostty-vt unimplemented mode: 9001`
-- Cause: shell/program output emits escape sequences the built-in Terminal's Ghostty VT does not implement
-- Action: noise; report the full escape sequence upstream if a specific shell breaks
+Unsupported VT modes can be harmless noise. Escalate only when a specific shell/program actually breaks rendering/input; capture the smallest reproducer.
 
-### 4. Sidecar launch failure
+### Sidecar / bootstrap loop
 
-- Symptom: UI stuck at "starting" or restarts repeatedly
-- Diagnose: read latest `main.log` for `sidecar`/`ready`; check the bound port is free; compare Desktop, external CLI, and plugin versions; confirm the configured shell can launch
-- Action: quit Desktop, wait 30 seconds, restart; confirm `OPENCODE_*` env vars do not conflict; clear only older log folders
+Inspect bounded latest bootstrap logs for sidecar readiness/port/config-root/runtime identity. Compare Desktop version with the **matching** auxiliary binary, not whichever `opencode*` happens to be first in PATH.
 
-### 5. Window state corruption
+### Window state corruption
 
-- Symptom: window opens off-screen or maximized state corrupted
-- Diagnose: check `AppData\Roaming\ai.opencode.desktop\window-state-*.json` for unreasonable x/y/width/height
-- Action: quit Desktop, delete the matching `window-state-*.json`, restart (position resets)
+If the window is off-screen or geometry is invalid, inspect the matching window-state file. Reset it only with operator knowledge; canonical destructive shell routes remain hard-denied to agents.
 
-### 6. Tools disappear / MCP broken after upgrade
+### Tools/MCP/skills disappear after upgrade
 
-- Symptom: custom tools, MCP, or skills not visible after upgrade
-- Diagnose: config does not hot-reload — restart first; check `opencode.jsonc` exists; confirm `npx -y <package>@<version>` runs alone
-- Action: fully restart Desktop; verify plugin package metadata
+1. full Desktop restart;
+2. identify V1 vs V2;
+3. verify active config root/overlay;
+4. run deterministic governance validation;
+5. run `/verify-config v1` or `/verify-config v2`;
+6. verify MCP/skill/command behavior with the target runtime rather than assuming migration preserved semantics.
+
+For V2 specifically, check depth overlay, command behavior, skill slash/autoinvoke, project command/skill collisions, and compaction semantics before blaming model routing.
 
 ## SOP
 
-1. **Reproduce**: confirm a reproducible trigger
-2. **Isolate**: single project / tool / agent?
-3. **Timeline**: `ls -lt logs/` for first occurrence
-4. **Compare**: diff config / version against the last working state
-5. **Test clean**: does it reproduce without custom config?
-6. **Report**: log snippet, version, config summary, repro steps
+1. **Reproduce** — smallest stable trigger.
+2. **Identify runtime** — V1/V2 + Desktop/CLI versions.
+3. **Confirm config root** — Desktop vs CLI vs overlay.
+4. **Deterministic check** — `scripts/validate-governance.mjs`.
+5. **Isolate** — project/tool/agent/runtime layer.
+6. **Timeline** — correlate first failure with update/config/provider change.
+7. **Compare** — last known-good effective config/runtime behavior.
+8. **Clean test** — only when it does not destroy user state.
+9. **Report** — bounded log excerpt, versions, runtime target, config summary, repro.
 
 ## Constraints
 
-- Do not autonomously modify log files or clear `tool-output/`
-- Do not delete `window-state-*.json` without informing the user
-- Report third-party package bugs upstream
+- Do not autonomously delete logs, state, caches, or window files.
+- Do not use the V1 CLI to certify V2 behavior.
+- Do not claim config parse success proves depth/session/permission semantics.
+- Report third-party/runtime defects upstream with reproducible evidence.

@@ -1,0 +1,118 @@
+name: Governance Validation
+
+on:
+  pull_request:
+    paths:
+      - "opencode.jsonc"
+      - "AGENTS.md"
+      - "AGENT_ARCHITECTURE.md"
+      - "RUNTIME_COMPATIBILITY.md"
+      - "agents/**"
+      - "prompts/**"
+      - "rules/**"
+      - "commands/**"
+      - "skills/**"
+      - "compat/**"
+      - "scripts/**"
+      - "package.json"
+      - ".github/workflows/governance-validation.yml"
+  push:
+    branches: [main]
+    paths:
+      - "opencode.jsonc"
+      - "AGENTS.md"
+      - "AGENT_ARCHITECTURE.md"
+      - "RUNTIME_COMPATIBILITY.md"
+      - "agents/**"
+      - "prompts/**"
+      - "rules/**"
+      - "commands/**"
+      - "skills/**"
+      - "compat/**"
+      - "scripts/**"
+      - "package.json"
+      - ".github/workflows/governance-validation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate-governance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Syntax-check validators and launcher
+        run: |
+          node --check scripts/validate-governance.mjs
+          node --check scripts/check-project-overrides.mjs
+          bash -n scripts/opencode2-northpalace.sh
+
+      - name: Validate canonical governance
+        run: node scripts/validate-governance.mjs --canonical --project "$GITHUB_WORKSPACE"
+
+      - name: Validate project-precedence checker self-case
+        run: node scripts/check-project-overrides.mjs --project "$GITHUB_WORKSPACE"
+
+      - name: Project preflight allows non-critical model config
+        run: |
+          tmp="$(mktemp -d)"
+          mkdir -p "$tmp/.git"
+          printf '%s\n' '{"model":"example/provider-model"}' > "$tmp/opencode.json"
+          node scripts/check-project-overrides.mjs --project "$tmp"
+
+      - name: Project preflight rejects permission override
+        run: |
+          tmp="$(mktemp -d)"
+          mkdir -p "$tmp/.git"
+          printf '%s\n' '{"permission":{"bash":"allow"}}' > "$tmp/opencode.json"
+          if node scripts/check-project-overrides.mjs --project "$tmp"; then
+            echo 'expected permission override rejection' >&2
+            exit 1
+          fi
+
+      - name: Project preflight rejects AO-reachable engineer injection
+        run: |
+          tmp="$(mktemp -d)"
+          mkdir -p "$tmp/.git" "$tmp/.opencode/agents"
+          printf '%s\n' '---' 'description: rogue engineer' 'mode: subagent' '---' > "$tmp/.opencode/agents/rogue-engineer.md"
+          if node scripts/check-project-overrides.mjs --project "$tmp"; then
+            echo 'expected rogue-engineer rejection' >&2
+            exit 1
+          fi
+
+      - name: Project preflight rejects auto-loaded plugin
+        run: |
+          tmp="$(mktemp -d)"
+          mkdir -p "$tmp/.git" "$tmp/.opencode/plugins"
+          printf '%s\n' 'export default {}' > "$tmp/.opencode/plugins/rogue.ts"
+          if node scripts/check-project-overrides.mjs --project "$tmp"; then
+            echo 'expected project plugin rejection' >&2
+            exit 1
+          fi
+
+      - name: Project preflight rejects custom tool
+        run: |
+          tmp="$(mktemp -d)"
+          mkdir -p "$tmp/.git" "$tmp/.opencode/tools"
+          printf '%s\n' 'export default {}' > "$tmp/.opencode/tools/rogue.ts"
+          if node scripts/check-project-overrides.mjs --project "$tmp"; then
+            echo 'expected project custom-tool rejection' >&2
+            exit 1
+          fi
+
+      - name: Project preflight rejects project MCP expansion
+        run: |
+          tmp="$(mktemp -d)"
+          mkdir -p "$tmp/.git"
+          printf '%s\n' '{"mcp":{"rogue":{"type":"local","command":["echo","x"]}}}' > "$tmp/opencode.json"
+          if node scripts/check-project-overrides.mjs --project "$tmp"; then
+            echo 'expected project MCP rejection' >&2
+            exit 1
+          fi

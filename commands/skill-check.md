@@ -1,19 +1,19 @@
 ---
-description: Verify OpenCode Desktop user skills, frontmatter, runtime detection, config-root portability, and operator-only skill gating.
+description: Version-aware audit of user skills, runtime detection, config-root portability, and operator-only activation gates.
 agent: build
 subtask: false
 ---
 
-Read-only Desktop skill audit. Resolve the active config root from `OPENCODE_CONFIG_DIR` when set; otherwise use the default OpenCode config directory. Do not silently inspect the default root when Desktop is using an override.
+Audit skills without modifying files. Interpret `$ARGUMENTS` runtime token as `v1` or `v2`; default `v1`. Resolve the active config root from `OPENCODE_CONFIG_DIR` when set, otherwise the default config root.
 
-1. List `<active-config-root>/skills/*/SKILL.md` and parse frontmatter.
-2. Require `name` and `description`; report optional `license` and `compatibility` as WARN only when absent.
-3. Require each directory name to match its lowercase hyphenated frontmatter `name`.
-4. Run `opencode debug skill`; require every installed user skill to be detected and report built-in skills separately.
-5. Resolve effective `permission.skill`: require `northpalace-langfei-ni-token` to be explicitly `deny` for model-facing skill loading while the other intended user skills remain available.
-6. Confirm `commands/northpalace-langfei-ni-token.md` is the documented operator-only activation path and loads its procedure from the active config root through config-root-aware shell injection. Fail if it uses a project-relative bare `@skills/northpalace-langfei-ni-token/SKILL.md` reference.
-7. Require the operator command's missing-skill sentinel to be path-sanitized: it may identify the active-config-root failure class, but must not echo `$FILE`, a resolved personal home directory, OS username, or another unnecessary absolute path into the injected prompt.
-8. Report whether the running OpenCode Desktop process appears to inherit the same config-root selection as the auxiliary CLI. If this cannot be observed, return `UNVERIFIED` rather than guessing.
-9. Return a concise Traditional Chinese table: skill, frontmatter, name match, runtime detection, effective model access, operator-only gate when applicable.
+1. List `<active-config-root>/skills/*/SKILL.md`; parse frontmatter and require `name`/`description`, directory-name match, and unique ids. Report optional `license`/`compatibility` separately.
+2. V1 runtime evidence uses only `opencode debug skill`; V2 runtime evidence uses only `opencode2` facilities available in the installed V2 build. Never report V2 detection from the V1 binary. If V2 runtime skill introspection is unavailable, mark detection `UNVERIFIED`.
+3. Resolve effective model-facing skill permission. `northpalace-langfei-ni-token` must remain explicit `deny`; other intended user skills remain available according to effective policy.
+4. For `northpalace-langfei-ni-token`, require `slash: false` and `metadata.opencode/autoinvoke: false` in addition to model-facing deny. Its only supported NorthPalace activation path remains the explicit trusted operator command.
+5. Confirm `commands/northpalace-langfei-ni-token.md` loads the procedure from the active config root, never from a project-relative bare `@skills/...` path, and never interpolates untrusted `$ARGUMENTS`/repository content into shell evaluation.
+6. Fail on an active-project `.opencode/commands/northpalace-langfei-ni-token.md` or `.opencode/skills/northpalace-langfei-ni-token/SKILL.md` collision unless the Human Operator explicitly reviewed it. Project precedence is a trust boundary and can shadow global operator artifacts before the global command runs.
+7. Require the operator command's missing-file sentinel to avoid echoing resolved personal absolute paths unless the operator explicitly requests that diagnostic.
+8. Confirm Desktop and auxiliary CLI appear to use the same config root and runtime target. If this cannot be observed, return `UNVERIFIED` rather than guessing.
+9. In canonical mode (`$ARGUMENTS` contains `canonical`), require exactly 8 user skills and the published names.
 
-Do not modify files, print personal absolute paths unnecessarily, or infer detection from `opencode agent list`. Config-time corrections require a full OpenCode Desktop restart.
+Return a concise Traditional Chinese table: skill, frontmatter, name match, runtime target/detection, model access, slash/autoinvoke state, operator gate, collision state. Do not install, edit, print secrets, or silently substitute V1 evidence for V2.

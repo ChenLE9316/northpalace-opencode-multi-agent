@@ -1,53 +1,55 @@
 ---
 name: windows-shell
-description: Windows / bash-on-Windows shell behavior reference. Use when running shell commands on Windows hosts (Git Bash, MSYS2, cmd, PowerShell), diagnosing path quoting, line endings, codepage, or exit-code issues, or writing cross-platform scripts.
+description: Windows / bash-on-Windows shell behavior reference for path quoting, CRLF, encoding, process resolution, and cross-platform scripts.
 license: MIT
 compatibility: opencode
 ---
 
 # Windows Shell Reference
 
-> For Desktop-specific issues (ResizeObserver, PTY, Ghostty, sidecar, window state), see the `desktop-troubleshooting` skill instead.
+> For Desktop-specific runtime/config issues, use `desktop-troubleshooting`. This file is a shell-behavior **reference**, not permission to bypass NorthPalace hard-denied destructive/external-effect commands.
 
-Platform-neutral reference for Windows hosts with a bash (Git Bash / MSYS2) shell.
+Platform-neutral reference for Windows hosts with Bash (Git Bash / MSYS2 or compatible shell).
 
 ## Paths and quoting
 
-- Prefer forward slashes in bash: `C:/Users/...` works; `C:\...` backslashes are escapes inside double quotes
-- Quote every path that may contain spaces
-- `~` expands to the user profile in Git Bash; `/c/Users/<username>` and `C:/Users/<username>` are equivalent
-- Drive-letter paths are case-insensitive; preserve case in user-visible output
-- Do not mix backslash and forward-slash forms in one command string
+- Prefer forward slashes in Bash: `C:/Users/...`; backslashes are escapes inside double quotes.
+- Quote every path that may contain spaces.
+- `~` expands to the user profile in Git Bash; `/c/Users/<username>` and `C:/Users/<username>` are typical equivalent forms.
+- Drive-letter paths are case-insensitive; preserve user-visible casing.
+- Do not mix slash forms in one command string without a reason.
 
 ## Executables and resolution
 
-- `command -v` resolves shims and `.exe`; a "found" result does not prove the binary works (rustup/npm shims can exist without the real binary) — verify with `--version` when availability matters
-- Windows resolves `.cmd`/`.bat` through cmd; bare `.cmd` names may need `cmd //c` or the full name
-- Use `where.exe <name>` for Windows PATH resolution evidence
+- `command -v` can resolve a shim without proving the underlying executable works; verify with a safe version/health command when availability matters.
+- Windows `.cmd`/`.bat` resolution may require `cmd //c`; use it only when allowed by the current agent permission policy.
+- `where.exe <name>` is useful cross-check evidence on Windows.
+- A configured `shell: bash` is only valid when the Desktop process can resolve Bash, not merely when a separate terminal can.
 
 ## Line endings and encoding
 
-- Git may rewrite line endings (autocrlf). Normalize `\r\n` before regex/JSON parsing; JS regex `.` does not match `\r` and `$` does not match before `\r`, silently dropping CRLF-terminated lines
-- Agent-written files usually use LF; tools expecting CRLF may misbehave
-- Console codepage may be CP950 (Traditional Chinese) or CP437; UTF-8 output can garble in legacy consoles — prefer writing evidence to files
+- Git/autocrlf can rewrite line endings. Normalize CRLF before regex/JSON parsing where tooling assumes LF.
+- Agent-written files commonly use LF; project-native formatting remains authoritative.
+- Legacy console codepages can garble UTF-8. Prefer bounded file/log evidence when terminal rendering is unreliable.
 
-## Exit codes and signals
+## Exit codes and processes
 
-- 0 = success; 1 = generic error; 127 = command not found (POSIX); 9009 = command not found (cmd). Do not report 127 as a runtime crash
-- SIGINT/Ctrl+C behavior differs from POSIX; `timeout` may leave child processes running
-- Long-running daemons may linger after the shell exits; use `tasklist`/`taskkill` for evidence
+- Common values: 0 success, 1 generic error, 127 POSIX command-not-found, 9009 cmd command-not-found. Do not call 127 a runtime crash.
+- Ctrl+C/timeout/process-tree behavior differs across Windows shells; verify that expected child processes actually stopped.
+- Process termination, service changes, deletion, cleanup, publish/deploy, and other external effects remain governed by effective permissions/operator policy even when this reference names the platform command.
 
 ## Interop
 
-- `diff`, `sha256sum`, `grep`, `sed` exist in Git Bash but may be older builds; prefer portable invocations
-- `rm -rf` on mounted drives fails silently for open files; verify with a follow-up `ls`
-- Use `cmd //c` (double slash) from Git Bash to avoid path mangling
-- PowerShell: `Get-ChildItem`, `Get-Content -Encoding UTF8`, `Remove-Item -Recurse -Force`
+- Git Bash utilities such as `diff`, `sha256sum`, `grep`, and `sed` may be older versions; prefer portable flags.
+- File deletion may fail on open/locked Windows files. Canonical model shell policy hard-denies representative destructive cleanup routes; do not evade a deny with alternate shell/PowerShell/Python syntax.
+- `cmd //c` avoids common MSYS path rewriting when a permitted Windows-native command is genuinely required.
+- PowerShell equivalents may be useful for operator-owned diagnostics, but an agent must not use them to bypass a denied Bash pattern.
 
 ## Verification checklist
 
-1. Quote paths with spaces
-2. Confirm binaries with `--version`, not just `command -v`
-3. Normalize CRLF before parsing text
-4. Check exit codes against the Windows table
-5. Verify deletion/creation with a follow-up listing
+1. Quote paths with spaces.
+2. Confirm binaries with safe version/health probes.
+3. Normalize CRLF before text parsing when necessary.
+4. Preserve and interpret exact exit codes.
+5. After any permitted mutating tool/process, inspect status/diff and reconcile unexpected source/generated changes with L1 ownership.
+6. Never translate a hard-denied operation into alternate syntax to evade the permission boundary.
