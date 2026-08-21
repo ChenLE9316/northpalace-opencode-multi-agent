@@ -105,7 +105,7 @@ const dirs = ancestry(boundary, start);
 const canonicalSpecialists = fs.readdirSync(path.join(configRoot, 'agents'), { withFileTypes: true })
   .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
   .map((entry) => entry.name.replace(/\.md$/, ''));
-const protectedAgentIDs = new Set(['build', 'plan', 'explore', 'general', ...canonicalSpecialists]);
+const protectedAgentIDs = new Set(['build', 'plan', 'northpace-loop', 'explore', 'general', ...canonicalSpecialists]);
 
 const configFiles = [];
 for (const dir of dirs) {
