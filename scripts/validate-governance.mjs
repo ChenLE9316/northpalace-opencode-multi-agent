@@ -186,6 +186,7 @@ if (mode === 'canonical') check(agentFiles.length === 34, 'canonical specialist 
 else check(agentFiles.length > 0, 'deployment has specialist definitions');
 
 const policies = new Map();
+const routes = new Map();
 for (const file of agentFiles) {
   const text = read(`agents/${file}`);
   const fm = extractFrontmatter(text);
@@ -194,7 +195,69 @@ for (const file of agentFiles) {
   check(topScalar(fm, 'hidden') === 'false', `${name} hidden is false`);
   const permissionBlock = fm.slice(fm.indexOf('permission:'));
   check(/^\s{2}question:\s*deny\s*$/m.test(permissionBlock), `${name} question tool is denied`);
+  routes.set(name, {
+    model: topScalar(fm, 'model'),
+    reasoningEffort: topScalar(fm, 'reasoningEffort'),
+  });
   policies.set(name, taskPolicy(fm));
+}
+
+if (mode === 'canonical') {
+  const NEMOTRON = 'opencode/nemotron-3.5-lightning-free';
+  const OX = 'opencode/x-preview-f-free';
+  const MUSE = 'opencode/muse-spark-1.2-contributor-free';
+  const MIMO = 'opencode/mimo-v2.5-free';
+
+  check(config.model === OX, 'canonical global model is Ox Alpha Free');
+  check(config.small_model === NEMOTRON, 'canonical small_model is Nemotron 3.5 Lightning Free');
+  check(config.agent?.build?.reasoningEffort === 'high', 'Build L1 uses Ox Alpha High');
+  check(config.agent?.plan?.reasoningEffort === 'max', 'Plan L1 uses Ox Alpha Max');
+  check(config.agent?.explore?.model === NEMOTRON && config.agent?.explore?.reasoningEffort === 'low', 'inline explore uses Nemotron Low');
+  check(config.agent?.general?.model === NEMOTRON && config.agent?.general?.reasoningEffort === 'medium', 'inline general uses Nemotron Medium');
+
+  const expectedRoutes = {
+    'a11y-specialist': [NEMOTRON, 'medium'],
+    'agent-orchestrator': [OX, 'high'],
+    'ai-ml-engineer': [NEMOTRON, 'high'],
+    'api-designer': [OX, 'high'],
+    'architect': [OX, 'max'],
+    'ci-debugger': [NEMOTRON, 'high'],
+    'cli-engineer': [NEMOTRON, 'medium'],
+    'db-engineer': [NEMOTRON, 'high'],
+    'decision-analyst': [MUSE, 'xhigh'],
+    'dependency-checker': [NEMOTRON, 'medium'],
+    'devops-engineer': [NEMOTRON, 'high'],
+    'discussion-facilitator': [MUSE, 'medium'],
+    'doc-generator': [NEMOTRON, 'low'],
+    'e2e-tester': [MIMO, undefined],
+    'electron-engineer': [NEMOTRON, 'high'],
+    'error-analyzer': [NEMOTRON, 'high'],
+    'frontend-engineer': [MIMO, undefined],
+    'handoff-drafter': [NEMOTRON, 'low'],
+    'knowledge-curator': [NEMOTRON, 'low'],
+    'multi-angle-researcher': [NEMOTRON, 'medium'],
+    'planning-agent': [OX, 'high'],
+    'product-manager': [OX, 'high'],
+    'rag-engineer': [NEMOTRON, 'high'],
+    'refactorer': [NEMOTRON, 'high'],
+    'release-manager': [OX, 'high'],
+    'researcher': [NEMOTRON, 'medium'],
+    'review': [MUSE, 'xhigh'],
+    'rust-engineer': [NEMOTRON, 'high'],
+    'screen-context-agent': [MIMO, undefined],
+    'security-auditor': [MUSE, 'xhigh'],
+    'tauri-engineer': [NEMOTRON, 'high'],
+    'test-runner': [NEMOTRON, 'low'],
+    'test-writer': [NEMOTRON, 'medium'],
+    'ui-designer': [MIMO, undefined],
+  };
+
+  check(Object.keys(expectedRoutes).length === 34, 'canonical model-routing matrix covers all 34 specialists');
+  for (const [name, [model, reasoningEffort]] of Object.entries(expectedRoutes)) {
+    const actual = routes.get(name) || {};
+    check(actual.model === model, `${name} canonical model route matches`);
+    check(actual.reasoningEffort === reasoningEffort, `${name} canonical reasoning tier matches`);
+  }
 }
 
 const inlineNames = ['explore', 'general'];
