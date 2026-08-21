@@ -12,6 +12,7 @@ NorthPalace treats OpenCode runtime semantics as an architecture dependency. The
 | Compaction | `preserve_recent_tokens` / `reserved` plus V1 controls | `keep.tokens` / `buffer` via overlay |
 | Auto update | disabled | disabled |
 | Approval | `ask` is interaction friction, not a hard boundary | approvals can be durable/project-scoped; `deny` remains the hard boundary |
+| Computer use | CUA MCP enabled; global deny; Build `ask`; Plan/specialists denied | require version-correct evidence that the V1 compatibility mapping preserves the same effective split |
 | Shell | host process capability; not an ownership/filesystem sandbox | same trust assumption; raw shell permission is not a path lock |
 | Skill activation | model-facing skill deny plus explicit operator command | also require `slash: false` and `opencode/autoinvoke: false` |
 | Project precedence | project config may override global safety/agents | project config also has higher precedence than the custom overlay; preflight is mandatory |
@@ -23,6 +24,8 @@ NorthPalace treats OpenCode runtime semantics as an architecture dependency. The
 ## V1 policy
 
 `opencode.jsonc` stays V1-schema-valid. Do not insert V2-only `experimental.subagent_depth` into the V1 canonical file. The canonical safety posture uses hard `deny` for irreversible/external-effect routes that must not become automatically approvable.
+
+CUA is the intentional supervised-interaction exception: the CUA MCP server is enabled so Desktop computer-use tools are present, global `cua-driver_*` remains `deny`, Build L1 overrides that route to `ask`, and Plan explicitly remains `deny`. Specialist subagents do not receive a CUA override. This makes ordinary Human-present Desktop operation possible without making computer use a general autonomous capability. `ask` remains supervised friction rather than a hard security boundary; rejection must stop the CUA path rather than trigger a shell/browser/tool bypass.
 
 Plan keeps arbitrary Bash denied. Its only shell exceptions are exact metadata-only Git queries; repository file/blob/diff content and remote URLs stay on native evidence paths so credential-path read denies are not bypassed through Git shell commands.
 
@@ -70,7 +73,7 @@ The V2 migration layer intentionally normalizes supported V1 global/project conf
 
 If a Desktop V2 process is used instead, its process environment must receive the same overlay and its active project must pass the same **external pre-start** preflight; running this CLI launcher does not prove the Desktop GUI inherited either condition.
 
-V2 is a beta compatibility target, not the published production baseline. Never report V2 depth, command isolation, skill gating, or compaction as verified from static files alone; require version-correct runtime evidence.
+V2 is a beta compatibility target, not the published production baseline. Never report V2 depth, command isolation, skill gating, CUA approval behavior, or compaction as verified from static files alone; require version-correct runtime evidence.
 
 ## Hard vs soft invariants
 
@@ -85,7 +88,7 @@ Treat every OpenCode upgrade as a compatibility event:
 1. run `node scripts/validate-governance.mjs --canonical` against the repository baseline;
 2. before opening an unreviewed target project, run `node scripts/check-project-overrides.mjs --project "$PWD"` externally;
 3. run `/verify-config v1` or `/verify-config v2` using the matching binary;
-4. verify actual depth rejection, fresh Task delegation, effective permissions, Web Search/MCP registration, and command/skill behavior;
+4. verify actual depth rejection, fresh Task delegation, effective permissions, Web Search/MCP registration, and one bounded CUA smoke showing Build reaches approval while Plan/non-Build stays denied;
 5. confirm active project config/instructions/plugins/tools/operator ids do not silently replace or extend the intended governance contract;
 6. only then mark the Desktop runtime verified.
 
