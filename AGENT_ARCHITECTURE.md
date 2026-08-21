@@ -68,10 +68,10 @@ Those are not autonomous DAG edges. Inside an active workflow they still require
 
 | Agent | Mode | Model | Steps | Effective capability | Role |
 |---|---|---|---:|---|---|
-| `build` | primary | global DeepSeek | 200 | edit + bounded Task + global shell policy | only mutating L1 workflow owner/integrator/acceptor |
-| `plan` | primary | global DeepSeek | 100 | edit deny; arbitrary Bash deny; explicit read-only Git shell allowlist; read-only Task graph | hard read-only planning/evidence L1 |
-| `explore` | subagent | DeepSeek | 60 | edit/bash/task/question deny | fast local evidence |
-| `general` | subagent | DeepSeek | 90 | task/question deny; edit/shell inherit Build-style policy | bounded general implementation leaf |
+| `build` | primary | Ox Alpha / high | 200 | edit + bounded Task + global shell policy | only mutating L1 workflow owner/integrator/acceptor |
+| `plan` | primary | Ox Alpha / max | 100 | edit deny; arbitrary Bash deny; explicit read-only Git shell allowlist; read-only Task graph | hard read-only planning/evidence L1 |
+| `explore` | subagent | Nemotron 3.5 Lightning / low | 60 | edit/bash/task/question deny | fast local evidence |
+| `general` | subagent | Nemotron 3.5 Lightning / medium | 90 | task/question deny; edit/shell inherit Build-style policy | bounded general implementation leaf |
 
 Plan's autonomous reachable graph is read-only. Unlike the previous baseline, Plan no longer relies on `bash: ask` for arbitrary commands.
 
@@ -199,62 +199,61 @@ Permission classes:
 
 | # | Specialist | Model | Class | Autonomous route | Primary function |
 |---:|---|---|---|---|---|
-| 1 | `a11y-specialist` | DeepSeek | RO | P | accessibility evidence/acceptance |
-| 2 | `agent-orchestrator` | DeepSeek/max | COORD-RO | B | bounded L3 implementation orchestration |
-| 3 | `ai-ml-engineer` | DeepSeek | WRITE | AO | inference/model/quantization performance work |
-| 4 | `api-designer` | DeepSeek | RO | P, PM | API/protocol/error/version contract design |
-| 5 | `architect` | DeepSeek/max | RO | P, B | architecture boundaries/trade-offs/migration |
-| 6 | `ci-debugger` | DeepSeek/max | WRITE | AO | CI failure root cause/minimal fix |
-| 7 | `cli-engineer` | DeepSeek | WRITE | AO | CLI contracts/routing/exit/output/signals |
-| 8 | `db-engineer` | DeepSeek | WRITE | AO | schema/migration/transaction/integrity |
-| 9 | `decision-analyst` | DeepSeek/max | COORD-RO | P | evidence-weighted decision/sensitivity |
-| 10 | `dependency-checker` | DeepSeek | RO | P, B, DA, RM | dependency/provenance/license/version risk |
-| 11 | `devops-engineer` | DeepSeek | WRITE | AO | CI/CD/packaging/monitoring/IaC; external effects hard-gated |
-| 12 | `discussion-facilitator` | DeepSeek | RO | P, PA, PM, DA | assumptions/perspectives/blind spots |
-| 13 | `doc-generator` | DeepSeek | WRITE | AO | evidence-based technical docs |
-| 14 | `e2e-tester` | MiMo/high | WRITE | B, AO | E2E user journey/test edits; Playwright evaluate exception |
-| 15 | `electron-engineer` | DeepSeek | WRITE | B, AO | Electron IPC/main/preload/renderer boundary; evaluate exception |
-| 16 | `error-analyzer` | DeepSeek/max | RO | P, B | error/log/repro root-cause analysis |
-| 17 | `frontend-engineer` | MiMo/high | WRITE | B, AO | React/TS UI state/protocol/accessibility |
-| 18 | `handoff-drafter` | DeepSeek | RO | P, B | bounded handoff draft only |
-| 19 | `knowledge-curator` | DeepSeek | SCOPED | B | only root `knowledge/**` and `decisions/**` |
-| 20 | `multi-angle-researcher` | DeepSeek | RO | P, PA, PM, DA | multi-perspective external evidence |
-| 21 | `planning-agent` | DeepSeek/max | COORD-RO | P | decomposition/dependency/rollback/verification |
-| 22 | `product-manager` | DeepSeek | COORD-RO | P | scope/requirements/acceptance/product risk |
-| 23 | `rag-engineer` | DeepSeek | WRITE | AO | ingestion/retrieval/reranking/provenance |
-| 24 | `refactorer` | DeepSeek/max | WRITE | AO | bounded behavior-preserving structural refactor |
-| 25 | `release-manager` | DeepSeek | COORD-WRITE | B | release readiness/flow; hard model external-effect denies apply |
-| 26 | `researcher` | DeepSeek | RO | P, B, PA, PM, DA | official/upstream evidence |
-| 27 | `review` | DeepSeek/max | RO | P, B | fresh independent correctness/regression review |
-| 28 | `rust-engineer` | DeepSeek | WRITE | B, AO | Rust implementation/verification |
-| 29 | `screen-context-agent` | MiMo/low | RO | P | screenshot/selected visible context analysis |
-| 30 | `security-auditor` | DeepSeek/max | RO | P, B, RM | trust-boundary/security review |
-| 31 | `tauri-engineer` | DeepSeek | WRITE | B, AO | Tauri IPC/capability/system integration; evaluate exception |
-| 32 | `test-runner` | DeepSeek | RUN | B, AO | source-non-editing test execution |
-| 33 | `test-writer` | DeepSeek | WRITE | AO | deterministic tests/contracts/regressions |
-| 34 | `ui-designer` | MiMo/high | RO | P | UI/UX/system/journey design evidence |
+| 1 | `a11y-specialist` | Nemotron/medium | RO | P | accessibility evidence/acceptance |
+| 2 | `agent-orchestrator` | Ox/high | COORD-RO | B | bounded L3 implementation orchestration |
+| 3 | `ai-ml-engineer` | Nemotron/high | WRITE | AO | inference/model/quantization performance work |
+| 4 | `api-designer` | Ox/high | RO | P, PM | API/protocol/error/version contract design |
+| 5 | `architect` | Ox/max | RO | P, B | architecture boundaries/trade-offs/migration |
+| 6 | `ci-debugger` | Nemotron/high | WRITE | AO | CI failure root cause/minimal fix |
+| 7 | `cli-engineer` | Nemotron/medium | WRITE | AO | CLI contracts/routing/exit/output/signals |
+| 8 | `db-engineer` | Nemotron/high | WRITE | AO | schema/migration/transaction/integrity |
+| 9 | `decision-analyst` | Muse/xhigh | COORD-RO | P | evidence-weighted decision/sensitivity |
+| 10 | `dependency-checker` | Nemotron/medium | RO | P, B, DA, RM | dependency/provenance/license/version risk |
+| 11 | `devops-engineer` | Nemotron/high | WRITE | AO | CI/CD/packaging/monitoring/IaC; external effects hard-gated |
+| 12 | `discussion-facilitator` | Muse/medium | RO | P, PA, PM, DA | assumptions/perspectives/blind spots |
+| 13 | `doc-generator` | Nemotron/low | WRITE | AO | evidence-based technical docs |
+| 14 | `e2e-tester` | MiMo | WRITE | B, AO | E2E user journey/test edits; Playwright evaluate exception |
+| 15 | `electron-engineer` | Nemotron/high | WRITE | B, AO | Electron IPC/main/preload/renderer boundary; evaluate exception |
+| 16 | `error-analyzer` | Nemotron/high | RO | P, B | error/log/repro root-cause analysis |
+| 17 | `frontend-engineer` | MiMo | WRITE | B, AO | React/TS UI state/protocol/accessibility |
+| 18 | `handoff-drafter` | Nemotron/low | RO | P, B | bounded handoff draft only |
+| 19 | `knowledge-curator` | Nemotron/low | SCOPED | B | only root `knowledge/**` and `decisions/**` |
+| 20 | `multi-angle-researcher` | Nemotron/medium | RO | P, PA, PM, DA | multi-perspective external evidence |
+| 21 | `planning-agent` | Ox/high | COORD-RO | P | decomposition/dependency/rollback/verification |
+| 22 | `product-manager` | Ox/high | COORD-RO | P | scope/requirements/acceptance/product risk |
+| 23 | `rag-engineer` | Nemotron/high | WRITE | AO | ingestion/retrieval/reranking/provenance |
+| 24 | `refactorer` | Nemotron/high | WRITE | AO | bounded behavior-preserving structural refactor |
+| 25 | `release-manager` | Ox/high | COORD-WRITE | B | release readiness/flow; hard model external-effect denies apply |
+| 26 | `researcher` | Nemotron/medium | RO | P, B, PA, PM, DA | official/upstream evidence |
+| 27 | `review` | Muse/xhigh | RO | P, B | fresh independent correctness/regression review |
+| 28 | `rust-engineer` | Nemotron/high | WRITE | B, AO | Rust implementation/verification |
+| 29 | `screen-context-agent` | MiMo | RO | P | screenshot/selected visible context analysis |
+| 30 | `security-auditor` | Muse/xhigh | RO | P, B, RM | trust-boundary/security review |
+| 31 | `tauri-engineer` | Nemotron/high | WRITE | B, AO | Tauri IPC/capability/system integration; evaluate exception |
+| 32 | `test-runner` | Nemotron/low | RUN | B, AO | source-non-editing test execution |
+| 33 | `test-writer` | Nemotron/medium | WRITE | AO | deterministic tests/contracts/regressions |
+| 34 | `ui-designer` | MiMo | RO | P | UI/UX/system/journey design evidence |
 
 ## 8. Model baseline
 
 Canonical public bootstrap model routes:
 
-- 30 specialist DeepSeek routes: `opencode/deepseek-v4-flash-free`
-- 4 MiMo routes: `frontend-engineer`, `ui-designer`, `e2e-tester`, `screen-context-agent`
-- Build/Plan inherit the global DeepSeek route
+- global model: Ox Alpha Free — `opencode/x-preview-f-free`
+  - Build L1: `high`
+  - Plan L1: `max`
+- small model: Nemotron 3.5 Lightning Free — `opencode/nemotron-3.5-lightning-free`
+- inline subagents:
+  - `explore`: Nemotron `low`
+  - `general`: Nemotron `medium`
+- 34 specialists:
+  - Nemotron 3.5 Lightning Free: 20 specialists — 4 `low`, 6 `medium`, 10 `high`
+  - Ox Alpha Free: 6 specialists — 5 `high`, 1 `max`
+  - Muse Spark 1.2 Contributor Free: 4 specialists — 1 `medium`, 3 `xhigh`
+  - MiMo V2.5 Free: 4 specialists — no explicit `reasoningEffort`
 
-Selective `reasoningEffort: max` remains on:
+The four MiMo routes remain `frontend-engineer`, `ui-designer`, `e2e-tester`, and `screen-context-agent`.
 
-- `agent-orchestrator`
-- `planning-agent`
-- `decision-analyst`
-- `architect`
-- `error-analyzer`
-- `security-auditor`
-- `review`
-- `refactorer`
-- `ci-debugger`
-
-Configured model/reasoning/temperature values are not proof of observed provider/runtime behavior. Runtime route smoke remains required after changes/upgrades.
+Configured model/reasoning/temperature values are configuration intent, not proof of observed provider/runtime behavior. Free-route availability, effective context/output limits, reasoning variants, serving quality, latency, stream behavior, quotas, and provider policy remain target-runtime/provider properties. Runtime route smoke remains required after model/runtime changes; the public-model responsibility disclaimer is in `README.md`.
 
 ## 9. Permission and safety semantics
 
@@ -342,6 +341,7 @@ Wave 3 test execution while writers remain is intermediate evidence only.
 `scripts/validate-governance.mjs` converts static invariants from LLM prose interpretation into deterministic checks where possible:
 
 - config parse/safety values
+- canonical global/inline/specialist model IDs and reasoning tiers
 - Plan hard read-only shell policy
 - external-effect/CUA hard deny
 - agent counts/frontmatter
