@@ -162,6 +162,7 @@
           "handoff-drafter": "allow",
           "e2e-tester": "allow"
         },
+        "cua-driver_*": "ask",
         "websearch": "allow"
       }
     },
@@ -206,6 +207,7 @@
           "review": "allow",
           "handoff-drafter": "allow"
         },
+        "cua-driver_*": "deny",
         "external_directory": "ask",
         "websearch": "allow"
       }
@@ -265,7 +267,7 @@
       "environment": {
         "CUA_DRIVER_RS_TELEMETRY_ENABLED": "0"
       },
-      "enabled": false
+      "enabled": true
     }
   },
   "watcher": {
