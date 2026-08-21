@@ -98,6 +98,7 @@ Plan 現在是真正的 hard source/workspace read-only L1：
 - `edit: deny`
 - arbitrary Bash: `deny`
 - 只有明確列出的 read-only Git evidence commands 可使用 shell
+- `cua-driver_*: deny`
 - 只可委派 read-only autonomous graph
 - 不允許 mutating work
 
@@ -111,6 +112,8 @@ Human → Plan
 ### Build
 
 每個 objective 最多一個 mutating Build root。Build 可以直接處理低風險工作，或依風險選 direct L2 / coordinator L2 → bounded L3。
+
+Build 也是 canonical 唯一的 supervised computer-use lane：CUA Driver 工具會註冊，但 global `cua-driver_*` 仍是 `deny`；只有 Build L1 覆寫成 `ask`。因此 Human Operator 在場時可以批准必要的 Desktop/電腦操作，而 child/specialist agents 不會因繼承 global policy 自動取得 CUA authority。
 
 最終 acceptance 必須遵循：
 
@@ -142,6 +145,7 @@ Human Operator 另外可以用：
 - `@agent`
 - `/command`
 - Desktop child-session inspection/steering
+- Build L1 的 supervised CUA approval flow
 
 人工 routing 不是非法 autonomous edge，但介入 active workflow 後仍要由 owning L1 reconcile workflow id、owned paths、dependencies、evidence、live tasks、safety gates 與 acceptance state；除非 operator 明確建立 standalone task 或改 scope。
 
@@ -192,7 +196,7 @@ Bash 已可用的環境可用：
 
 ### `ask` 不再當成 security boundary
 
-Canonical baseline 對真正不可由模型自行越過的外部 effect 改用 hard `deny`。原因很簡單：`ask` 是 supervised friction；在支援 auto-approval 的執行模式下，non-denied request 可能被自動批准。
+Canonical baseline 對真正不可由模型自行越過的外部 effect 改用 hard `deny`。原因很簡單：`ask` 是 supervised friction；在可自動或持續批准 non-denied request 的執行模式下，它不能被當成 hardened security boundary。
 
 Canonical hard-denied shell routes包含代表性的：
 
@@ -207,7 +211,7 @@ Canonical hard-denied shell routes包含代表性的：
 - Cargo clean
 - package publish
 
-`cua-driver_*` 也在 canonical baseline hard deny；CUA server 本身仍預設 disabled。如果 operator 確實要使用 CUA，應明確改變 policy、重啟 Desktop、重新 verify，而不是依賴一次 `ask` 當永久安全界線。
+CUA 採不同的 supervised interaction policy：server 預設 enabled 讓工具能被 Desktop 發現；global `cua-driver_*` 仍 hard `deny`，Build L1 才以 agent-specific rule 覆寫成 `ask`，Plan 明確 `deny`，specialist subagents 不覆寫 CUA。這是為了讓 Human Operator 在場時可以批准正常電腦操作，不是把 CUA 變成 unattended autonomous capability。若 operator reject，Build 必須停止該 CUA 路徑，不得用 shell/browser/其他工具繞過。
 
 這些 deny 不是宣稱 shell blacklist 可以變成 hardened sandbox。Bash-capable agent 仍然能啟動一般 host process，因此安全模型是 **supervised developer workstation + explicit hard capability denies + governance**，不是 hostile multi-user sandbox。
 
@@ -217,7 +221,7 @@ Canonical MCP defaults：
 
 - Context7：enabled
 - Playwright：disabled
-- CUA Driver：disabled
+- CUA Driver：**enabled**，但 global deny；只有 Build L1 = `ask`
 
 全域 hard deny：
 
@@ -227,6 +231,8 @@ Canonical MCP defaults：
 - `playwright_browser_evaluate`
 
 只有 `e2e-tester`、`electron-engineer`、`tauri-engineer` 可以在各自 agent permission 重新開 `evaluate`。因此 operator 一旦啟用 Playwright MCP，這三個角色的 capability surface 會比 global baseline 大；`evaluate` 不能被理解成 read-only primitive。
+
+CUA 與 Playwright 是不同 capability boundary：CUA 的 canonical authority 集中在 Build L1 的 supervised approval；不因為 CUA enabled 就放寬 Playwright 高風險工具，也不把 CUA authority 委派到 child agent。
 
 ## Ownership / cancellation / registry
 
@@ -294,8 +300,9 @@ node scripts/validate-governance.mjs --canonical
 
 - V1 config parse / canonical safety values
 - Plan hard read-only Bash
-- high-risk shell/CUA hard denies
+- high-risk shell hard denies + supervised CUA split（global deny / Build ask / Plan deny / MCP enabled）
 - 34 specialist / 5 coordinator / leaf semantics
+- canonical specialist 不得自行覆寫 CUA authority
 - canonical model IDs / per-agent reasoning tiers
 - no coordinator cycle/self-edge/L3 Task authority
 - canonical Build/Plan allowlists
@@ -427,7 +434,7 @@ Desktop-first 使用時，Desktop process 也必須繼承相同 `OPENCODE_CONFIG
 1. 確認 Bash 可由 Desktop process 解析。
 2. `node scripts/validate-governance.mjs --canonical`。
 3. V1：`/verify-config v1 canonical`；V2：`/verify-config v2 canonical`。
-4. 確認 target runtime model ids、Web Search、MCP/LSP、depth/no-L4、fresh child Task 行為。
+4. 確認 target runtime model ids、Web Search、MCP/LSP、depth/no-L4、fresh child Task 行為，以及 CUA Driver 的 Build approval / Plan 或 non-Build deny smoke。
 5. 確認 Desktop 與 auxiliary CLI 使用同一 config root/runtime target。
 6. 檢查 active project operator command/skill collision。
 7. config/agent/skill/command/MCP/environment 變更後完整重啟 Desktop再做 runtime verification。
@@ -467,7 +474,7 @@ Free 模型的上架、下架、更名、是否維持免費、配額、限流、
 - shell deny patterns ≠ 完整 OS sandbox
 - ownership ≠ filesystem lock
 - cancellation ≠ rollback
-- `ask` ≠ hard human security boundary
+- Build CUA `ask` ≠ hard human security boundary
 - Desktop child-session observability ≠ durable external task database
 - V2 config parse success ≠ V1 semantic equivalence
 
