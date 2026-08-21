@@ -61,6 +61,7 @@ Human can use:
 - `@agent`
 - `/command`
 - Desktop root/child session navigation/steering
+- Build L1 supervised CUA approval when direct computer interaction is required
 
 Those are not autonomous DAG edges. Inside an active workflow they still require owning-L1 reconciliation of workflow id, ownership, dependencies, evidence, safety, live child state, and acceptance unless the operator explicitly creates standalone work or changes scope.
 
@@ -68,10 +69,10 @@ Those are not autonomous DAG edges. Inside an active workflow they still require
 
 | Agent | Mode | Model | Steps | Effective capability | Role |
 |---|---|---|---:|---|---|
-| `build` | primary | Ox Alpha / high | 200 | edit + bounded Task + global shell policy | only mutating L1 workflow owner/integrator/acceptor |
-| `plan` | primary | Ox Alpha / max | 100 | edit deny; arbitrary Bash deny; explicit read-only Git shell allowlist; read-only Task graph | hard read-only planning/evidence L1 |
-| `explore` | subagent | Nemotron 3.5 Lightning / low | 60 | edit/bash/task/question deny | fast local evidence |
-| `general` | subagent | Nemotron 3.5 Lightning / medium | 90 | task/question deny; edit/shell inherit Build-style policy | bounded general implementation leaf |
+| `build` | primary | Ox Alpha / high | 200 | edit + bounded Task + global shell policy + supervised CUA `ask` | only mutating L1 workflow owner/integrator/acceptor and computer-use approval lane |
+| `plan` | primary | Ox Alpha / max | 100 | edit deny; arbitrary Bash deny; CUA deny; explicit read-only Git shell allowlist; read-only Task graph | hard read-only planning/evidence L1 |
+| `explore` | subagent | Nemotron 3.5 Lightning / low | 60 | edit/bash/task/question deny; global CUA deny | fast local evidence |
+| `general` | subagent | Nemotron 3.5 Lightning / medium | 90 | task/question deny; edit/shell inherit Build-style policy; global CUA deny | bounded general implementation leaf |
 
 Plan's autonomous reachable graph is read-only. Unlike the previous baseline, Plan no longer relies on `bash: ask` for arbitrary commands.
 
@@ -259,21 +260,37 @@ Configured model/reasoning/temperature values are configuration intent, not proo
 
 ### Plan
 
-Plan uses hard native edit deny and arbitrary Bash deny. The only shell exceptions are explicitly enumerated read-only Git evidence commands.
+Plan uses hard native edit deny, arbitrary Bash deny, and explicit CUA deny. The only shell exceptions are explicitly enumerated read-only Git evidence commands.
 
 ### Build/writers
 
-Canonical global shell policy still permits ordinary developer commands, but representative irreversible/external-effect/destructive routes are now hard deny rather than ask, including push/release/deploy/infrastructure mutation/destructive cleanup/publish. CUA tools are also hard deny in the canonical model path.
+Canonical global shell policy still permits ordinary developer commands, but representative irreversible/external-effect/destructive routes are hard deny rather than ask, including push/release/deploy/infrastructure mutation/destructive cleanup/publish.
 
-An `ask` decision is not treated as a hard boundary because runtime auto-approval modes can approve non-denied requests.
+An `ask` decision is not treated as a hard boundary because runtime approval modes can approve non-denied requests.
+
+### Computer use (CUA)
+
+CUA is intentionally separated from ordinary autonomous specialist capability:
+
+```text
+CUA MCP server: enabled
+        ↓
+global cua-driver_*: deny
+        ↓
+Build L1 override: ask
+Plan L1: deny
+specialists/inline children: no override → global deny
+```
+
+The purpose is supervised Desktop operation with a Human Operator present. Build may request CUA only when the objective requires direct computer interaction; rejection terminates that CUA path. Build must not bypass a rejection through shell/browser/alternate tools and must not delegate CUA authority to child agents. Because `ask` is supervised friction rather than a hard security boundary, unattended or auto-approved execution requires separate operator risk acceptance.
 
 ### Shell and ownership
 
-Shell is host-process authority, not a path ACL. Every writer must declare expected generated/lock/artifact effects and inspect post-command status/diff. Unexpected source mutation returns to L1 rather than becoming implicitly owned.
+Shell is host-process authority, not a path ACL. Every writer must declare expected generated/lock/artifact effects and inspect the resulting diff/status. Unexpected source mutation returns to L1 rather than becoming implicitly owned.
 
 ### Browser
 
-Global Playwright unsafe-run/upload/drop/evaluate are denied. `e2e-tester`, `electron-engineer`, and `tauri-engineer` intentionally re-enable evaluate. Since Playwright MCP is disabled by default, this capability only appears after operator enablement; once enabled, evaluate is not considered read-only.
+Global Playwright unsafe-run/upload/drop/evaluate are denied. `e2e-tester`, `electron-engineer`, and `tauri-engineer` intentionally re-enable evaluate. Since Playwright MCP is disabled by default, this capability only appears after operator enablement; once enabled, evaluate is not considered read-only. Enabling CUA does not widen these Playwright exceptions.
 
 ## 10. Ownership, concurrency, cancellation, and registry
 
@@ -343,7 +360,8 @@ Wave 3 test execution while writers remain is intermediate evidence only.
 - config parse/safety values
 - canonical global/inline/specialist model IDs and reasoning tiers
 - Plan hard read-only shell policy
-- external-effect/CUA hard deny
+- external-effect hard denies
+- supervised CUA split: MCP enabled, global deny, Build ask, Plan deny, no specialist override
 - agent counts/frontmatter
 - coordinator/leaf resolution and no-L4 shape
 - direct L1 allowlists
