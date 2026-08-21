@@ -296,6 +296,7 @@ node scripts/validate-governance.mjs --canonical
 - Plan hard read-only Bash
 - high-risk shell/CUA hard denies
 - 34 specialist / 5 coordinator / leaf semantics
+- canonical model IDs / per-agent reasoning tiers
 - no coordinator cycle/self-edge/L3 Task authority
 - canonical Build/Plan allowlists
 - AO `*-engineer` 九個現行 resolution
@@ -435,17 +436,28 @@ Desktop-first 使用時，Desktop process 也必須繼承相同 `OPENCODE_CONFIG
 
 ## 模型路由
 
-Canonical public bootstrap baseline：
+目前 canonical public bootstrap 是四種 OpenCode Free route 的角色化配置快照：
 
-- global `model` / `small_model`：`opencode/deepseek-v4-flash-free`
-- Build/Plan 繼承 global route
-- inline explore/general：DeepSeek free route
-- 30 DeepSeek specialists
-- 4 MiMo specialists：`frontend-engineer`、`ui-designer`、`e2e-tester`、`screen-context-agent`
+- global `model`：Ox Alpha Free `opencode/x-preview-f-free`；Build = `high`、Plan = `max`
+- `small_model`：Nemotron 3.5 Lightning Free `opencode/nemotron-3.5-lightning-free`
+- inline `explore` / `general`：Nemotron，分別 `low` / `medium`
+- 34 specialists：
+  - Nemotron 3.5 Lightning Free：20 個（4 low / 6 medium / 10 high）
+  - Ox Alpha Free：6 個（5 high / 1 max）
+  - Muse Spark 1.2 Contributor Free：4 個（1 medium / 3 xhigh）
+  - MiMo V2.5 Free：4 個；目前不額外指定 `reasoningEffort`
 
-這些是 bootstrap/reference defaults，不是永久 availability/production/privacy 保證。每次模型 route 或 runtime upgrade 後都要用實際 target-runtime evidence驗證。
+這個分配把高吞吐 execution、控制/規劃、獨立 judgment、UI/visual 四種工作型態拆開；完整逐角色表見 `AGENT_ARCHITECTURE.md`。
 
-`share: disabled` 只控制 OpenCode share 行為，不等於 provider zero-retention。敏感/商業/客戶程式碼應選擇符合 operator retention/privacy 要求的 verified paid/private route。
+### 模型設定免責
+
+本 repository 內的 `model`、`small_model`、`reasoningEffort` 與相關模型名稱，**只代表作者在某一時間點使用的 OpenCode 個人配置與參考快照，不是任何模型服務、Free tier 或供應狀態的承諾**。
+
+Free 模型的上架、下架、更名、是否維持免費、配額、限流、區域/帳號可用性、實際 context/output limit、推理檔位、provider serving、串流穩定性、速度、品質及其他 runtime/service 行為，均由 **OpenCode 與相關上游模型/服務供應商** 決定，與 NorthPalace 作者無關。作者不承諾追蹤、保證或持續維護任何 Free 模型的可用性、服務品質或供應政策。
+
+使用者應依自己當下的 OpenCode Desktop/runtime、帳號、區域與實際 model catalog 自行確認、替換或調整模型設定。某個 Free route 失效、改名、退場或行為改變，**不等同 NorthPalace Multi-Agent governance 架構本身失效**。
+
+`share: disabled` 只控制 OpenCode share 行為，不等於 provider zero-retention。敏感/商業/客戶程式碼應選擇符合 operator retention/privacy 要求的 verified paid/private/local route。
 
 ## 安全模型與限制
 
