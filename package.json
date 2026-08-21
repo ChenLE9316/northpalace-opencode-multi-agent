@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "validate:governance": "node scripts/validate-governance.mjs --canonical"
+    "validate:governance": "node scripts/validate-governance.mjs --canonical && node scripts/validate-model-routing.mjs && node scripts/validate-desktop-contract.mjs"
   },
   "dependencies": {
     "@opencode-ai/plugin": "1.18.16"
