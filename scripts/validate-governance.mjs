@@ -174,7 +174,10 @@ for (const dangerous of [
 ]) {
   check(globalBash[dangerous] === 'deny', `high-risk shell route is hard-denied: ${dangerous}`);
 }
-check(config.permission?.['cua-driver_*'] === 'deny', 'CUA tools are hard-denied by the canonical baseline');
+check(config.permission?.['cua-driver_*'] === 'deny', 'CUA is globally denied outside explicit agent overrides');
+check(config.agent?.build?.permission?.['cua-driver_*'] === 'ask', 'Build CUA route is supervised ask');
+check(plan?.permission?.['cua-driver_*'] === 'deny', 'Plan CUA route is explicitly denied');
+check(config.mcp?.['cua-driver']?.enabled === true, 'CUA MCP is enabled for supervised Build use');
 for (const tool of ['playwright_browser_run_code_unsafe', 'playwright_browser_file_upload', 'playwright_browser_drop', 'playwright_browser_evaluate']) {
   check(config.permission?.[tool] === 'deny', `global Playwright high-risk tool is denied: ${tool}`);
 }
@@ -195,6 +198,7 @@ for (const file of agentFiles) {
   check(topScalar(fm, 'hidden') === 'false', `${name} hidden is false`);
   const permissionBlock = fm.slice(fm.indexOf('permission:'));
   check(/^\s{2}question:\s*deny\s*$/m.test(permissionBlock), `${name} question tool is denied`);
+  if (mode === 'canonical') check(!fm.includes('cua-driver_'), `${name} does not override canonical CUA authority`);
   routes.set(name, {
     model: topScalar(fm, 'model'),
     reasoningEffort: topScalar(fm, 'reasoningEffort'),
