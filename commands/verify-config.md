@@ -32,7 +32,7 @@ Use `--canonical` instead of `--deployment` for the first command when `$ARGUMEN
 
 A deterministic failure is `FAIL`; do not continue to a final `OK` by reinterpreting the same invariant in prose.
 
-The baseline validator covers config structure, exact metadata-only Plan Git shell rules, hard-denied external effects, DAG/leaf topology, AO wildcard resolution in canonical mode, knowledge-curator scope, command/skill counts, `/tauri-verify`, operator-skill V2 gates, final-snapshot sweep rules, and V2 overlay presence.
+The baseline validator covers config structure, exact metadata-only Plan Git shell rules, hard-denied external effects, the supervised CUA split (global deny / Build ask / Plan deny / MCP enabled), DAG/leaf topology, AO wildcard resolution in canonical mode, knowledge-curator scope, command/skill counts, `/tauri-verify`, operator-skill V2 gates, final-snapshot sweep rules, and V2 overlay presence.
 
 The project-precedence validator covers project JSON/JSONC permission/depth/default-agent/share/autoupdate/compaction overrides, protected or AO-reachable agent-id overrides, operator command/skill shadowing, and active project instruction warnings. Project-level model/LSP settings that do not alter critical governance fields are not rejected.
 
@@ -58,7 +58,9 @@ The project-precedence validator covers project JSON/JSONC permission/depth/defa
 
 ## Gate 3 — permission and side-effect model
 
-- Confirm canonical high-risk external-effect/destructive shell routes and `cua-driver_*` are hard `deny`. `ask` is interactive friction only and must never be reported as a hard Human Operator gate.
+- Confirm canonical high-risk external-effect/destructive shell routes remain hard `deny`.
+- Confirm CUA Driver is registered/enabled, global `cua-driver_*` remains `deny`, Build L1 overrides it to `ask`, Plan explicitly keeps it `deny`, and canonical specialist subagents do not add their own CUA override. Treat Build CUA as a supervised Desktop capability, not an autonomous specialist capability.
+- `ask` is interactive friction only and must never be reported as a hard Human Operator gate. A rejected CUA request must stop; do not validate any shell/browser/tool bypass as equivalent approval.
 - Confirm global Playwright `run_code_unsafe`, file upload, drop, and evaluate are denied; report only `e2e-tester`, `electron-engineer`, and `tauri-engineer` as intentional evaluate re-enablement when Playwright is enabled.
 - Confirm Plan shell exceptions are exact metadata-only Git commands; no broad `git diff*`, `git log*`, `git show*`, `git grep*`, or `git remote*` content/URL path may be re-enabled.
 - Confirm native credential-path read denies, while explicitly stating that Bash/process-capable agents are not filesystem-sandboxed.
@@ -90,7 +92,8 @@ The project-precedence validator covers project JSON/JSONC permission/depth/defa
 ## Gate 7 — runtime services, portability, and privacy
 
 - Verify Web Search registration separately from permission. Model route configuration is not proof of provider availability; use the target runtime's model listing/smoke when available.
-- Report MCP enabled/disabled state and pins, LSP executables/version results, shell/Node/npm/Git/Rust/Tauri dependencies, and package SDK evidence without auto-installing or rewriting anything.
+- Report MCP enabled/disabled state and pins, including CUA Driver registration. When practical in supervised Desktop verification, confirm one bounded Build CUA request reaches the approval flow and a non-Build/Plan path remains denied; otherwise mark the runtime behavior `UNVERIFIED` rather than inferring it from config.
+- Report LSP executables/version results, shell/Node/npm/Git/Rust/Tauri dependencies, and package SDK evidence without auto-installing or rewriting anything.
 - Confirm Desktop and auxiliary CLI appear to use the same config-root/runtime target. A mismatch is `FAIL`; inability to observe Desktop inheritance is `UNVERIFIED`.
 - Scan reusable config/docs/handoffs/knowledge/decisions for personal home directories, usernames, emails, credentials, machine-specific absolute paths, or host-specific assumptions.
 - Report context budgets with lazy-loading awareness; total Markdown bytes are informational, not simultaneously-hot context.
