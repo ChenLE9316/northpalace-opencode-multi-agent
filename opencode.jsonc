@@ -134,7 +134,7 @@
   },
   "agent": {
     "build": {
-      "description": "Primary implementation agent for scoped changes, specialist delegation, and evidence-backed verification.",
+      "description": "Primary bounded implementation agent for scoped changes, specialist delegation, and evidence-backed verification.",
       "mode": "primary",
       "prompt": "{file:./prompts/build.md}",
       "steps": 200,
@@ -142,7 +142,7 @@
       "color": "#5E8CFF",
       "permission": {
         "task": {
-          "*": "deny",
+          "*": "ask",
           "explore": "allow",
           "general": "allow",
           "architect": "allow",
@@ -188,7 +188,7 @@
           "git describe": "allow"
         },
         "task": {
-          "*": "deny",
+          "*": "ask",
           "explore": "allow",
           "planning-agent": "allow",
           "product-manager": "allow",
@@ -209,6 +209,55 @@
         },
         "cua-driver_*": "deny",
         "external_directory": "ask",
+        "websearch": "allow"
+      }
+    },
+    "northpace-loop": {
+      "description": "NorthPace Loop — Human-selected long-horizon Goal mode that keeps advancing one Root Goal until evidence-backed completion or a Human Gate/blocker.",
+      "mode": "primary",
+      "prompt": "{file:./prompts/northpace-loop.md}",
+      "reasoningEffort": "high",
+      "color": "#22C55E",
+      "permission": {
+        "task": {
+          "*": "ask",
+          "explore": "allow",
+          "general": "allow",
+          "a11y-specialist": "allow",
+          "agent-orchestrator": "allow",
+          "ai-ml-engineer": "allow",
+          "api-designer": "allow",
+          "architect": "allow",
+          "ci-debugger": "allow",
+          "cli-engineer": "allow",
+          "db-engineer": "allow",
+          "decision-analyst": "allow",
+          "dependency-checker": "allow",
+          "devops-engineer": "allow",
+          "discussion-facilitator": "allow",
+          "doc-generator": "allow",
+          "e2e-tester": "allow",
+          "electron-engineer": "allow",
+          "error-analyzer": "allow",
+          "frontend-engineer": "allow",
+          "handoff-drafter": "allow",
+          "knowledge-curator": "allow",
+          "multi-angle-researcher": "allow",
+          "planning-agent": "allow",
+          "product-manager": "allow",
+          "rag-engineer": "allow",
+          "refactorer": "allow",
+          "release-manager": "allow",
+          "researcher": "allow",
+          "review": "allow",
+          "rust-engineer": "allow",
+          "screen-context-agent": "allow",
+          "security-auditor": "allow",
+          "tauri-engineer": "allow",
+          "test-runner": "allow",
+          "test-writer": "allow",
+          "ui-designer": "allow"
+        },
         "websearch": "allow"
       }
     },
