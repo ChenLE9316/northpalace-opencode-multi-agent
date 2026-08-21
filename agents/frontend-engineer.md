@@ -4,7 +4,6 @@ mode: subagent
 model: opencode/mimo-v2.5-free
 steps: 90
 temperature: 0.2
-reasoningEffort: high
 color: "#F97316"
 hidden: false
 permission:

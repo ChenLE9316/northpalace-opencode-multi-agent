@@ -1,10 +1,10 @@
 ---
 description: "Planning agent: design task decomposition, reasoning steps, dependency analysis, and execution plan."
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: opencode/x-preview-f-free
 steps: 80
 temperature: 0.3
-reasoningEffort: max
+reasoningEffort: high
 color: "#D35400"
 hidden: false
 permission:

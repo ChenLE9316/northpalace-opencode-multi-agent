@@ -1,10 +1,10 @@
 ---
 description: Audits trust boundaries, permissions, secrets, path handling, process execution, network access, persistence, and supply-chain risk.
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: opencode/muse-spark-1.2-contributor-free
 steps: 80
 temperature: 0.1
-reasoningEffort: max
+reasoningEffort: xhigh
 color: "#DC2626"
 hidden: false
 permission:

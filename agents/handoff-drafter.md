@@ -1,9 +1,10 @@
 ---
 description: Drafts structured handoff documents from current session state and the agent-handoff skill so the next owner can resume in minimum time.
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: opencode/nemotron-3.5-lightning-free
 steps: 60
 temperature: 0.1
+reasoningEffort: low
 color: "#8B5CF6"
 hidden: false
 permission:

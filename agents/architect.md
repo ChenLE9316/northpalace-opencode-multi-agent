@@ -1,7 +1,7 @@
 ---
 description: Produces bounded architecture decisions, dependency direction, interfaces, migrations, risks, verification plans, and read-only analysis.
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: opencode/x-preview-f-free
 steps: 80
 temperature: 0.3
 reasoningEffort: max

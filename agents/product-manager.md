@@ -1,9 +1,10 @@
 ---
 description: "Product manager: requirement grooming, roadmap, user stories, acceptance criteria, and feature specs."
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: opencode/x-preview-f-free
 steps: 80
 temperature: 0.3
+reasoningEffort: high
 color: "#60a5fa"
 hidden: false
 permission:

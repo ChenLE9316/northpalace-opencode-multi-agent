@@ -1,9 +1,10 @@
 ---
 description: "AI/ML engineer: model loading, quantization, inference optimization, performance evaluation."
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: opencode/nemotron-3.5-lightning-free
 steps: 90
 temperature: 0.2
+reasoningEffort: high
 color: "#ec4899"
 hidden: false
 permission:

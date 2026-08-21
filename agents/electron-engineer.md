@@ -1,9 +1,10 @@
 ---
 description: "Electron engineer: Node.js + Chromium desktop application, IPC, security configuration."
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: opencode/nemotron-3.5-lightning-free
 steps: 90
 temperature: 0.2
+reasoningEffort: high
 color: "#84cc16"
 hidden: false
 permission:

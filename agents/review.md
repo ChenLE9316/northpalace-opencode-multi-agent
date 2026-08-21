@@ -1,10 +1,10 @@
 ---
 description: Independently reviews current changes for correctness, regressions, missing tests, security boundaries, and configuration drift.
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: opencode/muse-spark-1.2-contributor-free
 steps: 80
 temperature: 0.1
-reasoningEffort: max
+reasoningEffort: xhigh
 color: "#E67E22"
 hidden: false
 permission:

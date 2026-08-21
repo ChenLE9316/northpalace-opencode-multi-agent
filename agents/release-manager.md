@@ -1,9 +1,10 @@
 ---
 description: "Owns release readiness: SemVer/changelog preparation, gated release coordination, and post-release verification."
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: opencode/x-preview-f-free
 steps: 70
 temperature: 0.2
+reasoningEffort: high
 color: "#10b981"
 hidden: false
 permission:

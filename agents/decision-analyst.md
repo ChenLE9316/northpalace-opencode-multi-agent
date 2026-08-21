@@ -1,10 +1,10 @@
 ---
 description: "Decision analyst: facilitates structured multi-criteria decision analysis with weighted factors, risk assessment, cost-benefit trade-offs, sensitivity analysis, and evidence-backed recommendations."
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: opencode/muse-spark-1.2-contributor-free
 steps: 80
 temperature: 0.2
-reasoningEffort: max
+reasoningEffort: xhigh
 color: "#818CF8"
 hidden: false
 permission:

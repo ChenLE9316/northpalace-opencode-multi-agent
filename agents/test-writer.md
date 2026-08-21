@@ -1,9 +1,10 @@
 ---
 description: Writes focused unit, integration, contract, security, UI, and end-to-end tests for confirmed behavior and regressions.
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: opencode/nemotron-3.5-lightning-free
 steps: 80
 temperature: 0.15
+reasoningEffort: medium
 color: "#4ADE80"
 hidden: false
 permission:

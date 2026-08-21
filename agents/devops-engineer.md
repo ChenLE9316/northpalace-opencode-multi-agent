@@ -1,9 +1,10 @@
 ---
 description: "DevOps engineer: CI/CD, packaging, release, monitoring, IaC."
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: opencode/nemotron-3.5-lightning-free
 steps: 70
 temperature: 0.2
+reasoningEffort: high
 color: "#0ea5e9"
 hidden: false
 permission:

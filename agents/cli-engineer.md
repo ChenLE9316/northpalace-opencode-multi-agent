@@ -1,9 +1,10 @@
 ---
 description: "CLI engineer: command structure, argument parsing, UX, output format, configuration."
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: opencode/nemotron-3.5-lightning-free
 steps: 60
 temperature: 0.2
+reasoningEffort: medium
 color: "#14b8a6"
 hidden: false
 permission:

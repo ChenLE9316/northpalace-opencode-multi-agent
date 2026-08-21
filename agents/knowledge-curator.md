@@ -1,9 +1,10 @@
 ---
 description: "Knowledge curator: organizes, archives, indexes, and retrieves cross-session knowledge, decisions, insights, and research findings. Maintains a structured knowledge base for long-term organizational memory."
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: opencode/nemotron-3.5-lightning-free
 steps: 70
 temperature: 0.2
+reasoningEffort: low
 color: "#FB7185"
 hidden: false
 permission:

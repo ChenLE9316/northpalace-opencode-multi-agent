@@ -1,9 +1,10 @@
 ---
 description: Implements bounded database schema, SQLite migrations, transactions, indexes, retention, integrity, and recovery behavior.
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: opencode/nemotron-3.5-lightning-free
 steps: 90
 temperature: 0.15
+reasoningEffort: high
 color: "#4F46E5"
 hidden: false
 permission:

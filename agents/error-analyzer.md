@@ -1,10 +1,10 @@
 ---
 description: "Error analysis expert: interpret stack traces, compile errors, runtime errors, and logs; provide root cause and fix."
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: opencode/nemotron-3.5-lightning-free
 steps: 80
 temperature: 0.1
-reasoningEffort: max
+reasoningEffort: high
 color: "#FB923C"
 hidden: false
 permission:

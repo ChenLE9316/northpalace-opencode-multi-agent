@@ -1,9 +1,10 @@
 ---
 description: Owns end-to-end grounded retrieval, including chunking, embeddings, vector storage, ranking, citations, evaluation, and source provenance.
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: opencode/nemotron-3.5-lightning-free
 steps: 90
 temperature: 0.2
+reasoningEffort: high
 color: "#D946EF"
 hidden: false
 permission:

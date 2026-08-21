@@ -1,10 +1,10 @@
 ---
 description: "Refactor engineer: improve code structure, readability, and maintainability while preserving behavior."
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: opencode/nemotron-3.5-lightning-free
 steps: 90
 temperature: 0.1
-reasoningEffort: max
+reasoningEffort: high
 color: "#2980B9"
 hidden: false
 permission:

@@ -1,9 +1,10 @@
 ---
 description: Designs versioned APIs, protocol methods, schemas, errors, compatibility rules, and client-facing contracts without implementation changes.
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: opencode/x-preview-f-free
 steps: 80
 temperature: 0.2
+reasoningEffort: high
 color: "#475569"
 hidden: false
 permission:

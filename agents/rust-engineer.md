@@ -1,9 +1,10 @@
 ---
 description: Implements safe Rust services, protocols, persistence, concurrency, native integration, error handling, and tests.
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: opencode/nemotron-3.5-lightning-free
 steps: 90
 temperature: 0.15
+reasoningEffort: high
 color: "#EF4444"
 hidden: false
 permission:

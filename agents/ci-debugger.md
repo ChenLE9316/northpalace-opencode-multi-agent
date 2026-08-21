@@ -1,10 +1,10 @@
 ---
 description: Diagnoses GitHub Actions / CI failure logs, identifies the root cause, and proposes minimal, verifiable fixes.
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: opencode/nemotron-3.5-lightning-free
 steps: 70
 temperature: 0.1
-reasoningEffort: max
+reasoningEffort: high
 color: "#f59e0b"
 hidden: false
 permission:

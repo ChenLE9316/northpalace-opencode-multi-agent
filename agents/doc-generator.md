@@ -1,9 +1,10 @@
 ---
 description: "Technical documentation expert: README, API, architecture docs, CHANGELOG."
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: opencode/nemotron-3.5-lightning-free
 steps: 70
 temperature: 0.2
+reasoningEffort: low
 color: "#64748b"
 hidden: false
 permission:

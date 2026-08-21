@@ -1,9 +1,10 @@
 ---
 description: "Dependency management expert: versioning, security vulnerabilities, license compliance (multi-language)."
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: opencode/nemotron-3.5-lightning-free
 steps: 80
 temperature: 0.1
+reasoningEffort: medium
 color: "#a1a1aa"
 hidden: false
 permission:

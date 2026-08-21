@@ -1,9 +1,10 @@
 ---
 description: Performs approved external research against primary sources and returns cited, trust-labeled implementation guidance without mutation.
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: opencode/nemotron-3.5-lightning-free
 steps: 80
 temperature: 0.3
+reasoningEffort: medium
 color: "#94A3B8"
 hidden: false
 permission:

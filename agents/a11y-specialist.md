@@ -1,9 +1,10 @@
 ---
 description: Reviews accessibility behavior, WCAG 2.2 AA compliance, keyboard navigation, focus, semantics, and assistive technology support.
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: opencode/nemotron-3.5-lightning-free
 steps: 70
 temperature: 0.15
+reasoningEffort: medium
 color: "#2DD4BF"
 hidden: false
 permission:

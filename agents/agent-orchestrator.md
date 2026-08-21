@@ -1,10 +1,10 @@
 ---
 description: "Multi-agent orchestration design: DAG, message passing, error recovery, and state management."
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: opencode/x-preview-f-free
 steps: 90
 temperature: 0.3
-reasoningEffort: max
+reasoningEffort: high
 color: "#7c3aed"
 hidden: false
 permission:

@@ -6,8 +6,8 @@
   "snapshot": true,
   "default_agent": "build",
   "subagent_depth": 2,
-  "model": "opencode/deepseek-v4-flash-free",
-  "small_model": "opencode/deepseek-v4-flash-free",
+  "model": "opencode/x-preview-f-free",
+  "small_model": "opencode/nemotron-3.5-lightning-free",
   "lsp": {
     "typescript": {
       "command": ["typescript-language-server", "--stdio"],
@@ -138,6 +138,7 @@
       "mode": "primary",
       "prompt": "{file:./prompts/build.md}",
       "steps": 200,
+      "reasoningEffort": "high",
       "color": "#5E8CFF",
       "permission": {
         "task": {
@@ -169,6 +170,7 @@
       "mode": "primary",
       "prompt": "{file:./prompts/plan.md}",
       "steps": 100,
+      "reasoningEffort": "max",
       "color": "#A78BFA",
       "permission": {
         "edit": "deny",
@@ -211,8 +213,9 @@
     "explore": {
       "description": "Fast codebase exploration using local search, LSP, and evidence collection.",
       "mode": "subagent",
-      "model": "opencode/deepseek-v4-flash-free",
+      "model": "opencode/nemotron-3.5-lightning-free",
       "steps": 60,
+      "reasoningEffort": "low",
       "permission": {
         "edit": "deny",
         "bash": "deny",
@@ -224,8 +227,9 @@
     "general": {
       "description": "General-purpose implementation subagent for bounded delegated tasks.",
       "mode": "subagent",
-      "model": "opencode/deepseek-v4-flash-free",
+      "model": "opencode/nemotron-3.5-lightning-free",
       "steps": 90,
+      "reasoningEffort": "medium",
       "prompt": "You are the general subagent: bounded delegated implementation work using the smallest coherent change. Always answer as the general subagent; never claim to be another agent or model. If you need clarification to proceed, surface the question in your text reply and never invoke the `question` tool; the parent agent will answer and the session will continue. ",
       "permission": {
         "task": "deny",

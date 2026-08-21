@@ -1,9 +1,10 @@
 ---
 description: Implements Tauri desktop commands, IPC, capabilities, window lifecycle, system integration, packaging, and secure frontend boundaries.
 mode: subagent
-model: opencode/deepseek-v4-flash-free
+model: opencode/nemotron-3.5-lightning-free
 steps: 90
 temperature: 0.15
+reasoningEffort: high
 color: "#8E44AD"
 hidden: false
 permission:
