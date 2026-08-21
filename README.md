@@ -435,7 +435,13 @@ Desktop-first 使用時，Desktop process 也必須繼承相同 `OPENCODE_CONFIG
 
 ## 模型路由
 
-Canonical public bootstrap baseline：
+> **模型設定免責：** 本 repository 內的 `model` / `small_model` / agent model ID、Free 標記、reasoning/thinking 檔位、context/output 長度與相關模型設定，只代表建立或更新當下的個人 OpenCode 設定／參考範例，不代表作者本人提供、營運或保證任何模型服務。
+>
+> 模型是否上架、下架、改名、維持免費、限流、可用配額、有效 context、輸出上限、推理檔位、能力或服務品質，均由 **OpenCode 與各模型／服務供應商** 決定，與 NorthPalace 作者無關。使用者應依自己的 OpenCode Desktop/runtime、帳號、地區與實際可用模型自行調整；作者沒有義務追蹤、維持或即時更新任何 Free 模型的供應狀態與 runtime 行為。
+>
+> 因 Free/model route 失效、供應商調整或 runtime 行為變更而需要替換模型設定，並不等同 NorthPalace governance 架構本身失效。`reasoningEffort`、thinking variant、context 等設定也屬 model/runtime-specific，不能假設不同模型之間可直接通用。
+
+目前 repository 中保留的 bootstrap 設定快照：
 
 - global `model` / `small_model`：`opencode/deepseek-v4-flash-free`
 - Build/Plan 繼承 global route
@@ -443,9 +449,9 @@ Canonical public bootstrap baseline：
 - 30 DeepSeek specialists
 - 4 MiMo specialists：`frontend-engineer`、`ui-designer`、`e2e-tester`、`screen-context-agent`
 
-這些是 bootstrap/reference defaults，不是永久 availability/production/privacy 保證。每次模型 route 或 runtime upgrade 後都要用實際 target-runtime evidence驗證。
+以上只描述目前檔案中的設定值，不代表該 route 現在仍可用。套用前由使用者依自己的 target runtime 實際模型清單與可用能力確認並調整。
 
-`share: disabled` 只控制 OpenCode share 行為，不等於 provider zero-retention。敏感/商業/客戶程式碼應選擇符合 operator retention/privacy 要求的 verified paid/private route。
+`share: disabled` 只控制 OpenCode share 行為，不等於 provider zero-retention。敏感/商業/客戶程式碼應由使用者自行確認所選模型／供應商的 retention/privacy 條款是否符合需求。
 
 ## 安全模型與限制
 
