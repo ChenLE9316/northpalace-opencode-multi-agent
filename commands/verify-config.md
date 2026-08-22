@@ -1,5 +1,5 @@
 ---
-description: Version-aware verification of NorthPalace static governance, three-primary Desktop contract, public Free-model routing, supervised CUA, and V1/V2 runtime evidence.
+description: Version-aware verification of NorthPalace static governance, three-primary Desktop contract, supervised automation permissions, public Free-model routing, and V1/V2 runtime evidence.
 agent: build
 subtask: false
 ---
@@ -19,13 +19,12 @@ node <root>/scripts/validate-desktop-contract.mjs
 node <root>/scripts/check-project-overrides.mjs --project "$PWD"
 ```
 
-Use `--canonical` for the first command when requested. Any deterministic failure is `FAIL`; do not reinterpret the same invariant into an `OK` in prose.
+Use `--canonical` for the first command when requested. Any deterministic failure is `FAIL`.
 
 ## Gate 2 — runtime identity / three primaries
 
 ### V1
 - require `opencode --version`;
-- use V1 diagnostics only when supported by the installed V1 build;
 - confirm effective `subagent_depth=2`, permissions, MCP/LSP/Web Search, and all three primary identities.
 
 ### V2
@@ -34,73 +33,83 @@ Use `--canonical` for the first command when requested. Any deterministic failur
 - unknown effective behavior = `UNVERIFIED`.
 
 For both targets:
-- confirm global primary route is `opencode/x-preview-f-free` and `small_model` is `opencode/nemotron-3.5-lightning-free`;
-- confirm `plan`, `build`, `northpace-loop` are `mode: primary`;
-- confirm Build = Ox `high`, Plan = Ox `max`, NorthPace Loop = Ox `high` by global inheritance;
+- confirm public root global model is `opencode/x-preview-f-free` and public `small_model` is `opencode/nemotron-3.5-lightning-free`;
+- confirm `plan`, `build`, `northpace-loop` are `mode: primary`, inherit the public global model, and use reasoning tiers `max/high/high` respectively;
 - confirm `plan.steps=100`, `build.steps=200`, and `northpace-loop.steps` is absent;
-- confirm `default_agent=build`, so Loop is never startup-selected by repository default;
-- confirm each L1 Task map uses `"*": "ask"`; canonical direct L2 routes stay explicit `allow`, while noncanonical L1 Task routes require Human Operator approval;
+- confirm `default_agent=build`;
+- confirm Plan Task fallback is `"*": "deny"`, while Build/Loop Task fallback is `"*": "ask"`; canonical direct L2 routes stay explicit `allow`;
 - confirm Plan `edit/bash`, global hard denies, coordinator allowlists, and subagent Task denies remain unchanged;
 - confirm Task permissions govern autonomous delegation, not Human Operator primary switching/`@agent`/`/command`/Desktop steering.
 
-## Gate 3 — NorthPace Loop Goal mode
+## Gate 3 — supervised automation permissions
 
-- Confirm NorthPace Loop is visible/selectable as a Desktop primary and is not explicitly allowed as a model Task target from Plan, Build, coordinators, or subagents.
-- Confirm its direct L2 Task map explicitly auto-allows exactly all 36 canonical subagents: `explore`, `general`, plus all 34 specialists, with `"*": "ask"` fallback for noncanonical targets.
-- Confirm coordinator L3 maps remain unchanged and L4 remains forbidden.
-- Bounded behavior smoke only when Human Operator elects to run it: Human selects NorthPace Loop → next prompt establishes Root Goal → Loop completes at least one material milestone → if Definition of Done is still incomplete, Loop chooses another useful action instead of returning control merely because the milestone finished.
+- Confirm global Bash fallback is `"*": "ask"` rather than broad `allow`.
+- Confirm exact low-risk Git inspection routes are `allow` and representative push/publish/deploy/raw-delete/disk-power/infrastructure-destructive routes remain `deny`.
+- Confirm `cargo clean*` is `ask`, not hard-denied.
+- Confirm sensitive native `read` and `edit` paths are hard-denied while `.env.example` remains allowed.
+- With Auto Mode **disabled**, execute one bounded representative `ask` action and verify Desktop shows approval UI (`once|always|reject`).
+- Only when Human Operator intentionally enables Auto Mode, repeat a harmless `ask` class and confirm it auto-approves; then verify a representative explicit `deny` still blocks. Do not infer effective Auto Mode merely from a Settings toggle.
+- Report Auto Mode state as observed runtime evidence; if Settings/UI and runtime behavior disagree, mark `WARN|FAIL` with repro.
+- State explicitly that native file denies are not a shell/process sandbox and that Auto Mode broadly preauthorizes `ask` shell operations.
+
+## Gate 4 — Browser / CUA
+
+- Confirm global `playwright_*` and `cua-driver_*` are denied.
+- Confirm Build and NorthPace Loop re-enable bounded browser interaction and CUA as `ask`, while unsafe Playwright page code/upload/drop/evaluate remain denied at L1.
+- Confirm `frontend-engineer`, `e2e-tester`, `electron-engineer`, `tauri-engineer` are the only specialists with `playwright_*: ask`.
+- Confirm evaluate is `ask` only for e2e/electron/tauri; e2e alone may approval-gate file upload and must restrict it to repository-owned test fixtures.
+- Confirm Playwright/CUA MCP entries are disabled-by-default in canonical config; report configured/enabled/registered/available separately. Permission presence is not tool availability.
+
+## Gate 5 — NorthPace Loop Goal mode
+
+- Confirm NorthPace Loop is visible/selectable as a Desktop primary and is not explicitly allowed as a model Task target.
+- Confirm its direct L2 Task map explicitly allows exactly all 36 canonical subagents with `"*": "ask"` fallback.
+- Confirm `doom_loop=deny`, coordinator L3 maps remain unchanged, and L4 remains forbidden.
+- Bounded behavior smoke: Human selects Loop → next prompt establishes Root Goal → Loop completes at least one material milestone → if Definition of Done is still incomplete, Loop chooses another useful action instead of returning control merely because the milestone finished.
 - Confirm a later Human prompt during an active goal is treated as steering/constraint by default, and explicit Human stop/switch/cancel works.
-- Do **not** claim “infinite execution”; report only that repository `steps` is unset and observed runtime behavior is consistent/inconsistent/`UNVERIFIED`.
+- Do **not** claim “infinite execution”; report only that repository `steps` is unset and observed runtime behavior is consistent/inconsistent/UNVERIFIED.
 
-## Gate 4 — public Free model routing
+## Gate 6 — public Free model / reasoning / sampling
 
-Confirm only the current canonical public Free families are pinned for subagent routing:
+Confirm exact public routes:
 
 ```text
-opencode/nemotron-3.5-lightning-free
 opencode/x-preview-f-free
+opencode/nemotron-3.5-lightning-free
 opencode/muse-spark-1.2-contributor-free
 opencode/mimo-v2.5-free
 ```
 
-- Inline `explore` = Nemotron `low`; inline `general` = Nemotron `medium`.
-- Specialist distribution = Nemotron 20 / Ox 6 / Muse 4 / MiMo 4.
-- MiMo specialist routes have no explicit `reasoningEffort`.
-- Exact role/tier/temperature map is authoritative in `scripts/validate-model-routing.mjs`.
-- Static model IDs and reasoning tiers are configuration intent, not proof of provider availability, effective context/output limits, variant application, latency, quota, stream stability, or quality. Use current target-runtime model listing/smoke; unavailable facts remain `UNVERIFIED`.
+- **Ox Alpha Free:** verify target runtime exposes the required `low|high|max` tier family. Canonical public routing uses `high|max`: Build/Loop `high`, Plan `max`, five specialist Ox `high` and one specialist Ox `max` according to `validate-model-routing.mjs`.
+- **Nemotron 3.5 Lightning Free:** verify `low|medium|high`; canonical public routing uses all three tiers and exact role temperatures from deterministic map.
+- **Muse Spark 1.2 Contributor Free:** verify the configured `medium|xhigh` routes used by the public map and exact role temperatures.
+- **MiMo V2.5 Free:** configured as fixed/default mode with no explicit `reasoningEffort`; do not invent a tier.
+- `explore=Nemotron low`; `general=Nemotron medium`; `small_model=Nemotron`.
+- Exact specialist distribution must be **Nemotron 20 / Ox 6 / Muse 4 / MiMo 4**.
+- Never substitute upstream/provider context or model IDs for observed OpenCode Free route metadata. Effective context/output limit, availability, streaming, tool-call behavior, quotas and tier application are runtime evidence.
+- Route disappearance/rename/free-status change/serving drift is a compatibility event; report and ask Human rather than silently remapping.
 
-## Gate 5 — three autonomous trees / ownership
+## Gate 7 — three autonomous trees / ownership
 
-- Plan direct auto-allowed L2 = 17.
-- Build direct auto-allowed L2 = 18.
-- NorthPace Loop direct auto-allowed L2 = 36.
-- Noncanonical L1 Task requests are approval-gated through `ask`, not canonical autonomous edges.
+- Plan direct auto-allowed L2 = 17; noncanonical autonomous Task is hard-denied.
+- Build direct auto-allowed L2 = 18; noncanonical Task is approval/Auto-Mode-preauthorization gated through `ask`.
+- NorthPace Loop direct auto-allowed L2 = 36; noncanonical Task is `ask`.
 - Per-parent newly-active child budget = 4 governance, not global/runtime ceiling.
 - At most one mutating L1 owns the same objective at a time; Build and Loop are mutating-capable, Plan is read-only.
-- A Human transfer Build ↔ Loop requires reconciliation of live/late tasks, filesystem state, ownership, dependencies, evidence, unresolved failures, and pending gates before new autonomous mutation.
-- Parallel writers require disjoint ownership plus semantic independence/dependency readiness.
+- Human transfer Build ↔ Loop requires reconciliation before new autonomous mutation.
+- No silent model/reasoning-tier substitution; parallel writers require disjoint ownership + semantic independence/dependency readiness.
 
-## Gate 6 — permissions / supervised CUA / final gates
+## Gate 8 — final gates / portability / lifecycle
 
-- Confirm representative irreversible/external-effect/destructive shell routes remain hard `deny`.
-- Confirm CUA MCP is enabled, global `cua-driver_*` = `deny`, Build override = `ask`, Plan = explicit `deny`, and Loop/specialists have no CUA override and therefore inherit global deny.
-- Treat Build CUA `ask` as supervised interaction friction, **not** a hardened security boundary. Rejection ends that CUA path; no shell/browser/alternate-tool bypass is valid.
-- Confirm only `e2e-tester`, `electron-engineer`, and `tauri-engineer` re-enable Playwright evaluate; CUA enablement does not widen Playwright permissions.
-- Native secret read denies are not process sandboxing.
-- Mutating completion: writers settled → stable snapshot → authoritative final verification → fresh review → fresh security when relevant → correction requires reverify + new fresh gates.
-- Build may declare bounded `COMPLETE`; Loop may declare `GOAL_COMPLETE` only against evidence-backed Root Goal Definition of Done.
-
-## Gate 7 — commands / skills / project trust / portability
-
-- `/tauri-verify` remains Build-owned and explicitly creates a fresh `test-runner` Task; Cargo/test artifacts do not make it filesystem read-only.
-- `/northpalace-langfei-ni-token` remains an explicit Human Operator Plan/Build-only full sweep; NorthPace Loop uses its Goal tree and is intentionally excluded.
-- Model-facing operator skill deny, `slash:false`, and `opencode/autoinvoke:false` remain intact.
-- Confirm project override preflight protects `northpace-loop`, canonical agents, operator command/skill, permissions, depth, plugins/tools/MCP trust boundaries.
-- Treat project `AGENTS.md` as active instruction context and ordinary repository text/tool output as evidence.
-- Confirm Desktop and matching auxiliary CLI use intended config root/runtime target when observable.
-- Report Bash, Node/npm, Git/GitHub, Rust/Tauri, LSP, MCP availability without auto-install/upgrade.
-- `share: disabled` controls OpenCode sharing only; it is not provider zero-retention.
+- confirm Desktop and matching auxiliary CLI use intended config root/runtime target when observable;
+- confirm project override preflight protects `northpace-loop` and permission policy from project shadowing;
+- scan reusable artifacts for machine/user identifiers/secrets;
+- mutating completion requires writers settled → stable snapshot → authoritative final verification → fresh review → fresh security when relevant → correction requires reverify + new fresh gates;
+- Build may declare bounded `COMPLETE`; Loop may declare `GOAL_COMPLETE` only against evidence-backed Root Goal Definition of Done;
+- `share: disabled` is not provider zero-retention;
+- public Free route availability/lifecycle/privacy/context/quality are external provider/runtime properties covered by the README model disclaimer;
+- keep plugin/LSP/MCP localization upgrades `UNVERIFIED`/deferred unless the actual Desktop environment was intentionally migrated and smoked.
 
 ## Output
 
-Return a severity-ordered Traditional Chinese table with `OK | WARN | FAIL | UNVERIFIED`, target runtime, exact evidence, and smallest corrective action. A static pass is not a Desktop runtime pass. After config-time changes, a full Desktop restart is required before runtime verification.
+Return severity-ordered Traditional Chinese table with `OK | WARN | FAIL | UNVERIFIED`, target runtime, exact evidence, and smallest corrective action. Static pass is not Desktop runtime pass.
