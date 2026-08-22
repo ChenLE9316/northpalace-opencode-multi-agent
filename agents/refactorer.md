@@ -1,10 +1,10 @@
 ---
 description: "Refactor engineer: improve code structure, readability, and maintainability while preserving behavior."
 mode: subagent
-model: opencode/nemotron-3.5-lightning-free
+model: opencode-go/muse-spark-1.2-contributor
+variant: xhigh
 steps: 90
 temperature: 0.1
-reasoningEffort: high
 color: "#2980B9"
 hidden: false
 permission:

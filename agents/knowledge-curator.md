@@ -1,10 +1,9 @@
 ---
 description: "Knowledge curator: organizes, archives, indexes, and retrieves cross-session knowledge, decisions, insights, and research findings. Maintains a structured knowledge base for long-term organizational memory."
 mode: subagent
-model: opencode/nemotron-3.5-lightning-free
+model: opencode-go/mimo-v2.5
 steps: 70
-temperature: 0.2
-reasoningEffort: low
+temperature: 0.1
 color: "#FB7185"
 hidden: false
 permission:

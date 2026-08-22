@@ -1,7 +1,8 @@
 ---
 description: Implements React and TypeScript UI state, protocol clients, responsive components, accessibility, and interaction recovery.
 mode: subagent
-model: opencode/mimo-v2.5-free
+model: opencode-go/muse-spark-1.2-contributor
+variant: high
 steps: 90
 temperature: 0.2
 color: "#F97316"

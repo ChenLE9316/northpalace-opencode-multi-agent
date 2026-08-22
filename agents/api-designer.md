@@ -1,10 +1,10 @@
 ---
 description: Designs versioned APIs, protocol methods, schemas, errors, compatibility rules, and client-facing contracts without implementation changes.
 mode: subagent
-model: opencode/x-preview-f-free
+model: opencode-go/muse-spark-1.2-contributor
+variant: high
 steps: 80
-temperature: 0.2
-reasoningEffort: high
+temperature: 0.15
 color: "#475569"
 hidden: false
 permission:

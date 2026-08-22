@@ -1,10 +1,10 @@
 ---
 description: "Electron engineer: Node.js + Chromium desktop application, IPC, security configuration."
 mode: subagent
-model: opencode/nemotron-3.5-lightning-free
+model: opencode-go/muse-spark-1.2-contributor
+variant: high
 steps: 90
 temperature: 0.2
-reasoningEffort: high
 color: "#84cc16"
 hidden: false
 permission:

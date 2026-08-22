@@ -1,10 +1,10 @@
 ---
 description: "Error analysis expert: interpret stack traces, compile errors, runtime errors, and logs; provide root cause and fix."
 mode: subagent
-model: opencode/nemotron-3.5-lightning-free
+model: opencode-go/muse-spark-1.2-contributor
+variant: high
 steps: 80
 temperature: 0.1
-reasoningEffort: high
 color: "#FB923C"
 hidden: false
 permission:

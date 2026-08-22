@@ -1,9 +1,9 @@
 ---
 description: Analyzes screenshots, selected text, and other screen context explicitly supplied to the current task.
 mode: subagent
-model: opencode/mimo-v2.5-free
+model: opencode-go/mimo-v2.5
 steps: 60
-temperature: 0.3
+temperature: 0.1
 color: "#f472b6"
 hidden: false
 permission:

@@ -1,10 +1,10 @@
 ---
 description: "Multi-angle researcher: cross-references technical, business, social, security, and policy dimensions of a topic using web search, documentation, and primary sources. Produces structured multi-dimensional research reports."
 mode: subagent
-model: opencode/nemotron-3.5-lightning-free
+model: opencode-go/muse-spark-1.2-contributor
+variant: high
 steps: 80
 temperature: 0.3
-reasoningEffort: medium
 color: "#34D399"
 hidden: false
 permission:

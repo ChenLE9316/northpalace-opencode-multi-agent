@@ -1,10 +1,9 @@
 ---
 description: "Technical documentation expert: README, API, architecture docs, CHANGELOG."
 mode: subagent
-model: opencode/nemotron-3.5-lightning-free
+model: opencode-go/mimo-v2.5
 steps: 70
 temperature: 0.2
-reasoningEffort: low
 color: "#64748b"
 hidden: false
 permission:

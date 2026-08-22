@@ -1,10 +1,10 @@
 ---
 description: "Product manager: requirement grooming, roadmap, user stories, acceptance criteria, and feature specs."
 mode: subagent
-model: opencode/x-preview-f-free
+model: opencode-go/muse-spark-1.2-contributor
+variant: medium
 steps: 80
-temperature: 0.3
-reasoningEffort: high
+temperature: 0.2
 color: "#60a5fa"
 hidden: false
 permission:
