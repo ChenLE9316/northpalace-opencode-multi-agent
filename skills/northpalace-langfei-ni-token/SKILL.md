@@ -118,7 +118,7 @@ After every writer, inspect workspace status/diff for undeclared mutation。Wave
 
 Non-gate: `release-manager` Hy3 low; `handoff-drafter` Muse minimal when warranted; AO may schedule `doc-generator` MiMo with explicit ownership。
 
-Wait for all writers/docs, reconcile paths, then L1 runs authoritative final verification on stable snapshot。
+Wait for all writers/docs and reconcile all paths. **Only after all writers settle**, L1 runs authoritative **final verification** on the stable final snapshot, then starts fresh independent review and **fresh security** when relevant.
 
 Fresh gates: `review` Muse xhigh; `security-auditor` Muse high when relevant。
 
