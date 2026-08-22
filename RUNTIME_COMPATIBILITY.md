@@ -1,8 +1,8 @@
 # OpenCode Runtime Compatibility Contract
 
-本文件描述 NorthPalace 對 OpenCode V1/V2、plugin pin、model/provider lifecycle、permission semantics 與 runtime verification 的相容性邊界。繁體中文為主；config keys / commands / model IDs 保留英文。
+本文件只處理 NorthPalace 與 OpenCode runtime/version/provider 的相容性邊界。Identity counts、direct-L2 topology、specialist model matrix 與 ownership architecture 請以 `AGENT_ARCHITECTURE.md` 為人類可讀 reference；delegation/recovery/final-gate semantics 以 `rules/orchestration.md` 為準。
 
-> 最後同步：2026-08-22。Upstream docs / provider catalog 會變動；日期之後的 change 必須重新驗證。
+> 最後同步：2026-08-22。Upstream runtime、provider catalog 與 Desktop behavior 會變動；日期之後的 change 必須重新驗證。
 
 ## 1. Canonical targets
 
@@ -13,53 +13,47 @@
 
 V1/V2 key 能 parse 不代表 enforcement 等價。Static validation 只能證明 repository contract 自洽，不能證明 Desktop session/runtime behavior。
 
-## 2. Plugin / update policy
+## 2. Upgrade policy
 
 - `@opencode-ai/plugin` stability pin = `1.18.16`。
 - `autoupdate: false`。
 - 不因 registry 有新版就自動 bump。
-- Upgrade 必須視為 compatibility event：deterministic validators → full Desktop restart → target-runtime smoke → documented result。
+- Runtime/plugin/provider change 視為 compatibility event：deterministic validators → config diff review → full Desktop restart → target-runtime smoke → documented result。
 
-## 3. Config ownership
+## 3. Config / model ownership
 
-`opencode.jsonc` owns：
+`opencode.jsonc` owns primary/inline identities、global permission baseline、LSP/MCP registrations 與 runtime settings；`agents/*.md` 各自 owns 一個 specialist definition。
 
-- three primary identities
-- inline `explore` / `general`
-- global permission baseline
-- LSP/MCP registrations
-- compaction/watcher/tool-output settings
+Root 與 Human-visible primaries intentionally do not pin primary model/variant/temperature；Desktop/session selection authoritative。Specialist routing baseline 與 sampling matrix見 `AGENT_ARCHITECTURE.md`，machine enforcement見 `scripts/validate-model-routing.mjs`。
 
-`agents/*.md` 各自 owns 一個 specialist。禁止 duplicate identity。
+Provider/model unavailable、renamed、metering changed、variant drifted 或 privacy policy materially changed 時：
 
-Root 與 `plan` / `build` / `northpace-loop` 不 pin primary model/variant/temperature；Desktop/session Human selection authoritative。
+- report `WARN|FAIL|UNVERIFIED`
+- surface to Human Operator
+- 不自行改 routing
+- replacement 必須作 explicit architecture/config change + validators + smoke
 
 ## 4. Depth / orchestration compatibility
 
-- V1：`subagent_depth: 2`
-- V2：`experimental.subagent_depth: 2`
-- intended maximum autonomous hierarchy = L1 → L2 → L3
-- target runtime 必須 smoke depth enforcement；未觀察就 `UNVERIFIED`
+V1 使用 `subagent_depth: 2`；V2 使用 `experimental.subagent_depth: 2`。Intended maximum autonomous hierarchy 與 coordinator/leaf contract 定義在 `AGENT_ARCHITECTURE.md` / `rules/orchestration.md`。
 
-Plan 17 direct L2 / Build 18 / Loop 36。Coordinator L3 allowlists 不能因 Loop broad L2 map 而擴張。
+Runtime upgrade 必須重新 smoke depth enforcement；未觀察就標 `UNVERIFIED`。Config parse success 不足以證明 no-L4 / Task fallback / coordinator behavior 的 runtime parity。
 
 ## 5. Permission / Auto Mode compatibility
 
 Canonical semantics：
 
 - `allow` = direct
-- `ask` = Human-supervised in normal mode; Auto Mode may preauthorize
+- `ask` = Human-supervised in normal mode；Auto Mode may preauthorize
 - `deny` = hard boundary even under Auto Mode
 
 必須用 runtime smoke 分別驗證 harmless `ask` 與 explicit `deny`；Settings toggle 本身不是 proof。
 
 Native secret-path read/edit deny 不是 process sandbox。Shell-capable route 的 filesystem reach 仍取決於 process/runtime permission。
 
-## 6. Optional Browser / CUA
+## 6. Browser / CUA / MCP availability
 
-Global Playwright/CUA deny；只由 reviewed roles re-enable narrower `ask`。Canonical MCP entries預設 `enabled: false`。
-
-驗證時分開報告：
+Role permissions 與 transport availability 分開判斷。任何 Browser/CUA/MCP capability 應分別報告：
 
 1. configured
 2. enabled
@@ -67,63 +61,17 @@ Global Playwright/CUA deny；只由 reviewed roles re-enable narrower `ask`。Ca
 4. registered
 5. callable
 
-Permission presence 不能當成 tool availability。
+Canonical optional Playwright/CUA transport 預設 disabled。Permission presence 不能當成 tool availability。
 
-## 7. Three-model Routing Baseline — Free Models Disabled
+## 7. LSP / MCP portability
 
-Canonical routes：
+Canonical config 可引用 platform PATH executables / `npx` transports。Registration 只表示 expected command，不代表目標機器已安裝、可執行或由 Desktop 成功載入。
 
-```text
-opencode-go/muse-spark-1.2-contributor
-opencode-go/mimo-v2.5
-opencode-go/hy3
-```
+不要把 deployment-specific absolute binary path、private endpoint、OS username 或 machine identifier 寫進公開 canonical config。本機 pin 應由 local deployment layer 管理並保持不入 public repo。
 
-Specialist distribution：**Muse 23 / MiMo 7 / Hy3 4**。
+## 8. V2 boundary
 
-任何 specialist route 含 `-free` 或 legacy preview-Free model = compatibility failure，不做 silent fallback。
-
-### Muse
-
-- variants：`minimal|low|medium|high|xhigh`
-- role-specific temperature
-- no repository `top_p` override
-
-### MiMo V2.5
-
-- canonical specialist mode 不設定 variant
-- role-specific temperature
-- 新增 thinking selector / variant exposure 視為 compatibility event
-
-### Hy3
-
-- provider variants expected：`none|low|high`
-- canonical specialists use `none|low`
-- `temperature=0.9`, `top_p=1.0`
-
-Inline：`explore` = MiMo；`general` = Hy3 low。
-
-Provider model list、region、retention、training/privacy policy、rate limit 與 variant catalog 都可能改變，需以 target runtime/provider current evidence 重新確認。
-
-## 8. No silent model substitution
-
-Provider/model unavailable、renamed、metering changed、variant drifted 或 privacy policy materially changed 時：
-
-- report `WARN|FAIL|UNVERIFIED`
-- surface to Human Operator
-- 不自行改 routing
-- 不因成本或 provider pressure 擴大 child budget
-- replacement 必須作 explicit architecture/config change + validators + smoke
-
-## 9. LSP / MCP portability
-
-Canonical config 可引用 platform PATH executables / `npx` transports。這些 registration 只表示 expected command，不代表目標機器已安裝或可執行。
-
-不要把 deployment-specific absolute binary path、private endpoint、OS username 或 machine identifier 寫進公開 canonical config。若需要本機 pin，應用 local deployment layer 管理並保持不入 public repo。
-
-## 10. V2 boundary
-
-`compat/v2/` 是 compatibility target，不是宣稱與 V1 完全 parity。
+`compat/v2/` 是 separate compatibility target，不宣稱與 V1 完全 parity。
 
 至少確認：
 
@@ -137,7 +85,7 @@ Canonical config 可引用 platform PATH executables / `npx` transports。這些
 
 未 smoke 的 V2 permission/depth/Desktop parity = `UNVERIFIED`。
 
-## 11. Runtime verification sequence
+## 9. Runtime verification sequence
 
 Config / agent / provider / runtime change 後：
 
@@ -148,25 +96,21 @@ Config / agent / provider / runtime change 後：
 5. `node scripts/check-project-overrides.mjs --project <workspace>`
 6. full restart OpenCode Desktop
 7. identify target V1/V2 and effective config root
-8. confirm 39 identities / 3 primaries
-9. smoke Plan hard read-only + Task fallback deny
-10. smoke Build/Loop supervised ask behavior
-11. smoke explicit deny under Auto Mode
-12. verify Loop 36 L2 / no steps ceiling / doom-loop behavior
-13. verify three canonical model IDs and **zero Free routes**
-14. smoke representative Muse high+xhigh, MiMo, Hy3 roles with continuation/tool behavior where relevant
-15. report Browser/CUA configured/enabled/available separately
-16. mark every unobserved runtime-only item `UNVERIFIED`
+8. smoke the changed permission/topology/model/runtime behavior only where relevant
+9. report Browser/CUA/MCP/LSP configured/enabled/available separately
+10. mark every unobserved runtime-only item `UNVERIFIED`
 
-## 12. Privacy / sharing semantics
+`/verify-config` 提供 canonical config/runtime verification；`/opencode-healthcheck` 聚焦實際 Desktop/runtime/tool/environment health。
+
+## 10. Privacy / sharing semantics
 
 `share: disabled` 控制 OpenCode sharing surface；它不等於 model/provider retention/training guarantee。
 
-公開 repository 不保存：credentials、auth files、personal home paths、OS username、absolute private workspace paths、private service endpoints、machine identifiers 或 raw personal logs。
+公開 repository 不保存 credentials、auth files、personal home paths、OS username、absolute private workspace paths、private service endpoints、machine identifiers 或 raw personal logs。
 
 外部 research/query 前 redact secrets/internal identifiers；provider policy 必須引用 current primary source，不能從本 repo 靜態推導。
 
-## 13. Upgrade acceptance
+## 11. Upgrade acceptance
 
 Upgrade / provider change 只有在以下條件完成後才算 accepted：
 
@@ -178,4 +122,4 @@ Upgrade / provider change 只有在以下條件完成後才算 accepted：
 - security/privacy changes reviewed when applicable
 - unresolved runtime-only facts explicitly `UNVERIFIED`
 
-這個 contract 的目的不是凍結 OpenCode，而是把 upgrade/provider drift 變成可觀測、可回滾、可驗證的 architecture event。
+這個 contract 的目的不是凍結 OpenCode，而是把 runtime/provider drift 變成可觀測、可回滾、可驗證的 architecture event。

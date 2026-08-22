@@ -1,12 +1,14 @@
 ---
-description: Verify canonical OpenCode V1/V2 config, three-primary topology, supervised automation permissions, NorthPace Loop, no-Free three-model routing, and runtime-only assumptions.
+description: Verify canonical OpenCode config and the runtime assumptions that static validators cannot prove.
 agent: build
 subtask: false
 ---
 
-Verify `$ARGUMENTS` or the active configuration. Default runtime target is `v1`; use `v2` only when explicitly requested. `canonical` means compare against this repository's published baseline.
+Verify `$ARGUMENTS` or the active configuration. Default target is `v1`; use `v2` only when explicitly requested.
 
-## Gate 1 — deterministic repository checks
+This command does **not** restate the full NorthPalace topology/routing contract. Human-readable architecture truth lives in `AGENT_ARCHITECTURE.md`; delegation/recovery semantics live in `rules/orchestration.md`; runtime/version assumptions live in `RUNTIME_COMPATIBILITY.md`.
+
+## Gate 1 — deterministic repository contract
 
 Run:
 
@@ -18,84 +20,40 @@ node scripts/validate-desktop-contract.mjs
 node scripts/check-project-overrides.mjs --project <workspace>
 ```
 
-Any deterministic FAIL blocks canonical verification.
+Any deterministic FAIL blocks canonical verification. Report the validator finding instead of manually re-deriving the same invariant.
 
-## Gate 2 — identity / primary ownership
+## Gate 2 — effective runtime identity
 
-Confirm exactly **39 repository-defined identities**: 3 primary + 2 inline + 34 specialists. Primary set is exactly `plan`, `build`, `northpace-loop`; no specialist duplicates an inline/primary identity.
+Confirm target runtime, effective config root, Desktop/session identity when observable, and whether the active configuration matches the intended V1/V2 target. Root/primary model selection must be reported from observed Desktop/session evidence, not guessed from repository defaults.
 
-Root and all three primary configs intentionally omit `model`, `variant`, and `temperature`. `default_agent=build`; Plan `steps=100`; Build `steps=200`; Loop has no repository `steps` ceiling.
+## Gate 3 — permission / Auto Mode smoke
 
-## Gate 3 — autonomous topology
+Where safe and relevant, distinguish:
 
-- Plan direct L2 = 17, fallback `deny`.
-- Build direct L2 = 18, fallback `ask`.
-- NorthPace Loop direct L2 = **36 canonical subagents**, fallback `ask`.
-- Five coordinators only; every L3 target is a Task-deny leaf.
-- Maximum hierarchy L1→L2→L3; L4 forbidden.
-- `agent-orchestrator` `*-engineer` resolves to the reviewed nine-role set.
-- `northpace-loop` must never appear as a Task-allowed child target.
+- normal-mode harmless `ask` → approval UI
+- Human-enabled Auto Mode → same class may be preauthorized
+- explicit `deny` → remains blocked
 
-Human primary switching/`@agent`/`/command`/Desktop steering is a separate mixed-initiative path, not an autonomous graph edge.
+Settings state alone is not proof. Native file deny is not a process sandbox.
 
-## Gate 4 — permission / Auto Mode
+## Gate 4 — changed topology / routing behavior
 
-Confirm:
+Only when the change touches delegation, identity, model routing, variant/sampling, Browser/CUA, or coordinator depth, smoke representative affected behavior after static validators pass. Do not duplicate full count/matrix checks already enforced by validators.
 
-- global Bash fallback `ask`
-- exact low-risk Git inspection `allow`
-- destructive/publish/push/deploy routes `deny`
-- Plan edit/arbitrary Bash deny
-- sensitive native read/edit paths deny, `.env.example` allow
-- global Playwright/CUA deny
-- role-scoped ask exceptions exactly as canonical
-- Loop `doom_loop=deny`
+For NorthPace Loop changes, use a bounded runtime smoke that verifies the affected Goal/delegation/continuation behavior rather than replaying the entire canonical topology.
 
-Runtime smoke must distinguish `ask` from `deny`: normal mode `ask` presents approval UI; effective Auto Mode may preauthorize `ask`; explicit `deny` stays blocked. Settings toggle alone is not proof.
+Provider/catalog drift must be surfaced; never silently remap a specialist model or variant.
 
-## Gate 5 — model routing: no Free models
+## Gate 5 — Browser / CUA / MCP / LSP
 
-Allowed specialist model IDs are exactly:
+Report configured / enabled / resolvable / registered / callable separately. Permission presence does not prove transport availability. Deployment/PATH-specific failures remain environment evidence, not repository contract drift unless the canonical declaration itself is wrong.
 
-```text
-opencode-go/muse-spark-1.2-contributor
-opencode-go/mimo-v2.5
-opencode-go/hy3
-```
+## Gate 6 — V1 / V2 boundary
 
-Canonical specialist distribution = **Muse 23 / MiMo 7 / Hy3 4**.
+V1 and V2 are separate compatibility targets. Do not use V1 CLI evidence to certify V2 semantics. After config-time changes, full restart the target Desktop before runtime verification.
 
-Hard fail when any specialist/config uses `opencode-go/ox-alpha-free`, `opencode/x-preview-f-free`, another `*-free` route, or an unreviewed preview-Free alias.
+## Gate 7 — privacy / sharing
 
-- Muse variants = `minimal|low|medium|high|xhigh` with role-specific temperatures.
-- MiMo specialists = fixed no-variant mode.
-- Hy3 expected provider variants = `none|low|high`; canonical specialists use `none|low` + `temperature=0.9`, `top_p=1.0`.
-- inline `explore=MiMo`; inline `general=Hy3 low`.
+Confirm no new persisted/shareable artifact introduces personal paths, credentials, private endpoints, machine identifiers, or raw personal logs. `share: disabled` is not a provider privacy/retention guarantee.
 
-Provider/catalog drift must be surfaced; never silently remap.
-
-## Gate 6 — NorthPace Loop behavior
-
-Confirm Human-selectable primary identity, exact 36 direct L2 allow routes, no repo steps ceiling, `doom_loop=deny`, Goal Ledger semantics, root-cause correction bound, and evidence-backed `GOAL_COMPLETE` gates.
-
-Runtime-only continuation/steering behavior remains `UNVERIFIED` until a bounded Desktop smoke.
-
-## Gate 7 — Browser/CUA/MCP/LSP
-
-Report configured / enabled / registered / callable separately. Canonical Playwright and CUA transports are disabled-by-default. Permission does not prove registration.
-
-LSP/MCP commands are deployment/PATH dependent; do not publish absolute personal paths or private endpoints to make static verification look portable.
-
-## Gate 8 — V1 / V2
-
-V1 root uses `subagent_depth: 2`. V2 overlay uses `experimental.subagent_depth: 2` and remains a separate beta target. Do not use V1 CLI evidence to certify V2 semantics.
-
-After config-time changes, full restart Desktop before runtime verification.
-
-## Gate 9 — privacy / sharing
-
-Confirm persisted/shareable artifacts contain no personal home directories, OS usernames, absolute private workspaces, email/credentials/tokens/private keys, machine identifiers, private endpoints, or raw personal logs.
-
-`share: disabled` is not a provider privacy/retention guarantee.
-
-Return Traditional Chinese table with each gate as `OK | WARN | FAIL | UNVERIFIED`, exact evidence, and smallest next action. Never claim runtime facts that were not observed.
+Return a concise Traditional Chinese table with each gate as `OK | WARN | FAIL | UNVERIFIED`, exact observed evidence, and the smallest next action. Never claim runtime facts that were not observed.

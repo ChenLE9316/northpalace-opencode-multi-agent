@@ -1,67 +1,61 @@
 ---
 name: windows-shell
-description: Windows / bash-on-Windows shell behavior reference for path quoting, CRLF, encoding, process resolution, permission/Auto Mode, and cross-platform scripts.
+description: Windows / bash-on-Windows shell reference for path quoting, CRLF, encoding, process resolution, and cross-platform command behavior.
 license: MIT
 compatibility: opencode
 ---
 
 # Windows Shell Reference
 
-> For Desktop-specific runtime/config issues, use `desktop-troubleshooting`. This file is a shell-behavior **reference**, not permission to bypass NorthPalace hard-denied destructive/external-effect commands.
+Platform-neutral reference for Windows hosts using Bash-compatible shells such as Git Bash / MSYS2.
 
-Platform-neutral reference for Windows hosts with Bash (Git Bash / MSYS2 or compatible shell).
-
-## Permission context
-
-Canonical global Bash fallback is `ask`. In normal Desktop operation this means a shell action may require `once|always|reject`; when Human Operator explicitly enables OpenCode Auto Mode, `ask` actions are preauthorized. Explicit `deny` still blocks and must never be translated into another shell/PowerShell/Python syntax to evade policy.
-
-Plan and explicit read-only specialists keep Bash hard-denied. Writer/test roles inherit the supervised global shell baseline unless they define a narrower policy.
+NorthPalace permission/ownership policy is defined elsewhere; this reference never grants authority to bypass an effective `deny` or the current agent's shell policy.
 
 ## Paths and quoting
 
-- Prefer forward slashes in Bash: `C:/Users/...`; backslashes are escapes inside double quotes.
+- Prefer forward slashes in Bash: `C:/Users/...`.
 - Quote every path that may contain spaces.
 - `~` expands to the user profile in Git Bash; `/c/Users/<username>` and `C:/Users/<username>` are typical equivalent forms.
-- Drive-letter paths are case-insensitive; preserve user-visible casing.
+- Backslashes are escapes inside double quotes.
 - Do not mix slash forms in one command string without a reason.
 
-## Executables and resolution
+## Executable resolution
 
-- `command -v` can resolve a shim without proving the underlying executable works; verify with a safe version/health command when availability matters.
-- Windows `.cmd`/`.bat` resolution may require `cmd //c`; use it only when allowed by the current agent permission policy.
-- `where.exe <name>` is useful cross-check evidence on Windows.
-- A configured `shell: bash` is only valid when the Desktop process can resolve Bash, not merely when a separate terminal can.
+- `command -v` may resolve a shim without proving the underlying program works; verify with a safe version/health probe when availability matters.
+- `where.exe <name>` is a useful Windows cross-check.
+- `.cmd` / `.bat` may require `cmd //c`; use only when allowed by the effective agent permission policy.
+- A configured shell is usable only if the Desktop process can resolve it, not merely a separate terminal.
 
 ## Line endings and encoding
 
 - Git/autocrlf can rewrite line endings. Normalize CRLF before regex/JSON parsing where tooling assumes LF.
-- Agent-written files commonly use LF; project-native formatting remains authoritative.
-- Legacy console codepages can garble UTF-8. Prefer bounded file/log evidence when terminal rendering is unreliable.
+- Project-native formatting remains authoritative.
+- Legacy console codepages can garble UTF-8; bounded file/log evidence is more reliable than broken terminal rendering.
+- Keep reusable repository text free of machine-specific absolute paths.
 
-## Exit codes and processes
+## Exit codes and process behavior
 
-- Common values: 0 success, 1 generic error, 127 POSIX command-not-found, 9009 cmd command-not-found. Do not call 127 a runtime crash.
-- Ctrl+C/timeout/process-tree behavior differs across Windows shells; verify that expected child processes actually stopped.
-- Process termination, service changes, cleanup, publish/deploy, and other external effects remain governed by effective permissions/operator policy even when this reference names the platform command.
-- Power/disk destruction and canonical raw deletion routes remain hard-denied; Auto Mode does not change that.
+- Common values: `0` success, `1` generic error, `127` POSIX command-not-found, `9009` cmd command-not-found.
+- Do not call `127` a runtime crash.
+- Ctrl+C, timeout and process-tree behavior differ across Windows shells; verify whether expected child processes actually stopped.
+- File operations may fail while a Windows process holds a lock.
 
-## Native file permissions are not a process sandbox
+## MSYS / native interop
 
-Native `read`/`edit` denies protect sensitive env/auth/SSH/cloud/credential/private-key paths from those OpenCode file tools. They do not prove that a permitted shell process cannot read or modify the same filesystem path. Treat Auto Mode as broad preauthorization for `ask` shell work and do not claim secrets are process-inaccessible.
+- Git Bash utilities such as `diff`, `sha256sum`, `grep` and `sed` may be older versions; prefer portable flags.
+- `cmd //c` can avoid MSYS path rewriting for a genuinely required Windows-native command.
+- PowerShell equivalents may help operator diagnostics, but alternate syntax must never be used to evade an effective deny.
 
-## Interop
+## Security note
 
-- Git Bash utilities such as `diff`, `sha256sum`, `grep`, and `sed` may be older versions; prefer portable flags.
-- File deletion may fail on open/locked Windows files. Canonical raw destructive cleanup routes remain hard-denied; `cargo clean` is supervised `ask`, not a license to translate a denied `rm`/`Remove-Item` into another form.
-- `cmd //c` avoids common MSYS path rewriting when a permitted Windows-native command is genuinely required.
-- PowerShell equivalents may be useful for operator-owned diagnostics, but an agent must not use them to bypass a denied Bash pattern.
+OpenCode native `read`/`edit` denies are not a process sandbox. A permitted shell process may have broader filesystem reach. When shell permission behavior matters, verify effective normal/Auto Mode separately and report the actual tool/process route.
 
 ## Verification checklist
 
 1. Quote paths with spaces.
 2. Confirm binaries with safe version/health probes.
-3. Normalize CRLF before text parsing when necessary.
-4. Preserve and interpret exact exit codes.
-5. Confirm effective normal/Auto permission mode when shell approval behavior matters.
-6. After any permitted mutating tool/process, inspect status/diff and reconcile unexpected source/generated changes with L1 ownership.
-7. Never translate a hard-denied operation into alternate syntax to evade the permission boundary.
+3. Normalize CRLF before strict text parsing when necessary.
+4. Preserve exact exit codes.
+5. Distinguish Desktop PATH/runtime resolution from a standalone terminal.
+6. After permitted mutating processes, inspect the repository state required by the active orchestration contract.
+7. Never translate a denied operation into alternate shell/PowerShell/Python syntax to bypass policy.
