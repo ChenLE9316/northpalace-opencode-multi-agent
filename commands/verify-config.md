@@ -40,6 +40,8 @@ Settings state alone is not proof. Native file deny is not a process sandbox.
 
 Only when the change touches delegation, identity, model routing, variant/sampling, Browser/CUA, or coordinator depth, smoke representative affected behavior after static validators pass. Do not duplicate full count/matrix checks already enforced by validators.
 
+For NorthPace Loop changes, use a bounded runtime smoke that verifies the affected Goal/delegation/continuation behavior rather than replaying the entire canonical topology.
+
 Provider/catalog drift must be surfaced; never silently remap a specialist model or variant.
 
 ## Gate 5 — Browser / CUA / MCP / LSP
