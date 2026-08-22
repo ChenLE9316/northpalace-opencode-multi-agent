@@ -187,9 +187,9 @@ const preflight = read('scripts/check-project-overrides.mjs');
 check(preflight.includes("'northpace-loop'"), 'project preflight protects northpace-loop from shadowing');
 
 const readme = read('README.md');
-check(readme.includes('Supervised Automation Permission Model') && readme.includes('39 repository-defined identities'), 'README documents supervised automation and three-tree identity model');
-check(readme.includes('36 canonical subagents') || readme.includes('36 direct L2'), 'README documents Loop 36-L2 design');
-check(readme.includes('17 canonical direct L2 = `allow`') && readme.includes('其他 model-created Task = `deny`'), 'README documents Plan hard Task fallback');
+check(readme.startsWith('⚠️ **重要：這是一套由北宮冰玉'), 'README keeps the personal-specialization warning first');
+check(readme.includes('AGENT_ARCHITECTURE.md') && readme.includes('RUNTIME_COMPATIBILITY.md') && readme.includes('rules/orchestration.md'), 'README routes detailed truth to canonical documentation');
+check(readme.includes('sanitized public projection') && readme.includes('Public safety boundary'), 'README keeps public projection and safety boundary clear');
 
 const architecture = read('AGENT_ARCHITECTURE.md');
 check(architecture.includes('NorthPace Loop direct L2 count = **36**'), 'architecture locks Loop direct L2 count');
@@ -197,9 +197,11 @@ check(architecture.includes('Build-only-via-AO'), 'architecture renames old glob
 check(architecture.includes('Supervised automation permission architecture'), 'architecture documents permission model');
 
 const verify = read('commands/verify-config.md');
-check(verify.includes('Auto Mode') && verify.includes('NorthPace Loop') && verify.includes('36'), '/verify-config includes Auto Mode and Loop runtime verification');
+check(verify.includes('validate-governance.mjs') && verify.includes('validate-model-routing.mjs') && verify.includes('validate-desktop-contract.mjs'), '/verify-config delegates canonical invariants to deterministic validators');
+check(verify.includes('Auto Mode') && verify.includes('NorthPace Loop'), '/verify-config retains runtime permission and Loop smoke coverage');
 const health = read('commands/opencode-healthcheck.md');
-check(health.includes('Auto Mode') && health.includes('NorthPace Loop') && health.includes('39'), '/opencode-healthcheck includes permission/Loop/identity audit');
+check(health.includes('observed runtime health and drift') && health.includes('validate-desktop-contract.mjs'), '/opencode-healthcheck focuses on observed runtime evidence after static preflight');
+check(health.includes('Auto Mode') && health.includes('NorthPace Loop'), '/opencode-healthcheck retains targeted permission and Loop diagnostics');
 
 const workflow = read('.github/workflows/governance-validation.yml');
 check(workflow.includes('- "README.md"'), 'governance workflow triggers on README changes');
