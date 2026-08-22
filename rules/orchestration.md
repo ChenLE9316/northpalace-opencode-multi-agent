@@ -8,9 +8,10 @@ Authoritative lazy-loaded rules for multi-agent, multi-session, and NorthPace Lo
 - `plan` is read-only. `build` is a bounded mutating L1. `northpace-loop` is an operator-selected long-horizon mutating Goal L1 with no repository `steps` ceiling.
 - L2 is a subagent called by L1. L3 is a child called by an approved L2 coordinator. Effective runtime must enforce depth 2; every L3 target denies `task`; L4 forbidden.
 - Canonical specialist coordinators: `agent-orchestrator`, `planning-agent`, `product-manager`, `decision-analyst`, `release-manager`. Their autonomous allowlists contain leaves only; self-edge, coordinator→coordinator edge, and cycles are invalid.
-- Plan direct L2 allowlist remains exactly its reviewed 17-role tree. Build direct L2 allowlist remains exactly its reviewed 18-role tree.
-- NorthPace Loop direct L2 allowlist is exactly **all 36 canonical subagents**: inline `explore`, inline `general`, plus all 34 specialist subagents. This broad L2 authority does not expand any coordinator's L3 allowlist.
-- All three L1 Task maps use `"*": "ask"` as fallback. The reviewed 17/18/36 sets are the **auto-allowed canonical routes**; any noncanonical L1 Task request requires explicit Human Operator approval and does not silently become a new canonical autonomous edge.
+- Plan direct L2 allowlist remains exactly its reviewed 17-role tree. Plan's noncanonical Task fallback is hard `deny`, so Auto Mode cannot expand the planning tree into mutating specialists.
+- Build direct L2 allowlist remains exactly its reviewed 18-role tree. Build's noncanonical Task fallback is `ask`.
+- NorthPace Loop direct L2 allowlist is exactly **all 36 canonical subagents**: inline `explore`, inline `general`, plus all 34 specialist subagents. Its noncanonical Task fallback is `ask`. This broad L2 authority does not expand any coordinator's L3 allowlist.
+- Reviewed direct sets are the **auto-allowed canonical routes**. Build/Loop approval of a noncanonical `ask` route does not silently redefine canonical topology; in Auto Mode those asks are Human-preauthorized exceptions for that runtime mode.
 - Default newly-active child budget = 4 **per parent**, not a global session ceiling and not an OpenCode hard limit.
 - No provider-specific concurrency ceiling is canonical unless supported by observed runtime/provider evidence. Provider pressure never authorizes automatic model/reasoning-tier substitution.
 - Parallel writers require disjoint owned paths **and** semantic independence/dependency readiness. If one package changes an interface, schema, lockfile, generated artifact, or invariant consumed by another, order them by dependency.
@@ -29,19 +30,27 @@ Authoritative lazy-loaded rules for multi-agent, multi-session, and NorthPace Lo
 - Keep a compact Goal Ledger in active context: Root Goal, Definition of Done, current milestone, completed evidence, active ownership/tasks, blockers/decisions/constraints, next best action.
 - Loop control is intentionally small: `OBSERVE → CHOOSE → ACT/DELEGATE → VERIFY/RECONCILE → COMPARE TO ROOT GOAL → CONTINUE`.
 - Completing one task/milestone/review/test does not end the Loop. Before voluntary stop, compare verified state to Definition of Done; if incomplete and no Human Gate, hard blocker, or runtime/provider failure exists, choose the next useful action immediately.
-- No repository `steps` ceiling means unbounded horizon, not unbounded retry. The normal two-corrections-per-root-cause and two-attempts-without-new-evidence blocking rules still apply.
+- No repository `steps` ceiling means unbounded horizon, not unbounded retry. The normal two-corrections-per-root-cause and two-attempts-without-new-evidence blocking rules still apply. Loop also hard-denies runtime `doom_loop`; an identical repeated tool call must change strategy or surface a Human Gate.
 - `GOAL_COMPLETE` requires evidence-backed Definition of Done, all intended writers settled, ownership/diff reconciled, stable final snapshot, authoritative final verification, fresh independent review and fresh security when relevant.
+
+## Supervised automation permissions
+
+- `allow` is low-friction capability; `ask` is supervised capability; `deny` is a hard runtime boundary.
+- In normal mode, `ask` produces Human approval UI. When Human explicitly enables OpenCode Auto Mode, requests that would otherwise ask are automatically approved; explicit `deny` remains enforced.
+- Global Bash fallback is `ask`, not `allow`. Exact low-risk Git inspection remains `allow`; raw deletion, push/publish/deploy, disk/power destruction, and selected irreversible external effects remain `deny`.
+- Browser and CUA are role-scoped. Global Playwright/CUA remain denied; Build/Loop may use approval-gated browser/CUA when the corresponding MCP/tool transport is enabled. Frontend/e2e/electron/tauri may use approval-gated browser tooling; only e2e/electron/tauri may approval-gate evaluate, and only e2e may approval-gate fixture file upload.
+- Optional Playwright/CUA MCP entries remain disabled by default until Human Operator enables a verified local transport. Permission config never proves tool registration/availability.
+- Native secret read/edit denies reduce accidental disclosure/mutation but are not a process sandbox. A shell process can have broader filesystem reach when shell policy permits; Auto Mode therefore represents broad Human preauthorization for `ask` shell operations.
 
 ## Hard runtime boundaries vs governance
 
-- Hard boundaries are effective runtime `deny`, configured identities, and verified depth enforcement. `ask` is supervised friction, not a security boundary.
+- Hard boundaries are effective runtime `deny`, configured identities, and verified depth enforcement. `ask` is supervised/Auto-Mode-preauthorized capability, not a hard security boundary.
 - Ownership, dependency acceptance, ResultEnvelope validity, retry/root-cause counters, freshness, Goal Ledger/registry reconciliation, and one-writer-per-path are NorthPalace governance unless a future runtime enforces them mechanically.
 - Shell/process capability is not a filesystem ownership sandbox. Before mutating shell work, declare expected source/generated/lock/artifact paths; afterwards inspect status/diff. Unexpected source mutation blocks for L1 reconciliation.
-- Native read secret denies reduce accidental disclosure but do not make Bash-capable agents filesystem-sandboxed.
 
 ## Mixed-initiative control
 
-- Model-initiated work follows the autonomous DAG and effective `permission.task`; an `ask` fallback is a Human approval gate, not silent autonomous expansion.
+- Model-initiated work follows the autonomous DAG and effective `permission.task`. Plan cannot ask its way into a noncanonical mutating child; Build/Loop may request a noncanonical child through `ask`, subject to normal approval or explicit Auto Mode preauthorization.
 - Human Operator sits above all three trees and may use natural prompt, switch Plan/Build/NorthPace Loop, `@agent`, `/command`, Desktop root/child-session inspection/steering, cancel/resume, standalone work, manual edits, or explicit scope/model changes.
 - Human-directed invocation is not a model-created graph edge. If it remains inside an active workflow/goal, it inherits objective/ownership/dependency/evidence/safety obligations unless the operator explicitly changes scope or starts standalone work.
 - After manual routing/scope/model changes, owning L1 reconciles live tasks, ownership, dependencies, filesystem state, and evidence before new autonomous dispatch or acceptance.
