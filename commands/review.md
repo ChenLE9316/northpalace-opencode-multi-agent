@@ -4,7 +4,7 @@ agent: build
 subtask: false
 ---
 
-Collect Git status/diff, changed/generated-file state, ownership reconciliation, and verification evidence using safe commands. When Git is unavailable, provide explicit changed paths plus bounded current/before-after evidence.
+Collect Git status/diff, changed/generated-file state, ownership reconciliation, and verification evidence using safe commands. Global Bash fallback is supervised `ask`, so normal Desktop use may request approval; Auto Mode may preauthorize `ask`, while hard-denied routes remain blocked. When Git is unavailable, provide explicit changed paths plus bounded current/before-after evidence.
 
 Start a **fresh `review` Task** with a complete TaskEnvelope and focus from `$ARGUMENTS`; never ask the reviewer to run shell or modify files. If this invocation is the final acceptance gate, first require no active writers and an authoritative final verification on the same stable final snapshot.
 
