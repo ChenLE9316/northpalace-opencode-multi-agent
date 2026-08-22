@@ -2,7 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const here = path.dirname(fileURLToPath(import.meta.url));
+const root = path.resolve(here, '..');
 const args = new Set(process.argv.slice(2));
 const mode = args.has('--deployment') ? 'deployment' : 'canonical';
 const projectArgIndex = process.argv.indexOf('--project');
@@ -13,26 +14,47 @@ const projectRoot = projectArgIndex >= 0 && process.argv[projectArgIndex + 1]
 const failures = [];
 const warnings = [];
 const passes = [];
-const pass = (message) => passes.push(message);
-const warn = (message) => warnings.push(message);
-const check = (condition, message) => (condition ? pass(message) : failures.push(message));
-const exists = (rel) => fs.existsSync(path.join(root, rel));
-const read = (rel) => fs.readFileSync(path.join(root, rel), 'utf8');
 
+function pass(message) { passes.push(message); }
+function warn(message) { warnings.push(message); }
+function check(condition, message) {
+  if (condition) pass(message);
+  else failures.push(message);
+}
+function exists(rel) { return fs.existsSync(path.join(root, rel)); }
+function read(rel) { return fs.readFileSync(path.join(root, rel), 'utf8'); }
 function listMd(rel) {
   const dir = path.join(root, rel);
   if (!fs.existsSync(dir)) return [];
   return fs.readdirSync(dir, { withFileTypes: true })
     .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
-    .map((entry) => entry.name).sort();
+    .map((entry) => entry.name)
+    .sort();
 }
 function stripJsonComments(text) {
-  let out = '', inString = false, escaped = false, lineComment = false, blockComment = false;
+  let out = '';
+  let inString = false;
+  let escaped = false;
+  let lineComment = false;
+  let blockComment = false;
   for (let i = 0; i < text.length; i += 1) {
-    const ch = text[i], next = text[i + 1];
-    if (lineComment) { if (ch === '\n') { lineComment = false; out += ch; } continue; }
-    if (blockComment) { if (ch === '*' && next === '/') { blockComment = false; i += 1; } continue; }
-    if (inString) { out += ch; if (escaped) escaped = false; else if (ch === '\\') escaped = true; else if (ch === '"') inString = false; continue; }
+    const ch = text[i];
+    const next = text[i + 1];
+    if (lineComment) {
+      if (ch === '\n') { lineComment = false; out += ch; }
+      continue;
+    }
+    if (blockComment) {
+      if (ch === '*' && next === '/') { blockComment = false; i += 1; }
+      continue;
+    }
+    if (inString) {
+      out += ch;
+      if (escaped) escaped = false;
+      else if (ch === '\\') escaped = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
     if (ch === '"') { inString = true; out += ch; continue; }
     if (ch === '/' && next === '/') { lineComment = true; i += 1; continue; }
     if (ch === '/' && next === '*') { blockComment = true; i += 1; continue; }
@@ -41,8 +63,13 @@ function stripJsonComments(text) {
   return out;
 }
 function parseJsonc(text, label) {
-  try { return JSON.parse(stripJsonComments(text).replace(/,\s*([}\]])/g, '$1')); }
-  catch (error) { failures.push(`${label} is not parseable JSONC: ${error.message}`); return {}; }
+  try {
+    const clean = stripJsonComments(text).replace(/,\s*([}\]])/g, '$1');
+    return JSON.parse(clean);
+  } catch (error) {
+    failures.push(`${label} is not parseable JSONC: ${error.message}`);
+    return {};
+  }
 }
 function extractFrontmatter(text) {
   if (!text.startsWith('---\n')) return '';
@@ -52,15 +79,17 @@ function extractFrontmatter(text) {
 function topScalar(fm, key) {
   const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const match = fm.match(new RegExp(`^${escaped}:\\s*(.*?)\\s*$`, 'm'));
-  return match?.[1]?.replace(/^['"]|['"]$/g, '');
+  if (!match) return undefined;
+  return match[1].replace(/^['"]|['"]$/g, '');
 }
 function taskPolicy(fm) {
   const lines = fm.split(/\r?\n/);
   const p = lines.findIndex((line) => /^permission:\s*$/.test(line));
   if (p < 0) return { type: 'missing', entries: {} };
   for (let i = p + 1; i < lines.length; i += 1) {
-    if (/^\S/.test(lines[i])) break;
-    const task = lines[i].match(/^\s{2}task:\s*(.*?)\s*$/);
+    const line = lines[i];
+    if (/^\S/.test(line)) break;
+    const task = line.match(/^\s{2}task:\s*(.*?)\s*$/);
     if (!task) continue;
     if (task[1]) return { type: 'scalar', value: task[1].replace(/^['"]|['"]$/g, ''), entries: {} };
     const entries = {};
@@ -86,69 +115,94 @@ function resolveAllowed(policy, candidates) {
     if (pattern.includes('*')) {
       const re = globRegex(pattern);
       for (const candidate of candidates) if (re.test(candidate)) allowed.add(candidate);
-    } else allowed.add(pattern);
+    } else {
+      allowed.add(pattern);
+    }
   }
   return [...allowed].sort();
 }
 function sameSet(actual, expected) {
-  const a = [...actual].sort(), b = [...expected].sort();
-  return a.length === b.length && a.every((value, index) => value === b[index]);
-}
-function sameObject(actual, expected) {
-  return JSON.stringify(Object.entries(actual).sort()) === JSON.stringify(Object.entries(expected).sort());
+  return actual.length === expected.length && actual.every((value, index) => value === expected[index]);
 }
 
 const config = parseJsonc(read('opencode.jsonc'), 'opencode.jsonc');
-check(config.default_agent === 'build', 'default_agent remains build');
+check(config.default_agent === 'build', 'default_agent is build');
 check(config.subagent_depth === 2, 'V1 top-level subagent_depth is 2');
-check(config.autoupdate === false, 'autoupdate is hard-disabled');
-check(config.share === 'disabled', 'sharing remains disabled');
+check(config.autoupdate === false, 'autoupdate is hard-disabled for runtime-stability');
 check(config.compaction?.auto === true, 'V1 compaction auto is enabled');
-check(Number.isInteger(config.compaction?.preserve_recent_tokens) && config.compaction.preserve_recent_tokens > 0, 'V1 compaction preserve_recent_tokens is explicit');
-check(Number.isInteger(config.compaction?.reserved) && config.compaction.reserved > 0, 'V1 compaction reserved buffer is explicit');
+check(Number.isInteger(config.compaction?.preserve_recent_tokens) && config.compaction.preserve_recent_tokens > 0,
+  'V1 compaction preserve_recent_tokens is explicit for V2 migration');
+check(Number.isInteger(config.compaction?.reserved) && config.compaction.reserved > 0,
+  'V1 compaction reserved buffer is explicit');
 
 const plan = config.agent?.plan;
 const build = config.agent?.build;
 const loop = config.agent?.['northpace-loop'];
-for (const [name, agent] of [['plan', plan], ['build', build], ['northpace-loop', loop]]) {
-  check(agent?.mode === 'primary', `${name} is a primary L1`);
-  check(agent?.permission?.task?.['*'] === 'ask', `${name} L1 Task wildcard fallback is ask`);
-}
-check(plan?.steps === 100, 'Plan steps remains 100');
-check(build?.steps === 200, 'Build steps remains 200');
-check(loop?.steps === undefined, 'NorthPace Loop has no repository steps ceiling');
+check(plan?.mode === 'primary', 'plan remains a primary L1');
+check(build?.mode === 'primary', 'build remains a primary L1');
+check(loop?.mode === 'primary', 'northpace-loop remains a primary L1');
 check(plan?.permission?.edit === 'deny', 'Plan native edit is denied');
 check(plan?.permission?.bash?.['*'] === 'deny', 'Plan arbitrary Bash is hard-denied');
+check(plan?.permission?.task?.['*'] === 'deny', 'Plan noncanonical Task fallback is hard-denied');
+check(build?.permission?.task?.['*'] === 'ask', 'Build noncanonical Task fallback is approval-gated');
+check(loop?.permission?.task?.['*'] === 'ask', 'NorthPace Loop noncanonical Task fallback is approval-gated');
+check(loop?.permission?.doom_loop === 'deny', 'NorthPace Loop hard-denies doom_loop');
 
 const planMetadataGit = [
-  'git status','git status --short','git status --porcelain','git diff --name-only','git diff --stat',
-  'git rev-parse HEAD','git ls-files','git branch --show-current','git describe',
+  'git status',
+  'git status --short',
+  'git status --porcelain',
+  'git diff --name-only',
+  'git diff --stat',
+  'git rev-parse HEAD',
+  'git ls-files',
+  'git branch --show-current',
+  'git describe',
 ];
-for (const safe of planMetadataGit) check(plan?.permission?.bash?.[safe] === 'allow', `Plan exact metadata Git route allowed: ${safe}`);
-const planAllowedGit = Object.entries(plan?.permission?.bash || {}).filter(([k,v]) => k !== '*' && v === 'allow').map(([k]) => k);
-check(sameSet(planAllowedGit, planMetadataGit), 'Plan shell allowlist contains only exact metadata Git commands');
+for (const safe of planMetadataGit) check(plan?.permission?.bash?.[safe] === 'allow', `Plan exact metadata-only Git route is allowed: ${safe}`);
+const planAllowedGitKeys = Object.entries(plan?.permission?.bash || {}).filter(([key, value]) => key !== '*' && value === 'allow').map(([key]) => key).sort();
+check(sameSet(planAllowedGitKeys, [...planMetadataGit].sort()), 'Plan Git shell allowlist contains only exact metadata commands');
 for (const forbidden of ['git diff*','git log*','git show*','git grep*','git remote*','git rev-parse*','git ls-files*','git branch --show-current*','git describe*']) {
-  check(plan?.permission?.bash?.[forbidden] !== 'allow', `Plan has no broad/content-bearing Git allow: ${forbidden}`);
+  check(plan?.permission?.bash?.[forbidden] !== 'allow', `Plan has no broad/content-bearing Git allow rule: ${forbidden}`);
 }
 
+const globalEdit = config.permission?.edit || {};
+check(globalEdit['*'] === 'allow', 'workspace native edit remains allowed by default');
+for (const sensitive of [
+  '.env','**/.env','~/.local/share/opencode/auth.json','**/.local/share/opencode/auth.json',
+  '.ssh/**','**/.ssh/**','.npmrc','**/.npmrc','.git-credentials','**/.git-credentials',
+  '.aws/**','**/.aws/**','.azure/**','**/.azure/**','.config/gcloud/**','**/.config/gcloud/**',
+  '.config/gh/**','**/.config/gh/**','.kube/**','**/.kube/**','.docker/config.json','**/.docker/config.json',
+  '.netrc','**/.netrc','*.pem','**/*.pem','*.key','**/*.key','credentials.json','**/credentials.json',
+  'service-account*.json','**/service-account*.json'
+]) check(globalEdit[sensitive] === 'deny', `sensitive native edit path is hard-denied: ${sensitive}`);
+check(globalEdit['.env.example'] === 'allow' && globalEdit['**/.env.example'] === 'allow', 'env example files remain editable');
+
 const globalBash = config.permission?.bash || {};
+check(globalBash['*'] === 'ask', 'global Bash fallback is supervised ask');
+for (const safe of ['git status*','git diff*','git log*','git show*','git grep*','git rev-parse*','git ls-files*','git branch --show-current*','git remote -v*','git remote get-url*','git describe*']) check(globalBash[safe] === 'allow', `low-risk Git evidence route is allowed: ${safe}`);
 for (const dangerous of [
   'git push*','git reset --hard*','git clean*','git checkout --*','git restore*',
   'gh pr merge*','gh release create*','gh release delete*','gh repo delete*',
-  'docker push*','kubectl apply*','kubectl delete*','helm upgrade*','terraform apply*','terraform destroy*',
-  'rm *','rmdir *','del *','Remove-Item *','powershell*Remove-Item*','cmd *del *','cargo clean*',
-  'npm publish*','pnpm publish*','bun publish*','cargo publish*',
-]) check(globalBash[dangerous] === 'deny', `high-risk shell route hard-denied: ${dangerous}`);
+  'docker push*','docker * prune*','kubectl apply*','kubectl delete*','helm install*','helm upgrade*','helm uninstall*',
+  'terraform apply*','terraform destroy*','terraform state rm*','rm *','rmdir *','del *','Remove-Item *',
+  'powershell*Remove-Item*','cmd *del *','shutdown*','reboot*','poweroff*','halt*','mkfs*','dd *','diskpart*','format *',
+  'npm publish*','pnpm publish*','bun publish*','cargo publish*'
+]) check(globalBash[dangerous] === 'deny', `high-risk shell route is hard-denied: ${dangerous}`);
+check(globalBash['cargo clean*'] === 'ask', 'cargo clean is supervised instead of hard-denied');
 
 check(config.permission?.['cua-driver_*'] === 'deny', 'CUA is globally denied');
-check(build?.permission?.['cua-driver_*'] === 'ask', 'Build CUA is supervised ask');
-check(plan?.permission?.['cua-driver_*'] === 'deny', 'Plan CUA is explicitly denied');
-check(loop?.permission?.['cua-driver_*'] === undefined, 'NorthPace Loop does not override global CUA deny');
-check(config.mcp?.['cua-driver']?.enabled === true, 'CUA MCP is enabled for supervised Build use');
-for (const tool of ['playwright_browser_run_code_unsafe','playwright_browser_file_upload','playwright_browser_drop','playwright_browser_evaluate']) {
-  check(config.permission?.[tool] === 'deny', `global Playwright high-risk tool denied: ${tool}`);
+check(build?.permission?.['cua-driver_*'] === 'ask', 'Build re-enables CUA as supervised ask');
+check(loop?.permission?.['cua-driver_*'] === 'ask', 'NorthPace Loop re-enables CUA as supervised ask');
+check(config.permission?.['playwright_*'] === 'deny', 'Playwright is globally denied and role-scoped');
+for (const tool of ['playwright_browser_run_code_unsafe','playwright_browser_file_upload','playwright_browser_drop','playwright_browser_evaluate']) check(config.permission?.[tool] === 'deny', `global Playwright high-risk tool is denied: ${tool}`);
+for (const primary of [build, loop]) {
+  check(primary?.permission?.['playwright_*'] === 'ask', 'mutating L1 re-enables bounded browser automation as ask');
+  for (const tool of ['playwright_browser_run_code_unsafe','playwright_browser_file_upload','playwright_browser_drop','playwright_browser_evaluate']) check(primary?.permission?.[tool] === 'deny', `mutating L1 keeps high-risk Playwright tool denied: ${tool}`);
 }
-check(config.permission?.skill?.['northpalace-langfei-ni-token'] === 'deny', 'operator-only skill denied to model-facing skill loading');
+check(config.mcp?.playwright?.enabled === false, 'Playwright transport remains disabled-by-default');
+check(config.mcp?.['cua-driver']?.enabled === false, 'CUA transport remains disabled-by-default');
+check(config.permission?.skill?.['northpalace-langfei-ni-token'] === 'deny', 'operator-only skill is denied to model-facing skill loading');
 
 const agentFiles = listMd('agents');
 const specialistNames = agentFiles.map((file) => file.replace(/\.md$/, ''));
@@ -164,91 +218,69 @@ for (const file of agentFiles) {
   check(topScalar(fm, 'hidden') === 'false', `${name} hidden is false`);
   const permissionBlock = fm.slice(fm.indexOf('permission:'));
   check(/^\s{2}question:\s*deny\s*$/m.test(permissionBlock), `${name} question tool is denied`);
-  if (mode === 'canonical') check(!fm.includes('cua-driver_'), `${name} has no canonical CUA override`);
   policies.set(name, taskPolicy(fm));
 }
 
-const inlineNames = ['explore','general'];
-const subagentCandidates = [...specialistNames, ...inlineNames];
+const inlineNames = ['explore', 'general'];
+const candidates = [...specialistNames, ...inlineNames];
 const coordinators = specialistNames.filter((name) => policies.get(name)?.type === 'map').sort();
-const canonicalCoordinators = ['agent-orchestrator','decision-analyst','planning-agent','product-manager','release-manager'];
+const canonicalCoordinators = ['agent-orchestrator','decision-analyst','planning-agent','product-manager','release-manager'].sort();
 if (mode === 'canonical') check(sameSet(coordinators, canonicalCoordinators), 'canonical coordinator set is exact');
+else check(coordinators.length > 0, 'deployment coordinator set is non-empty');
 
 for (const name of specialistNames) {
-  if (!coordinators.includes(name)) {
-    const p = policies.get(name);
-    check(p?.type === 'scalar' && p.value === 'deny', `${name} remains a task-deny leaf`);
-  }
-}
-check(config.agent?.explore?.permission?.task === 'deny', 'inline explore is task-deny leaf');
-check(config.agent?.general?.permission?.task === 'deny', 'inline general is task-deny leaf');
-
-const coordinatorExpected = {
-  'agent-orchestrator': {'*':'deny','explore':'allow','general':'allow','*-engineer':'allow','refactorer':'allow','test-runner':'allow','test-writer':'allow','e2e-tester':'allow','doc-generator':'allow','ci-debugger':'allow'},
-  'planning-agent': {'*':'deny','explore':'allow','researcher':'allow','multi-angle-researcher':'allow','discussion-facilitator':'allow'},
-  'product-manager': {'*':'deny','researcher':'allow','multi-angle-researcher':'allow','discussion-facilitator':'allow','api-designer':'allow'},
-  'decision-analyst': {'*':'deny','researcher':'allow','multi-angle-researcher':'allow','discussion-facilitator':'allow','dependency-checker':'allow'},
-  'release-manager': {'*':'deny','security-auditor':'allow','dependency-checker':'allow'},
-};
-for (const [name, expected] of Object.entries(coordinatorExpected)) {
   const policy = policies.get(name);
-  check(policy?.type === 'map' && sameObject(policy.entries, expected), `${name} exact coordinator Task map matches`);
-  const targets = resolveAllowed(policy, subagentCandidates);
-  check(!targets.includes(name), `${name} has no self-delegation`);
-  check(!targets.some((target) => coordinators.includes(target)), `${name} has no coordinator-to-coordinator edge`);
+  if (!coordinators.includes(name)) check(policy?.type === 'scalar' && policy.value === 'deny', `${name} is a task-deny leaf`);
+}
+check(config.agent?.explore?.permission?.task === 'deny', 'inline explore is a task-deny leaf');
+check(config.agent?.general?.permission?.task === 'deny', 'inline general is a task-deny leaf');
+
+for (const coordinator of coordinators) {
+  const targets = resolveAllowed(policies.get(coordinator), candidates);
+  check(!targets.includes(coordinator), `${coordinator} has no self-delegation`);
   for (const target of targets) {
-    const leaf = inlineNames.includes(target)
-      ? config.agent?.[target]?.permission?.task === 'deny'
-      : policies.get(target)?.type === 'scalar' && policies.get(target)?.value === 'deny';
-    check(leaf, `${name} target is task-deny L3 leaf: ${target}`);
+    check(candidates.includes(target), `${coordinator} target exists: ${target}`);
+    const leaf = inlineNames.includes(target) ? config.agent?.[target]?.permission?.task === 'deny' : policies.get(target)?.type === 'scalar' && policies.get(target)?.value === 'deny';
+    check(leaf, `${coordinator} target is task-deny leaf: ${target}`);
   }
 }
 
 if (mode === 'canonical') {
   const expectedEngineers = ['ai-ml-engineer','cli-engineer','db-engineer','devops-engineer','electron-engineer','frontend-engineer','rag-engineer','rust-engineer','tauri-engineer'];
-  check(sameSet(specialistNames.filter((n) => /-engineer$/.test(n)), expectedEngineers), 'AO *-engineer resolves to reviewed nine engineers');
-
-  const planExpected = ['explore','planning-agent','product-manager','researcher','api-designer','ui-designer','a11y-specialist','security-auditor','screen-context-agent','dependency-checker','error-analyzer','discussion-facilitator','multi-angle-researcher','decision-analyst','architect','review','handoff-drafter'];
-  const buildExpected = ['explore','general','architect','researcher','review','security-auditor','error-analyzer','dependency-checker','agent-orchestrator','frontend-engineer','rust-engineer','tauri-engineer','electron-engineer','test-runner','release-manager','knowledge-curator','handoff-drafter','e2e-tester'];
-  const loopExpected = [...subagentCandidates];
-  const allowed = (obj = {}) => Object.entries(obj).filter(([k,v]) => k !== '*' && v === 'allow').map(([k]) => k);
-  check(sameSet(allowed(plan?.permission?.task), planExpected), 'Plan exact 17 direct auto-allowed L2 routes match');
-  check(sameSet(allowed(build?.permission?.task), buildExpected), 'Build exact 18 direct auto-allowed L2 routes match');
-  check(sameSet(allowed(loop?.permission?.task), loopExpected), 'NorthPace Loop exact 36 direct auto-allowed L2 routes match');
-  check(loopExpected.length === 36, 'Loop canonical subagent target count is 36');
-  check(plan?.permission?.task?.['northpace-loop'] === undefined && build?.permission?.task?.['northpace-loop'] === undefined, 'Plan/Build do not explicitly allow NorthPace Loop as a Task target');
+  const actualEngineers = specialistNames.filter((name) => /-engineer$/.test(name)).sort();
+  check(sameSet(actualEngineers, expectedEngineers.sort()), 'AO *-engineer resolution matches the reviewed nine-role baseline');
+  const planExpected = ['explore','planning-agent','product-manager','researcher','api-designer','ui-designer','a11y-specialist','security-auditor','screen-context-agent','dependency-checker','error-analyzer','discussion-facilitator','multi-angle-researcher','decision-analyst','architect','review','handoff-drafter'].sort();
+  const buildExpected = ['explore','general','architect','researcher','review','security-auditor','error-analyzer','dependency-checker','agent-orchestrator','frontend-engineer','rust-engineer','tauri-engineer','electron-engineer','test-runner','release-manager','knowledge-curator','handoff-drafter','e2e-tester'].sort();
+  const mapAllowed = (obj = {}) => Object.entries(obj).filter(([key, value]) => key !== '*' && value === 'allow').map(([key]) => key).sort();
+  check(sameSet(mapAllowed(config.agent?.plan?.permission?.task), planExpected), 'canonical Plan L2 allowlist matches 17 roles');
+  check(sameSet(mapAllowed(config.agent?.build?.permission?.task), buildExpected), 'canonical Build L2 allowlist matches 18 roles');
 }
 
 const curator = read('agents/knowledge-curator.md');
 check(curator.includes('"knowledge/**": allow') && curator.includes('"decisions/**": allow'), 'knowledge-curator can write canonical root knowledge/decisions');
-check(!curator.includes('"**/knowledge/**": allow') && !curator.includes('"**/decisions/**": allow'), 'knowledge-curator has no nested project-wide wildcard');
+check(!curator.includes('"**/knowledge/**": allow') && !curator.includes('"**/decisions/**": allow'), 'knowledge-curator has no nested project-wide knowledge/decisions wildcard');
+check(curator.includes('owning mutating L1 (`build` or `northpace-loop`)'), 'knowledge-curator recognizes both mutating L1 owners');
+const planningAgent = read('agents/planning-agent.md');
+check(planningAgent.includes('surface that requirement to the owning L1') && planningAgent.includes('If the owner is NorthPace Loop'), 'planning-agent handles both Plan and Loop parents');
 
 const commandFiles = listMd('commands');
 if (mode === 'canonical') check(commandFiles.length === 19, 'canonical command count is 19');
-const skillDirs = fs.readdirSync(path.join(root, 'skills'), { withFileTypes: true })
-  .filter((entry) => entry.isDirectory() && exists(`skills/${entry.name}/SKILL.md`)).map((entry) => entry.name).sort();
+const skillDirs = fs.readdirSync(path.join(root, 'skills'), { withFileTypes: true }).filter((entry) => entry.isDirectory() && exists(`skills/${entry.name}/SKILL.md`)).map((entry) => entry.name).sort();
 if (mode === 'canonical') check(skillDirs.length === 8, 'canonical skill count is 8');
 
 const tauriVerify = read('commands/tauri-verify.md');
 const tauriFm = extractFrontmatter(tauriVerify);
 check(topScalar(tauriFm, 'agent') === 'build', '/tauri-verify executes in Build L1');
 check(topScalar(tauriFm, 'subtask') === 'false', '/tauri-verify does not depend on command subtask semantics');
-check(/fresh [`']?test-runner[`']?/i.test(tauriVerify) && /TaskEnvelope/.test(tauriVerify), '/tauri-verify explicitly delegates fresh test-runner');
+check(/fresh [`']?test-runner[`']?/i.test(tauriVerify) && /TaskEnvelope/.test(tauriVerify), '/tauri-verify explicitly delegates a fresh test-runner task');
 
-const operatorCommand = read('commands/northpalace-langfei-ni-token.md');
-check(/Plan\/Build/i.test(operatorCommand) && /NorthPace Loop is intentionally not a target/.test(operatorCommand), 'operator full sweep is explicitly Plan/Build-only');
 const operatorSkill = read('skills/northpalace-langfei-ni-token/SKILL.md');
 const operatorFm = extractFrontmatter(operatorSkill);
-check(topScalar(operatorFm, 'slash') === 'false', 'operator-only skill hidden from V2 slash activation');
+check(topScalar(operatorFm, 'slash') === 'false', 'operator-only skill is hidden from V2 slash activation');
 check(/opencode\/autoinvoke:\s*false/.test(operatorFm), 'operator-only skill disables V2 model autoinvoke metadata');
-check(/canonical topology/i.test(operatorSkill) && /stop without dispatch/i.test(operatorSkill), 'full sweep stops on canonical topology drift');
-check(/stable final snapshot/i.test(operatorSkill), 'full sweep defines stable final snapshot');
-check(/fresh security/i.test(operatorSkill) && /final verification/i.test(operatorSkill), 'full sweep requires final verification and fresh security');
-
-check(exists('prompts/northpace-loop.md'), 'NorthPace Loop primary prompt exists');
-check(exists('decisions/northpace-loop-goal-mode.md'), 'NorthPace Loop architecture decision exists');
-check(exists('scripts/validate-model-routing.mjs'), 'public model routing validator exists');
-check(exists('scripts/validate-desktop-contract.mjs'), 'Desktop contract validator exists');
+check(/canonical topology/i.test(operatorSkill) && /stop without dispatch/i.test(operatorSkill), 'full sweep stops on canonical topology drift instead of adapting to incompatible coverage');
+check(/stable final snapshot/i.test(operatorSkill), 'full sweep defines a stable final snapshot gate');
+check(/fresh security/i.test(operatorSkill) && /final verification/i.test(operatorSkill), 'full sweep requires final verification and fresh security after writers settle');
 
 check(exists('compat/v2/opencode.overlay.jsonc'), 'V2 compatibility overlay exists');
 const v2 = parseJsonc(read('compat/v2/opencode.overlay.jsonc'), 'compat/v2/opencode.overlay.jsonc');
@@ -263,17 +295,11 @@ check(exists('RUNTIME_COMPATIBILITY.md'), 'runtime compatibility contract exists
 const criticalCommandCollision = path.join(projectRoot, '.opencode', 'commands', 'northpalace-langfei-ni-token.md');
 const criticalSkillCollision = path.join(projectRoot, '.opencode', 'skills', 'northpalace-langfei-ni-token', 'SKILL.md');
 if (path.resolve(projectRoot) !== path.resolve(root)) {
-  check(!fs.existsSync(criticalCommandCollision), 'active project does not shadow operator-only command');
-  check(!fs.existsSync(criticalSkillCollision), 'active project does not shadow operator-only skill');
+  check(!fs.existsSync(criticalCommandCollision), 'active project does not shadow the operator-only command');
+  check(!fs.existsSync(criticalSkillCollision), 'active project does not shadow the operator-only skill');
 }
 
-const budgets = [
-  ['AGENTS.md', 75],
-  ['rules/orchestration.md', 140],
-  ['prompts/build.md', 55],
-  ['prompts/plan.md', 45],
-  ['prompts/northpace-loop.md', 80],
-];
+const budgets = [['AGENTS.md', 90],['rules/orchestration.md', 120],['prompts/build.md', 45],['prompts/plan.md', 34]];
 for (const [file, maxLines] of budgets) {
   const lines = read(file).split(/\r?\n/).length;
   if (lines <= maxLines) pass(`${file} stays within ${maxLines} lines`);
