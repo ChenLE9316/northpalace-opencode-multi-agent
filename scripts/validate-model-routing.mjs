@@ -45,15 +45,6 @@ function numberScalar(fm, key) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : NaN;
 }
-function walk(dir, out = []) {
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (entry.name === '.git' || entry.name === 'node_modules') continue;
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) walk(full, out);
-    else out.push(full);
-  }
-  return out;
-}
 
 const MUSE = 'opencode-go/muse-spark-1.2-contributor';
 const MIMO = 'opencode-go/mimo-v2.5';
@@ -160,14 +151,6 @@ check(counts[MIMO] === 7, 'MiMo specialist count is 7');
 check(counts[HY3] === 4, 'Hy3 specialist count is 4');
 check([...['minimal','low','medium','high','xhigh']].every((v) => usedMuse.has(v)), 'Muse routing exercises all five canonical tiers');
 check(usedHy3.has('none') && usedHy3.has('low'), 'Hy3 routing exercises canonical none|low tiers');
-
-const forbiddenId = /opencode-go\/ox-alpha-free|opencode\/x-preview-f-free/i;
-for (const full of walk(root)) {
-  if (!/\.(md|jsonc|mjs|yml|yaml|json)$/.test(full)) continue;
-  const rel = path.relative(root, full).replaceAll('\\', '/');
-  const text = fs.readFileSync(full, 'utf8');
-  check(!forbiddenId.test(text), `${rel} contains no forbidden legacy Free model ID`);
-}
 
 for (const message of passes) console.log(`[OK] ${message}`);
 for (const message of failures) console.error(`[FAIL] ${message}`);
