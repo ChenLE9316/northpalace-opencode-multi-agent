@@ -68,6 +68,7 @@ Plan 是 hard source-edit read-only L1：
 - arbitrary Bash `deny`
 - shell 只允許 exact metadata-only Git queries
 - 17 canonical direct L2 = `allow`
+- 其他 model-created Task = `deny`
 - Plan 非 canonical Task fallback = **`deny`**
 
 因此即使 Human 啟用 Auto Mode，Plan autonomous tree 也不能自行擴張到 mutating specialist。
