@@ -1,6 +1,6 @@
 # Agent Architecture Reference
 
-NorthPalace public canonical architecture：**OpenCode Desktop runtime + three Human-visible primary L1 delegation trees (`plan`, `build`, `northpace-loop`) + Human Operator mixed-initiative + bounded model-autonomous L1→L2→L3 DAG + public OpenCode Free model routing**。
+NorthPalace public canonical architecture：**OpenCode Desktop runtime + three Human-visible primary L1 delegation trees (`plan`, `build`, `northpace-loop`) + Human Operator mixed-initiative + supervised automation permissions + bounded model-autonomous L1→L2→L3 DAG + public OpenCode Free model routing**。
 
 > Source of truth: `opencode.jsonc`, `prompts/*.md`, `agents/*.md`, `rules/orchestration.md`, `RUNTIME_COMPATIBILITY.md`, `scripts/validate-governance.mjs`, `scripts/validate-model-routing.mjs`, and `scripts/validate-desktop-contract.mjs`.
 
@@ -17,23 +17,45 @@ All 34 specialist files use `mode: subagent`, `hidden: false`, `question: deny`.
 
 `permission.task` controls **model-autonomous** Task creation. Human natural prompt / primary switching / `@agent` / `/command` / Desktop child-session steering is a separate control path.
 
-All three L1 Task maps use `"*": "ask"` fallback. Their exact reviewed target lists remain explicit `allow`; an `ask` fallback is Human approval for a noncanonical request, not silent expansion of the canonical autonomous DAG.
-
 ## 2. Three primary L1 trees
 
-| Agent | Mode | Public model route | Steps | Direct auto-allowed L2 | Role |
-|---|---|---|---:|---:|---|
-| `plan` | primary | global Ox Alpha Free / `max` | 100 | 17 | hard read-only planning/evidence |
-| `build` | primary | global Ox Alpha Free / `high` | 200 | 18 | bounded mutating implementation owner |
-| `northpace-loop` | primary | global Ox Alpha Free / `high` | **unset** | **36** | Human-selected long-horizon Root Goal owner |
-| `explore` | subagent | Nemotron / `low` | 60 | — | fast read-only evidence |
-| `general` | subagent | Nemotron / `medium` | 90 | — | bounded implementation |
+| Agent | Mode | Public model route | Steps | Direct L2 | Task fallback | Role |
+|---|---|---|---:|---:|---|---|
+| `plan` | primary | global Ox Alpha Free / `max` | 100 | 17 | **deny** | hard read-only planning/evidence |
+| `build` | primary | global Ox Alpha Free / `high` | 200 | 18 | **ask** | bounded mutating implementation owner |
+| `northpace-loop` | primary | global Ox Alpha Free / `high` | **unset** | **36** | **ask** | Human-selected long-horizon Root Goal owner |
+| `explore` | subagent | Nemotron / `low` | 60 | — | deny | fast read-only evidence |
+| `general` | subagent | Nemotron / `medium` | 90 | — | deny | bounded implementation |
 
 Global public model = `opencode/x-preview-f-free`; public `small_model` = `opencode/nemotron-3.5-lightning-free`.
 
-NorthPace Loop intentionally has no repository `steps`: NorthPalace imposes no Root Goal iteration ceiling. Retry/blocker/safety rules still bound repeated failure behavior.
+NorthPace Loop intentionally has no repository `steps`: NorthPalace imposes no Root Goal iteration ceiling. Retry/blocker/safety rules still bound repeated failure behavior; Loop additionally hard-denies `doom_loop`.
 
-## 3. Human-only NorthPace Loop entry
+Plan's noncanonical Task fallback is hard `deny`, preserving the read-only autonomous tree under Auto Mode. Build/Loop noncanonical Task fallback is `ask`; approval or Auto Mode preauthorization is an exception path and does not redefine canonical topology.
+
+## 3. Supervised automation permission architecture
+
+NorthPalace uses OpenCode permission semantics as a three-tier operating model:
+
+| Decision | Meaning |
+|---|---|
+| `allow` | low-friction routine capability; no approval |
+| `ask` | Human-supervised in normal mode; automatically approved when Human explicitly enables Auto Mode |
+| `deny` | hard runtime boundary; Auto Mode does not bypass it |
+
+Key policy:
+
+- Global Bash fallback = `ask`; exact low-risk Git inspection remains `allow`.
+- Raw deletion, push/publish/deploy, selected infrastructure apply/destroy, disk/power destruction remain `deny`.
+- `cargo clean` is `ask`, not a hard deny.
+- Workspace edit = `allow`, with native `read` and `edit` hard-denying sensitive credential/private-key paths.
+- Plan Bash/edit remain hard `deny` except exact metadata-only Git inspection.
+- Read-only planning/review/security agents keep Bash/edit hard `deny`.
+- Global Playwright/CUA = `deny`; only selected Human-visible L1/specialists explicitly re-enable bounded automation as `ask`.
+- Auto Mode is Human preauthorization for `ask`, not permission to evade `deny`.
+- Native file denies are not a shell/process sandbox; shell-capable agents may have broader filesystem reach when shell permission is approved.
+
+## 4. Human-only NorthPace Loop entry
 
 NorthPace Loop is a **primary**, never a subagent. It is not explicitly present as an allowed Task target in Plan, Build, coordinator, or specialist maps.
 
@@ -49,7 +71,7 @@ next Human prompt establishes Root Goal if none active
 
 While a Root Goal is active, later Human prompts are steering/constraints/evidence unless Human explicitly replaces the goal. Human can stop/switch/edit/steer at any time.
 
-## 4. Public Free model families
+## 5. Public Free model families
 
 ```text
 OX        = opencode/x-preview-f-free
@@ -62,10 +84,10 @@ Specialist counts: **Nemotron 20 / Ox 6 / Muse 4 / MiMo 4 = 34**.
 
 MiMo specialist routes intentionally do not set `reasoningEffort` in the current public runtime configuration.
 
-## 5. Canonical Plan DAG
+## 6. Canonical Plan DAG
 
 ```text
-Plan L1 (Ox max; hard read-only)
+Plan L1 (Ox max; hard read-only; noncanonical Task=deny)
 ├─ explore
 ├─ planning-agent
 │  ├─ explore
@@ -97,12 +119,12 @@ Plan L1 (Ox max; hard read-only)
 └─ handoff-drafter
 ```
 
-Plan direct L2 count = **17**. Its read-only coordinators may create only their exact reviewed L3 leaves.
+Plan direct L2 count = **17**. Its read-only coordinators may create only their exact reviewed L3 leaves. Human direct `@agent`/primary switching remains separate from Plan's autonomous Task graph.
 
-## 6. Canonical Build DAG
+## 7. Canonical Build DAG
 
 ```text
-Build L1 (Ox high; bounded mutating)
+Build L1 (Ox high; bounded mutating; noncanonical Task=ask)
 ├─ explore
 ├─ general
 ├─ architect
@@ -147,14 +169,14 @@ Build direct L2 count = **18**.
 
 Nine roles are **Build-only-via-AO**: `ai-ml-engineer`, `ci-debugger`, `cli-engineer`, `db-engineer`, `devops-engineer`, `doc-generator`, `rag-engineer`, `refactorer`, `test-writer`.
 
-They are not globally AO-only anymore because NorthPace Loop can call them directly as L2.
+They are not globally AO-only because NorthPace Loop can call them directly as L2.
 
-## 7. Canonical NorthPace Loop DAG
+## 8. Canonical NorthPace Loop DAG
 
 NorthPace Loop directly owns every canonical subagent as L2:
 
 ```text
-NorthPace Loop L1 (Ox high; Human-selected Goal mode)
+NorthPace Loop L1 (Ox high; Human-selected Goal mode; noncanonical Task=ask)
 ├─ explore
 ├─ general
 ├─ a11y-specialist
@@ -193,11 +215,9 @@ NorthPace Loop L1 (Ox high; Human-selected Goal mode)
 └─ ui-designer
 ```
 
-NorthPace Loop direct L2 count = **36**.
+NorthPace Loop direct L2 count = **36**. Coordinator targets inside Loop remain normal L2 coordinators; their L3 allowlists are unchanged.
 
-Coordinator targets inside Loop remain normal L2 coordinators. If they delegate, their L3 allowlists are unchanged; Loop does not grant them wider child authority.
-
-## 8. Coordinator allowlists
+## 9. Coordinator allowlists
 
 | Coordinator | Auto parents | Edit | Bash | Exact autonomous L3 authority |
 |---|---|---|---|---|
@@ -209,12 +229,27 @@ Coordinator targets inside Loop remain normal L2 coordinators. If they delegate,
 
 Canonical coordinator→coordinator autonomous delegation does not exist. Every L3 target is task-deny.
 
-## 9. Specialist reference table
+## 10. Browser / CUA capability map
+
+| Identity | Browser interaction | Evaluate | File upload | CUA |
+|---|---|---|---|---|
+| Build L1 | ask | deny | deny | ask |
+| NorthPace Loop L1 | ask | deny | deny | ask |
+| Plan L1 | deny | deny | deny | deny |
+| `frontend-engineer` | ask | deny | deny | deny |
+| `e2e-tester` | ask | ask | ask — repo-owned test fixtures only | deny |
+| `electron-engineer` | ask | ask | deny | deny |
+| `tauri-engineer` | ask | ask | deny | deny |
+| all other subagents | deny | deny | deny | deny |
+
+`playwright_browser_run_code_unsafe` and `playwright_browser_drop` remain denied. Playwright/CUA MCP transports are disabled by default and must be separately enabled/verified by Human Operator.
+
+## 11. Specialist reference table
 
 Permission classes:
 
 - **RO**: edit/bash/task deny
-- **WRITE**: edit allow, task deny, shell inherits canonical policy
+- **WRITE**: edit allow, task deny, shell inherits canonical supervised policy
 - **RUN**: edit deny, task deny, shell inherited for test execution
 - **SCOPED**: only canonical root paths explicitly allowed
 - **COORD-RO**: read-only coordinator with bounded Task map
@@ -235,7 +270,7 @@ Permission classes:
 | 11 | `devops-engineer` | Nemotron/high | WRITE | AO, L | CI/CD/packaging/monitoring/IaC |
 | 12 | `discussion-facilitator` | Muse/medium | RO | P, PA, PM, DA, L | assumptions/perspectives/blind spots |
 | 13 | `doc-generator` | Nemotron/low | WRITE | AO, L | evidence-based technical docs |
-| 14 | `e2e-tester` | MiMo | WRITE | B, AO, L | E2E journey/test edits; Playwright evaluate exception |
+| 14 | `e2e-tester` | MiMo | WRITE | B, AO, L | E2E journey/test edits; browser/evaluate/upload ask |
 | 15 | `electron-engineer` | Nemotron/high | WRITE | B, AO, L | Electron IPC/main/preload/renderer boundary |
 | 16 | `error-analyzer` | Nemotron/high | RO | P, B, L | error/log/repro root-cause analysis |
 | 17 | `frontend-engineer` | MiMo | WRITE | B, AO, L | React/TS UI state/protocol/accessibility |
@@ -246,7 +281,7 @@ Permission classes:
 | 22 | `product-manager` | Ox/high | COORD-RO | P, L | scope/requirements/acceptance/product risk |
 | 23 | `rag-engineer` | Nemotron/high | WRITE | AO, L | ingestion/retrieval/reranking/provenance |
 | 24 | `refactorer` | Nemotron/high | WRITE | AO, L | bounded behavior-preserving refactor |
-| 25 | `release-manager` | Ox/high | COORD-WRITE | B, L | release readiness/flow; hard external effects remain denied |
+| 25 | `release-manager` | Ox/high | COORD-WRITE | B, L | release readiness; hard external effects remain denied |
 | 26 | `researcher` | Nemotron/medium | RO | P, B, PA, PM, DA, L | official/upstream evidence |
 | 27 | `review` | Muse/xhigh | RO | P, B, L | fresh independent correctness/regression review |
 | 28 | `rust-engineer` | Nemotron/high | WRITE | B, AO, L | Rust implementation/verification |
@@ -259,7 +294,7 @@ Permission classes:
 
 Legend: P=Plan, B=Build, L=NorthPace Loop, AO/PA/PM/DA/RM=coordinator path.
 
-## 10. NorthPace Loop Goal mechanics
+## 12. NorthPace Loop Goal mechanics
 
 ```text
 Root Goal + Definition of Done
@@ -271,48 +306,15 @@ OBSERVE → CHOOSE → ACT/DELEGATE → VERIFY/RECONCILE
    └──────── goal incomplete ─────────────┘
 ```
 
-Goal Ledger keeps:
+Goal Ledger keeps Root Goal, Definition of Done, current milestone, completed evidence, active ownership/tasks, blockers/decisions/constraints, and next best action.
 
-- Root Goal
-- Definition of Done
-- current milestone
-- completed evidence
-- active ownership/tasks
-- blockers/decisions/constraints
-- next best action
+Unbounded horizon ≠ infinite retry. Same root-cause correction ≤2; two attempts without new evidence block/change strategy/surface a Human Gate. Identical repeated tool calls are additionally blocked by Loop `doom_loop: deny`.
 
-No repository `steps` ceiling does not remove:
+## 13. Mutating L1 transfer
 
-- hard permission gates
-- effective depth
-- per-parent fan-out
-- ownership
-- two-corrections-per-root-cause
-- blocked-after-no-new-evidence rule
-- provider/runtime termination
-- Human interruption
+At most one of `build` / `northpace-loop` owns the same objective at a time. Human transfer requires reconciliation of live/late child state, filesystem/diff, ownership, dependencies, evidence, failures, and pending gates before new mutation. Primary switching is Human control, not autonomous Task delegation. Plan is never a mutating owner.
 
-## 11. Mutating L1 transfer
-
-At most one of `build` / `northpace-loop` owns the same objective at a time.
-
-Human transfer requires reconciliation before new mutation:
-
-```text
-old mutating L1
-      ↓
-stop / switch
-      ↓
-inspect live + late child state
-inspect filesystem / diff
-reconcile ownership + dependencies + evidence + failures + gates
-      ↓
-new mutating L1 continues
-```
-
-Primary switching is Human control, not autonomous Task delegation. Plan is never a mutating owner.
-
-## 12. Public model baseline
+## 14. Public model baseline
 
 - global model: Ox Alpha Free — `opencode/x-preview-f-free`
   - Build L1: `high`
@@ -328,40 +330,21 @@ Primary switching is Human control, not autonomous Task delegation. Plan is neve
   - Muse 4 — 1 medium / 3 xhigh
   - MiMo 4 — no explicit `reasoningEffort`
 
-`temperature` is also checked in `scripts/validate-model-routing.mjs` so the public routing snapshot does not silently drift.
+`temperature` is checked in `scripts/validate-model-routing.mjs` so the public routing snapshot does not silently drift.
 
 Configured model/reasoning/temperature values are intent, not proof of observed provider behavior. Free-route availability, effective context/output limit, variants, latency, quotas, stream behavior, and provider policy remain runtime/provider properties. README contains the public model-setting responsibility disclaimer.
 
-## 13. Permission / CUA / browser semantics
+## 15. Concurrency / final gates
 
-### Plan
-
-Plan uses hard native edit deny, arbitrary Bash deny, exact metadata-only Git exceptions, and explicit CUA deny.
-
-### Build / Loop
-
-Both are mutating-capable L1s, but external/destructive/publish routes remain hard denied. L1 Task `ask` fallback does not weaken shell/edit capability boundaries.
-
-### Computer use (public-specific supervised lane)
+Per-parent newly-active budget remains **4**. Parallel writers need disjoint owned paths + semantic independence + dependency readiness. No provider-specific concurrency cap is canonical without observed evidence.
 
 ```text
-CUA MCP server: enabled
-        ↓
-global cua-driver_*: deny
-        ↓
-Build L1 override: ask
-Plan L1: deny
-NorthPace Loop: inherit deny
-all subagents: inherit deny
+writers settled → ownership reconcile → stable snapshot → final verification
+→ fresh review/security → correction? → reverify → NEW fresh gates
+→ Build COMPLETE / Loop GOAL_COMPLETE
 ```
 
-This preserves supervised Desktop operation without making CUA an autonomous tree-wide capability. `ask` is not a hard security boundary; reject means stop, no bypass.
-
-### Browser
-
-Global Playwright unsafe-run/upload/drop/evaluate are denied. Only `e2e-tester`, `electron-engineer`, and `tauri-engineer` intentionally re-enable evaluate. CUA enablement does not widen Playwright.
-
-## 14. Full sweep boundary
+## 16. Full sweep boundary
 
 `/northpalace-langfei-ni-token` is intentionally **Plan/Build-only**:
 
@@ -369,39 +352,25 @@ Global Playwright unsafe-run/upload/drop/evaluate are denied. Only `e2e-tester`,
 - Build: 27 distinct reachable roles
 - NorthPace Loop: not part of this procedure; it uses direct Goal-mode routing across 36 L2
 
-This keeps full-sweep semantics separate from long-horizon Goal semantics.
-
-## 15. Deterministic validators
-
-Static invariants are split into three layers:
+## 17. Deterministic validators
 
 ```text
 validate-governance.mjs
-→ permissions / DAG / counts / commands / skills / V2 baseline
+→ supervised Bash / sensitive edit / hard-deny baseline / DAG / counts / commands / skills / V2
 
 validate-model-routing.mjs
 → exact public Free model / reasoning / temperature matrix
 
 validate-desktop-contract.mjs
-→ three primaries / Loop 36 / ask fallback / Goal contract / CUA / docs integration
+→ three primaries / Plan deny vs Build-Loop ask / Loop 36 / browser-CUA map / doom_loop / docs integration
 ```
 
 `check-project-overrides.mjs` protects the effective deployment boundary, including `northpace-loop` shadowing, AO engineer injection, plugins/tools/MCP, permission/depth/default-agent and operator-id collisions.
 
-Runtime/session behavior still requires target-specific smoke. Static pass is never a Desktop runtime pass.
+Static success is not runtime evidence; actual Desktop visibility, Auto Mode approval behavior, primary selection, optional MCP availability, unbounded continuation, Human interruption, depth, model availability, and reasoning tiers require target-runtime smoke.
 
-## 16. System intentionally not implemented here
+## 18. System intentionally not implemented here
 
-NorthPalace does not implement its own:
+NorthPalace does not implement its own agent scheduler, shared task board/mailbox, custom message bus, SQLite task registry, filesystem lease manager, background daemon, or OpenCode replacement runtime.
 
-- agent scheduler
-- shared task board/mailbox
-- custom message bus
-- SQLite task registry
-- filesystem lease manager
-- background daemon
-- OpenCode replacement runtime
-
-The architecture is:
-
-> **OpenCode Desktop-first, Human-controllable, three-tree Multi-Agent governance with public Free-model routing and explicit runtime-compatibility boundaries.**
+> **OpenCode Desktop-first, Human-controllable, three-tree / public-Free-model / supervised-automation Multi-Agent governance architecture.**
