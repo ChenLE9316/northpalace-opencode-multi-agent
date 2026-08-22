@@ -3,6 +3,7 @@ name: Governance Validation
 on:
   pull_request:
     paths:
+      - "README.md"
       - "opencode.jsonc"
       - "AGENTS.md"
       - "AGENT_ARCHITECTURE.md"
@@ -13,12 +14,14 @@ on:
       - "commands/**"
       - "skills/**"
       - "compat/**"
+      - "decisions/**"
       - "scripts/**"
       - "package.json"
       - ".github/workflows/governance-validation.yml"
   push:
     branches: [main]
     paths:
+      - "README.md"
       - "opencode.jsonc"
       - "AGENTS.md"
       - "AGENT_ARCHITECTURE.md"
@@ -29,6 +32,7 @@ on:
       - "commands/**"
       - "skills/**"
       - "compat/**"
+      - "decisions/**"
       - "scripts/**"
       - "package.json"
       - ".github/workflows/governance-validation.yml"
