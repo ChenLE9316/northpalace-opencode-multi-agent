@@ -7,8 +7,6 @@ scope:
   - global-opencode-config
   - runtime-compatibility
 supersedes: []
-amended-by:
-  - supervised-cua-build-lane
 decision-maker: NorthPalace
 ---
 
@@ -22,7 +20,7 @@ Keep OpenCode V1 / 1.18.x as the published canonical baseline and treat V2 as a 
 - Disable automatic runtime updates so upgrades become explicit compatibility events.
 - Give V1 compaction an explicit `preserve_recent_tokens`/`reserved` state budget and map V2 to `keep.tokens`/`buffer` in the overlay.
 - Stop relying on command `subtask` for `/tauri-verify`; Build now creates a fresh `test-runner` Task explicitly, preserving child-session isolation across runtime command changes.
-- Convert canonical irreversible/external-effect/destructive routes from interactive `ask` to hard `deny`. The original CUA-hard-deny portion of this decision is superseded by `decisions/supervised-cua-build-lane.md`: CUA remains globally denied but Build L1 may request it through `ask` while Plan/specialists stay denied.
+- Convert canonical external-effect/destructive/CUA routes from interactive `ask` to hard `deny`. `ask` remains supervised friction, not a security boundary.
 - Make Plan arbitrary Bash hard-denied while retaining only explicit read-only Git evidence commands.
 - Narrow `knowledge-curator` writes to repository-root `knowledge/**` and `decisions/**` instead of nested wildcard matches.
 - Add deterministic `scripts/validate-governance.mjs` for DAG, permission, role-count, route, command/skill, V2 overlay, and final-gate invariants.
