@@ -1,156 +1,175 @@
 # OpenCode Runtime Compatibility Contract
 
-NorthPalace treats OpenCode runtime semantics as an architecture dependency. The repository root remains the stable **V1 / 1.18.x canonical baseline**; V2 is a separate beta target. The public deployment defines **three Human-visible primary L1 trees**: read-only Plan, bounded Build, and operator-selected long-horizon NorthPace Loop.
+NorthPalace treats OpenCode runtime semantics as an architecture dependency. Root remains **V1 / 1.18.x canonical**; V2 is a separate beta target. The public deployment defines three Human-visible primary L1 trees: read-only Plan, bounded Build, and operator-selected long-horizon NorthPace Loop.
 
 ## Supported targets
 
-| Concern | V1 canonical | V2 beta target |
+| Concern | V1 canonical | V2 beta |
 |---|---|---|
-| Binary | `opencode` | `opencode2` |
-| Depth | top-level `subagent_depth: 2` | `experimental.subagent_depth: 2` via `compat/v2/opencode.overlay.jsonc` |
-| Primary L1 | `plan`, `build`, `northpace-loop` | require version-correct evidence the same three identities/effective modes survive normalization |
-| L1 Task fallback | reviewed direct routes `allow`; `* = ask` | approval persistence/semantics are runtime-specific; never infer from V1 |
-| Command isolation | V1 command `subtask` exists | do not rely on `subtask`; explicit Task for isolation |
-| Compaction | `preserve_recent_tokens` / `reserved` plus V1 controls | `keep.tokens` / `buffer` via overlay |
-| Auto update | disabled | disabled |
-| Approval | `ask` = supervised friction, not hard boundary | approvals can be durable/project-scoped; `deny` remains hard boundary |
-| Computer use | CUA MCP enabled; global deny; Build `ask`; Plan/Loop/subagents denied | require target-runtime evidence effective split is preserved |
-| Shell | host process capability; not ownership/filesystem sandbox | same trust assumption |
-| Skill activation | model-facing operator skill deny + explicit command | also require `slash:false` / `opencode/autoinvoke:false` |
-| Project precedence | project config may override global safety/agents | project config also outranks custom overlay; preflight mandatory |
-| Project code | plugins/tools/MCP expand capability | plugins can transform/intercept runtime; pre-start review mandatory |
-| Command precedence | project definitions may affect behavior | project commands can override global definitions |
-| TUI config | `tui.json` | V2 migrates toward `cli.json` |
-| LSP | current V1 integration part of baseline | version-specific; verify before claiming support |
+| Auxiliary binary | `opencode` | `opencode2` |
+| Depth | top-level `subagent_depth: 2` | `experimental.subagent_depth: 2` overlay |
+| Compaction | V1 preserve/reserved | V2 keep.tokens/buffer overlay |
+| Primary model | public global Ox Alpha Free with role-specific reasoning tiers | independently observed |
+| NorthPace Loop steps | repository unset | independently observed |
+| Subagent routing | public 4-Free-model map statically validated | variants/runtime independently smoked |
+| Desktop | normal production interaction surface | independent beta evidence |
 
-## Three-primary runtime contract
+CLI evidence never substitutes for unobserved Desktop process identity/config inheritance.
 
-Canonical identities:
+## Three-primary Desktop semantics
+
+- `plan`, `build`, and `northpace-loop` are separate `mode: primary` L1 identities visible to Human Operator.
+- Public root intentionally pins the OpenCode Free global model `opencode/x-preview-f-free`. Plan/Build/NorthPace Loop inherit that route and use repository reasoning tiers `max/high/high` respectively; model availability/application remains runtime evidence.
+- `plan` keeps `steps: 100`; `build` keeps `steps: 200`; `northpace-loop` intentionally omits `steps` so NorthPalace does not impose an iteration ceiling on the Goal horizon.
+- `default_agent` remains `build`; NorthPace Loop is entered only by Human Operator primary selection.
+- Task permission controls model-autonomous child creation. Human Operator primary switching, `@agent`, `/command`, steering, standalone work, manual edit, cancel/resume, scope/model change are operator control paths.
+- Plan uses `permission.task["*"] = "deny"`; its reviewed 17 direct L2 routes are the only autonomous planning routes, preserving hard read-only DAG semantics even when Auto Mode is enabled.
+- Build and NorthPace Loop use `permission.task["*"] = "ask"`. Canonical direct routes remain explicit `allow`; noncanonical model-created routes are supervised in normal mode and Human-preauthorized when Auto Mode is intentionally enabled. Approval does not redefine canonical topology.
+
+## Supervised automation semantics
+
+OpenCode permission actions are treated as an explicit three-tier contract:
+
+- `allow`: run without approval;
+- `ask`: normal Desktop approval point (`once|always|reject`); when Human Operator enables Auto Mode, requests that would ask are automatically approved;
+- `deny`: hard block that remains enforced in Auto Mode.
+
+Therefore `ask` is not a hard security boundary and documentation must not promise per-request Human interaction while Auto Mode is active.
+
+Canonical runtime policy:
+
+- global Bash fallback = `ask`;
+- exact low-risk Git inspection = `allow`;
+- raw deletion, push/publish/deploy, selected infrastructure apply/destroy, disk/power destruction, and other irreversible routes = `deny`;
+- `cargo clean` = `ask`;
+- workspace edit = `allow`, but sensitive credential/private-key paths are native read/edit `deny`;
+- `external_directory = ask` remains the normal worktree-exit gate;
+- native file denies are not a process sandbox: shell-capable agents may still have broader filesystem access through processes when shell permission permits, especially under Auto Mode.
+
+## Browser / computer-use policy
+
+- Global Playwright and CUA capability is `deny` so read-only/reviewer/planning subagents never gain browser/computer control merely because Auto Mode is active.
+- Build and NorthPace Loop explicitly re-enable bounded `playwright_*` and `cua-driver_*` as `ask`, with unsafe Playwright page code/file upload/drop/evaluate still denied at L1.
+- `frontend-engineer`, `e2e-tester`, `electron-engineer`, and `tauri-engineer` re-enable browser interaction as `ask`; only e2e/electron/tauri may use `playwright_browser_evaluate` as `ask`, and only e2e may use file upload as `ask` for repository-owned test fixtures.
+- `playwright_browser_run_code_unsafe` and `playwright_browser_drop` remain denied everywhere in canonical routing.
+- Playwright and CUA MCP entries remain **disabled by default**. Human Operator enables a verified local transport when needed; permissions do not prove tool registration.
+
+## NorthPace Loop runtime contract
+
+- No other primary/coordinator/subagent Task map explicitly allows `northpace-loop`; it is not a delegated subagent.
+- Loop directly allows exactly all 36 canonical subagents as L2: `explore`, `general`, and all 34 specialists.
+- Coordinator L3 allowlists remain unchanged; runtime depth remains L1→L2→L3 and L4 forbidden.
+- With no active Root Goal, first Human prompt in Loop establishes it. Later prompts default to steering/constraints unless Human explicitly replaces the goal.
+- Unset `steps` means no NorthPalace step ceiling, not guaranteed infinite execution. Provider/runtime termination, Human cancellation, permission gates, blockers, and normal retry limits still apply.
+- Loop additionally sets `doom_loop: deny`; an identical repeated tool call must change strategy or surface a Human Gate.
+- Runtime smoke must prove actual Desktop visibility/selection and continuation after at least one completed milestone; static config cannot prove those behaviors.
+
+## Public Free model routes
+
+The public repository intentionally differs from the private deployment in model routing. Current public routes:
 
 ```text
-Plan L1
-├─ read-only
-├─ steps 100
-└─ 17 reviewed direct auto-allowed L2
-
-Build L1
-├─ bounded mutating
-├─ steps 200
-└─ 18 reviewed direct auto-allowed L2
-
-NorthPace Loop L1
-├─ Human-selected Goal mode
-├─ no repository steps ceiling
-└─ all 36 canonical subagents direct auto-allowed as L2
+OX        = opencode/x-preview-f-free
+NEMOTRON  = opencode/nemotron-3.5-lightning-free
+MUSE      = opencode/muse-spark-1.2-contributor-free
+MIMO      = opencode/mimo-v2.5-free
 ```
 
-All three L1 Task maps use `"*": "ask"`. This creates a supervised Human approval fallback for noncanonical L1 Task requests; it does **not** redefine reviewed 17/18/36 routes as automatically reachable. Coordinator maps remain exact and leaf agents remain Task-denied.
+Primary / inline baseline:
 
-Primary switching is Human mixed-initiative control, not a Task edge. Model code must never emulate a Plan/Build/Loop transfer by spawning another primary.
+- global `model` = Ox Alpha Free
+- Build = Ox `high`
+- Plan = Ox `max`
+- NorthPace Loop = Ox `high`
+- `small_model` = Nemotron 3.5 Lightning Free
+- `explore` = Nemotron `low`
+- `general` = Nemotron `medium`
 
-Build and NorthPace Loop are mutating-capable, but one objective has at most one mutating L1 owner. Human transfer requires reconciliation of live/late child sessions, filesystem state, ownership, dependencies, evidence, unresolved failures, and pending gates before new autonomous mutation.
+34 specialists:
 
-NorthPace Loop's absent `steps` is a repository-policy fact only. It removes a NorthPalace goal-horizon ceiling; it does not prove infinite runtime execution or bypass provider termination, permissions, retry/blocker rules, compaction/context limits, or Human cancellation.
+| Route | Count |
+|---|---:|
+| Nemotron 3.5 Lightning Free | 20 |
+| Ox Alpha Free | 6 |
+| Muse Spark 1.2 Contributor Free | 4 |
+| MiMo V2.5 Free | 4 |
 
-## Public Free-model runtime boundary
+Public specialist reasoning distribution:
 
-The public repository intentionally pins OpenCode Free routes separately from the private deployment:
+- Nemotron: 4 low / 6 medium / 10 high
+- Ox: 5 high / 1 max
+- Muse: 1 medium / 3 xhigh
+- MiMo: fixed route with no explicit `reasoningEffort`
 
-- global primary route: `opencode/x-preview-f-free`
-- `small_model`: `opencode/nemotron-3.5-lightning-free`
-- specialist matrix additionally uses `opencode/muse-spark-1.2-contributor-free` and `opencode/mimo-v2.5-free`
+`temperature` and reasoning tiers are checked by `scripts/validate-model-routing.mjs`. Configured names/tiers prove intent only, not provider availability, effective context/output limits, streaming/tool behavior, quota, latency, or actual runtime application.
 
-`validate-model-routing.mjs` machine-checks the exact public snapshot. Static configuration is not evidence that a Free route is currently available or that effective context/output limits, reasoning tiers, temperature handling, latency, quota, streaming, or serving quality match upstream/provider documentation. Use the actual target runtime; unobservable facts remain `UNVERIFIED`.
+Model removal, rename, free-window end, reasoning-tier drift, or serving behavior change is a compatibility event. Fail/ask Human; never silently substitute another model.
+
+## Mutating-L1 ownership
+
+`plan` is never mutating. `build` and `northpace-loop` are mutating-capable L1 modes, but one objective has at most one mutating L1 owner at a time.
+
+Human may transfer an active objective between Build and Loop at any time. Before receiving L1 mutates again, reconcile live/late tasks, filesystem state, ownership, dependencies, evidence, unresolved failures, and pending final gates. Mode switch/cancellation is not rollback.
+
+## Provider/concurrency policy
+
+Canonical per-parent newly-active child budget remains 4. No provider-specific concurrency exception is canonical without observed evidence. Provider pressure or model removal never authorizes silent model/reasoning-tier substitution; Human Operator owns explicit route changes.
 
 ## V1 policy
 
-`opencode.jsonc` stays V1-schema-valid. Do not insert V2-only `experimental.subagent_depth` into the V1 canonical file. Hard `deny` remains the baseline for irreversible/external-effect routes that must not become automatically approvable.
+`opencode.jsonc` stays V1 canonical. Plan keeps edit denied and arbitrary Bash denied with exact metadata-only Git exceptions. Global Bash is approval-gated by default; representative irreversible/external-effect routes remain hard `deny`.
 
-### Supervised CUA exception
+## V2 beta launcher
 
-Public CUA policy is intentionally:
+`compat/v2/opencode.overlay.jsonc` carries V2 depth/compaction overrides. `scripts/opencode2-northpalace.sh` is auxiliary verification, not proof that Desktop GUI inherited the same environment.
 
-```text
-CUA MCP enabled
-      ↓
-global cua-driver_* = deny
-      ↓
-Build L1 = ask
-Plan L1 = deny
-NorthPace Loop = inherited deny
-specialists / inline children = inherited deny
-```
+Launcher must validate the same config root it loads, run governance/model/Desktop-contract validators, export `OPENCODE_CONFIG_DIR` to that root, then apply the V2 overlay.
 
-This makes Human-present Desktop computer use available through Build without turning CUA into a general autonomous tree capability. `ask` is supervised friction rather than a hard security boundary. Rejection terminates the CUA path; shell/browser/alternate-tool bypass is invalid.
+## Project precedence
 
-Plan keeps arbitrary Bash denied. Its only shell exceptions are exact metadata-only Git queries; repository content and remote URLs stay on native evidence paths so credential read denies are not bypassed through Git shell commands.
-
-## Project precedence and pre-start trust boundary
-
-OpenCode intentionally lets project configuration override global/default configuration and may auto-load project plugins/tools/MCP. Those are capability surfaces, not passive repository text.
-
-For an unreviewed project, run before opening it in NorthPalace-governed Desktop:
+Before opening an unreviewed project:
 
 ```bash
 node scripts/check-project-overrides.mjs --project "$PWD"
 ```
 
-The preflight rejects critical changes including:
+Reject critical permission/depth/default-agent/share/autoupdate/compaction overrides, project plugin/MCP/custom-tool expansion, protected agent-id overrides including `northpace-loop`, AO engineer injection, and operator command/skill shadowing. Project `AGENTS.md` is active instruction context, not ordinary evidence.
 
-- permission/permissions overrides;
-- weakened V1/V2 depth;
-- non-Build default startup L1;
-- autoupdate/share/compaction policy changes;
-- project plugins or MCP expansion;
-- auto-loaded `.opencode/plugins/` code;
-- `.opencode/tools/` custom tool code;
-- protected agent overrides including `northpace-loop`;
-- new `*-engineer` identities that become AO-reachable;
-- operator command/skill id shadowing.
+## Hard vs soft invariants
 
-Project `AGENTS.md`, ordinary project commands/skills, or instructions are reported as WARN/trust boundaries because legitimate repositories commonly contain project policy. Treat recognized OpenCode instruction surfaces as active instruction context, not ordinary evidence.
+Hard runtime boundaries: effective `deny`, configured identities, target-runtime verified depth. `ask` becomes Human-supervised or Auto-Mode-preauthorized capability depending on active runtime mode. Governance: ownership, dependencies, ResultEnvelope validity, retry counters, freshness, registry/Goal Ledger reconciliation, one-writer-per-path, and final-gate ordering.
 
-Project model/LSP settings that do not alter critical governance remain allowed. Intentional critical extensions require explicit review and corresponding deployment-policy change.
+Shell/process capability is not a filesystem sandbox. Writer side effects must be declared/reconciled.
 
-## V2 beta launch
+## Runtime / catalog gate
 
-```bash
-./scripts/opencode2-northpalace.sh
-```
+After OpenCode/model/config changes:
 
-The launcher:
+1. full restart Desktop;
+2. `npm run validate:governance`;
+3. preflight active project;
+4. `/verify-config v1 canonical` or matching V2 target;
+5. confirm `plan`, `build`, `northpace-loop` are visible primary identities and public inherited model/reasoning configuration matches intent;
+6. confirm Plan Task fallback is `deny`, Build/Loop Task fallbacks are `ask`, and canonical direct routes remain explicit `allow`;
+7. with Auto Mode disabled, smoke one representative `ask` action and confirm Desktop approval UI; then, only when Human intentionally enables Auto Mode, confirm the same class auto-approves while an explicit `deny` still blocks;
+8. confirm global Bash fallback is `ask`, exact safe Git inspection stays `allow`, sensitive native read/edit paths are denied, and representative destructive/external-effect routes remain `deny`;
+9. confirm Loop has no effective repository `steps` limit, has `doom_loop: deny`, and exact 36 direct L2 targets;
+10. verify role-scoped Playwright/CUA policy and separately report whether their MCP transports are enabled/available;
+11. verify `opencode/x-preview-f-free` and its required `high|max` tiers in the target runtime;
+12. verify Nemotron `low|medium|high` routes used by the public map;
+13. verify Muse public `medium|xhigh` routes used by the public map;
+14. verify MiMo V2.5 Free behaves as the configured fixed route with no invented reasoning tier;
+15. bounded Loop smoke: Human selects Loop → next prompt establishes Root Goal → one milestone completes → Loop re-checks Definition of Done and continues when incomplete → Human steering/stop/switch remains effective;
+16. smoke representative text/tool/result-continuation/same-session/child-Task behavior across the public route classes;
+17. mark anything not observed `UNVERIFIED`.
 
-1. confirms intended config root;
-2. runs `validate-governance.mjs`;
-3. runs public `validate-model-routing.mjs`;
-4. runs `validate-desktop-contract.mjs`;
-5. runs project-precedence preflight;
-6. exports `OPENCODE_CONFIG_DIR`, V2 overlay, and runtime marker;
-7. starts `opencode2`.
+## Provider privacy / lifecycle boundary
 
-The V2 migration layer may normalize supported V1 config in memory. Overlay presence alone is never proof that Desktop loaded three primaries, depth 2, L1 `ask` fallback, CUA split, Goal Loop semantics, or public model variants correctly.
+`share: disabled` does not override provider retention/training policy. Public model IDs, Free status, privacy policy, context limits, output limits, reasoning tiers and provider behavior are external service properties. README contains the public model-setting disclaimer; users must validate current provider/runtime policy for their own data.
 
-A V2 Desktop GUI process must receive the same intended configuration/environment and active-project preflight. Running the CLI launcher does not prove an already-running Desktop inherited it.
+## Deferred environment-dependent changes
 
-## Hard vs governance invariants
-
-Runtime-enforced facts include effective tool/agent permissions and effective depth when observed. NorthPalace ownership, semantic dependency ordering, ResultEnvelope validity, retry counters, Goal Ledger, freshness, registry reconciliation, one-writer-per-path, mutating-L1 transfer, and final acceptance ordering remain governance invariants unless runtime primitives enforce them mechanically.
-
-A shell-capable writer can cause indirect filesystem mutation through formatters, package managers, build scripts, code generation, tests, or other processes. Every mutating shell step therefore declares expected source/generated/lock/artifact effects and inspects resulting status/diff.
-
-## Upgrade gate
-
-Treat every OpenCode upgrade as a compatibility event:
-
-1. `npm run validate:governance`;
-2. pre-start `check-project-overrides.mjs` for an unreviewed target project;
-3. `/verify-config v1 canonical` or `/verify-config v2 canonical` with matching runtime;
-4. verify three primary identities and `default_agent=build`;
-5. verify Plan 17 / Build 18 / Loop 36, L1 `* = ask`, coordinator maps, depth/no-L4;
-6. verify public Free model IDs/variants from actual runtime rather than static config alone;
-7. verify CUA MCP registration and, when operator-approved, one bounded Build approval smoke while Plan/Loop/non-Build remain denied;
-8. verify NorthPace Loop Human selection, Root Goal continuation after one incomplete milestone, and Human steer/stop/switch when a bounded smoke is explicitly chosen;
-9. confirm active project config/instructions/plugins/tools/operator ids do not silently replace or extend governance;
-10. mark anything not observed `UNVERIFIED`.
-
-Static validation is not a Desktop runtime pass.
+- `@opencode-ai/plugin` remains stability-pinned until a deliberate runtime-upgrade smoke; do not bump merely because a newer package exists.
+- Playwright/CUA MCP transports remain disabled-by-default until the local Desktop environment is intentionally verified/enabled.
+- LSP and MCP commands remain deployment/PATH dependent until intentionally migrated to repository-local pinned binaries. Static config must report that limitation rather than pretending portability.
+- Main branch protection is not part of runtime permission design; deterministic push validation is not the same thing as an admission gate.
