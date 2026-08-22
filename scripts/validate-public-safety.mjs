@@ -79,16 +79,24 @@ check(config.share === 'disabled', 'OpenCode share surface is disabled by defaul
 
 const placeholderSecret = /(?:example|sample|dummy|placeholder|changeme|redacted|replace[_ -]?me|your[_ -]?(?:token|key|secret|password)|<[^>]+>|\$\{[^}]+\})/i;
 const allowedEmail = /@(example\.(?:com|org|net)|users\.noreply\.github\.com)$/i;
+const digitCount = value => (value.match(/\d/g) || []).length;
 
 const detectors = [
   { label: 'Windows user home', re: /[A-Za-z]:\\Users\\(?!<|%)[^\\\r\n]+\\/g },
   { label: 'macOS user home', re: /\/Users\/(?!<)[A-Za-z0-9._-]+\//g },
   { label: 'Linux user home', re: /\/home\/(?!runner\/|<)[A-Za-z0-9._-]+\//g },
   { label: 'Windows UNC machine/share path', re: /\\\\[A-Za-z0-9._-]+\\[A-Za-z0-9$._-]+\\/g },
-  { label: 'Windows machine hostname', re: /\b(?:DESKTOP|LAPTOP)-[A-Z0-9]{5,}\b/gi },
+  {
+    label: 'Windows machine hostname',
+    re: /\b(?:DESKTOP|LAPTOP|WIN)-(?=[A-Z0-9]{7,15}\b)(?=[A-Z0-9]*\d)[A-Z0-9]+\b/g,
+  },
 
   { label: 'email address', re: /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,63}\b/gi, allow: value => allowedEmail.test(value) },
-  { label: 'international phone-like number', re: /\+\d{1,3}[ .-]?(?:\(?\d{1,4}\)?[ .-]?){2,4}\d{2,4}\b/g },
+  {
+    label: 'international phone-like number',
+    re: /\+\d{1,3}[ .-]?(?:\(?\d{1,4}\)?[ .-]?){2,4}\d{2,4}\b/g,
+    allow: value => digitCount(value) < 10 || digitCount(value) > 15,
+  },
   { label: '10-digit mobile-like number', re: /\b09\d{8}\b/g },
 
   { label: 'private IPv4 10/8', re: /\b10(?:\.\d{1,3}){3}\b/g },
@@ -135,11 +143,25 @@ function scanText(source, text) {
 }
 
 const allowedExtensions = /\.(md|json|jsonc|mjs|js|ts|tsx|yml|yaml|toml|sh|ps1|txt|lock)$/i;
+const extensionlessTextNames = new Set(['.gitattributes', '.gitignore']);
+const isTextCandidate = rel => allowedExtensions.test(rel) || extensionlessTextNames.has(path.basename(rel));
+
 for (const full of walk(root)) {
-  if (!allowedExtensions.test(full)) continue;
   const rel = path.relative(root, full).replaceAll('\\', '/');
+  if (!isTextCandidate(rel)) continue;
   const text = fs.readFileSync(full, 'utf8');
   scanText(rel, text);
+}
+
+function extractChangedContentFromPatch(patch) {
+  return patch
+    .split('\n')
+    .filter(line => {
+      if (line.startsWith('+++') || line.startsWith('---')) return false;
+      return line.startsWith('+') || line.startsWith('-');
+    })
+    .map(line => line.slice(1))
+    .join('\n');
 }
 
 const gitDir = path.join(root, '.git');
@@ -156,13 +178,14 @@ if (fs.existsSync(gitDir)) {
     else warnings.push('Git checkout is shallow; historical deleted-content scan was skipped');
   } else {
     try {
-      const history = git([
-        'log', '--all', '--format=commit %H', '-p', '--no-ext-diff', '--text', '--', '.',
+      const historyPatch = git([
+        'log', '--all', '--format=', '-p', '--no-ext-diff', '--text', '--', '.',
       ]);
-      scanText('Git history patches (all reachable refs)', history);
-      passes.push('full Git history patches were scanned for deleted/historical sensitive content');
+      const historyContent = extractChangedContentFromPatch(historyPatch);
+      scanText('Git history changed content (all reachable refs)', historyContent);
+      passes.push('full Git history changed content was scanned for deleted/historical sensitive content');
     } catch {
-      check(false, 'full Git history patches can be scanned');
+      check(false, 'full Git history changed content can be scanned');
     }
   }
 } else if (requireHistory) {
