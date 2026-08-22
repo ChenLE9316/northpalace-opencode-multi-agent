@@ -1,0 +1,37 @@
+# Windows-safe newline governance: normalize text to LF on checkout/commit.
+* text=auto eol=lf
+
+# Common binary formats: keep as binary, never normalize line endings or diff.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.bmp binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.otf binary
+*.pdf binary
+*.zip binary
+*.gz binary
+*.tgz binary
+*.tar binary
+*.7z binary
+*.rar binary
+*.exe binary
+*.dll binary
+*.so binary
+*.dylib binary
+*.bin binary
+*.mp4 binary
+*.mov binary
+*.mkv binary
+*.mp3 binary
+*.wav binary
+*.flac binary
+*.node binary
+*.wasm binary
+*.pyc binary

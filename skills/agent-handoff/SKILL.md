@@ -69,5 +69,4 @@ Default 40 lines, maximum 60; link evidence/logs instead of copying them.
 - A primary-mode switch or cancellation is not rollback. Never mark a cancelled/transferred writer clean until already-written filesystem state was inspected/reconciled.
 - Never fabricate state, commits, commands, verification, runtime enforcement, Goal completion, or task ids.
 - Never store secrets, full env values, hidden reasoning, unnecessary logs, email, personal home paths, OS usernames, or absolute workspace paths.
-- Use repository-relative evidence and sanitized workspace labels.
 - Reuse a task id only for the same valid agent/session when context materially helps; another owner gets a new linked task. Independent review/security is fresh.

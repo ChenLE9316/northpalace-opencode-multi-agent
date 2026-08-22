@@ -1,39 +1,38 @@
 ---
 name: tauri-patterns
-description: Tauri desktop application conventions for command design, IPC, state, events, and window lifecycle. Use when writing, reviewing, or modifying Tauri code.
+description: Tauri desktop application review and implementation patterns for commands, IPC, state, events, windows, and security boundaries.
 license: MIT
 compatibility: opencode
 ---
 
 # Tauri Patterns
 
-## Command Design
+## First rule: repository conventions win
 
-- Input: explicit typed struct (`#[derive(serde::Deserialize)]`), never raw `serde_json::Value`
-- Output: `Result<T, AppError>` with a unified error type in `error.rs`
-- Commands do parameter validation + delegation only; business logic lives in the service layer
-- Long-running tasks use `async` + event reporting; never block a command
+Inspect the project's Tauri version, existing command/state/error/module layout, frontend framework, capability model, tests, and generated bindings before applying a pattern. **Existing coherent project conventions are authoritative.** The patterns below are fallback guidance when the repository does not already establish a compatible convention; do not force file names, directories, crates, or frontend libraries merely to match this skill.
 
-## IPC / Event Contract
+## Command and IPC design
 
-- Payload structures live in `src-tauri/src/contracts/`, shared by frontend and backend
-- Event naming: `kebab-case`, consistent with the publisher
-- Type changes must sync all callers and be marked breaking
+- Prefer explicit typed inputs/outputs over unstructured `serde_json::Value` when the existing contract permits it.
+- Validate frontend-controlled input at the privileged boundary and keep exposed commands narrow.
+- Keep business logic out of thin IPC adapters when the repository already has a service/domain layer.
+- Preserve the project's existing error contract; use a unified serializable application error only when it fits existing architecture.
+- Long-running work should avoid blocking the UI/runtime thread and should expose cancellation/progress through project-native mechanisms.
 
-## State Management
+## State and events
 
-- App state uses `tauri::State<T>` injection with `T: Send + Sync + 'static`
-- Do not wrap the entire state in a `Mutex`; use layered locking
-- Frontend state lives in a store (zustand/pinia); do not rely on backend persistent state
+- Respect existing `tauri::State<T>` ownership and synchronization strategy; avoid introducing coarse global locking without evidence.
+- Keep event names/payloads consistent with existing publishers and consumers; update all callers when a contract changes.
+- Do not prescribe Zustand, Pinia, or another frontend store unless the project already uses it or the task explicitly introduces it.
 
-## Window Lifecycle
+## Window lifecycle and capabilities
 
-- Multi-window uses `WebviewWindowBuilder` with `kebab-case` tags
-- Clean up in `on_window_event` before window close
-- Special windows (system tray, overlay) follow their framework's conventions
+- Follow existing window labels/builders/lifecycle hooks. Clean up owned resources on close/shutdown using the project's established lifecycle path.
+- Preserve least-privilege capability/permission scope. Treat wildcard/broad capability expansion as a security-relevant change requiring focused verification.
+- Do not introduce Electron or a second desktop framework into a Tauri project unless the Human Operator explicitly changes scope.
 
-## Error Handling
+## Error and verification guidance
 
-- Custom `AppError` enum implementing `serde::Serialize` for the frontend
-- Never `unwrap()` inside commands; propagate with `?`
-- Register a panic hook in `tauri::Builder::default().setup()` for fatal errors
+- Avoid `unwrap()`/panic on attacker- or user-controlled command paths unless the repository explicitly treats the condition as impossible and proves it.
+- Panic hooks, tracing, error modules, contract directories, generated bindings, and serialization strategies are project decisions, not mandatory file-layout rules.
+- Verify affected Rust code, command serialization, capabilities, frontend callers, lifecycle behavior, and platform-specific behavior with the smallest project-native checks.

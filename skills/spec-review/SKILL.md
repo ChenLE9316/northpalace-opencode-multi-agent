@@ -7,43 +7,44 @@ compatibility: opencode
 
 # Spec Review Checklist
 
-Check item by item; list suggested fixes for any unsatisfied item.
+Check item by item and list suggested fixes for unsatisfied items. Apply checks according to the actual domain; do not force HTTP concepts onto CLI, IPC, library, database, or local-runtime specs.
 
 ## Completeness
 
-- [ ] Background explains the pain point, not just the feature
-- [ ] Goal is measurable (not vague like "good")
-- [ ] Non-goals explicit; avoid scope creep
-- [ ] Interface contract has type / structure / error type
+- [ ] Background explains the pain point, not just the feature.
+- [ ] Goal is measurable.
+- [ ] Non-goals are explicit.
+- [ ] Interface contract defines input/output/error behavior appropriate to the domain.
 
-## Interface
+## Interface and errors
 
-- [ ] Input has validation rules (type, range, necessity)
-- [ ] Output structure stable with backward-compatibility strategy
-- [ ] Error types differentiated (4xx vs 5xx, recoverable vs unrecoverable)
+- [ ] Inputs have validation rules: type, range/shape, required/optional semantics.
+- [ ] Output structure and compatibility/migration strategy are explicit when stability matters.
+- [ ] Errors are classified using the **domain's actual contract**: HTTP status classes only for HTTP APIs; otherwise use the project's native error/exit/IPC/result model.
+- [ ] Recoverable vs unrecoverable behavior and user-visible/logging effects are clear.
 
-## Edge Cases
+## Edge cases
 
-- [ ] Empty input / boundary values
-- [ ] Concurrency / race conditions
-- [ ] Resource exhaustion
-- [ ] Insufficient permissions
+- [ ] Empty input / boundary values.
+- [ ] Concurrency / race conditions when applicable.
+- [ ] Resource exhaustion and cancellation when applicable.
+- [ ] Insufficient permissions / authorization boundaries when applicable.
 
 ## Dependencies
 
-- [ ] External dependencies and license compliance listed
-- [ ] Breaking changes marked
-- [ ] Upstream/downstream impact assessed
+- [ ] External dependencies and license/provenance requirements are listed.
+- [ ] Breaking changes are marked.
+- [ ] Upstream/downstream impact is assessed.
 
 ## Testing
 
-- [ ] Each error type has a corresponding test
-- [ ] Edge cases covered
-- [ ] Integration tests cover main flows
-- [ ] E2E / manual verification checklist present
+- [ ] Each meaningful failure class has a corresponding test or explicit verification.
+- [ ] Edge cases are covered.
+- [ ] Integration tests cover main flows when applicable.
+- [ ] E2E/manual verification is present when runtime behavior cannot be proven statically.
 
 ## Feasibility
 
-- [ ] Estimated workload reasonable
-- [ ] No missing design decisions
-- [ ] Risks and mitigations both present
+- [ ] Estimated workload is reasonable.
+- [ ] No material design decision is silently unresolved.
+- [ ] Risks and mitigations are both present.
