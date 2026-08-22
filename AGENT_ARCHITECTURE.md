@@ -34,7 +34,7 @@ Human Operator
 - parent-mediated communication
 - newly-active child budget = 4 per parent
 
-**NorthPace Loop direct L2 count = 36**，也就是 `explore` + `general` + all 34 specialists。
+NorthPace Loop direct L2 count = **36**，也就是 `explore` + `general` + all 34 specialists。
 
 ## 3. Primary contracts
 
