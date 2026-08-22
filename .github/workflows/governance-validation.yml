@@ -48,6 +48,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -70,7 +72,7 @@ jobs:
           node scripts/test-frontmatter.mjs
           node scripts/validate-governance.mjs --canonical --project "$GITHUB_WORKSPACE"
           node scripts/validate-model-routing.mjs
-          node scripts/validate-public-safety.mjs
+          node scripts/validate-public-safety.mjs --require-history
           node scripts/validate-desktop-contract.mjs
 
       - name: Validate project-precedence checker self-case
