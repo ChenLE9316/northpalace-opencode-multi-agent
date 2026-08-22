@@ -4,6 +4,17 @@ NorthPalace 的 OpenCode Desktop-first 多 Agent configuration + governance refe
 
 > **Plan 負責思考，Build 負責 bounded implementation，NorthPace Loop 持續推進 Human 給定的 Root Goal；Human 可使用 normal approval 或 Auto Mode，而 explicit `deny` 永遠保持 hard boundary。**
 
+## 公開版定位：Private Hardened → Public Capability Showcase
+
+這個 repository **不是刻意弱化的 starter config**，也不是只保留概念的示範骨架。它是實際私人使用 NorthPalace hardened configuration 的 **sanitized public projection**，目的就是把多 Agent 系統的實際架構、治理方式、模型分工、delegation topology、ownership / dependency control、verification / review gates 與 supervised automation 能力盡可能完整地對外展示。
+
+換句話說，公開版保留的是「火力與設計」，拿掉的是「私人環境與不應公開的資料」。公開安全處理不應把核心能力降級；除非某項設定本身涉及個資、credential、private endpoint、私人 workspace/session artifact 或其他 deployment-local secret，否則應優先保留與私人 hardened architecture 相同的可重用能力與治理契約。
+
+因此本 repository 同時具有兩個角色：
+
+1. **Capability showcase** — 展示 NorthPalace 多 Agent 系統在實際強化配置下能做到的 orchestration / governance / automation 深度；
+2. **Public reference implementation** — 提供可審查、可驗證、可移植的 architecture / config / agent / skill / command / validator reference。
+
 ## 公開安全原則
 
 本 repository 只保存可重用的架構、agent definitions、rules、commands、skills、validators 與 portable runtime config。Persisted/shareable artifacts 不應包含 personal home directory、OS username、absolute personal workspace path、email、credential、API token、private key、machine identifier、private endpoint 或其他可定位個人電腦環境的資訊。範例一律使用 repository-relative / generic runtime paths。
