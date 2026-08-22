@@ -1,10 +1,10 @@
 ---
 description: Produces bounded architecture decisions, dependency direction, interfaces, migrations, risks, verification plans, and read-only analysis.
 mode: subagent
-model: opencode/x-preview-f-free
+model: opencode-go/muse-spark-1.2-contributor
+variant: xhigh
 steps: 80
-temperature: 0.3
-reasoningEffort: max
+temperature: 0.2
 color: "#6366F1"
 hidden: false
 permission:

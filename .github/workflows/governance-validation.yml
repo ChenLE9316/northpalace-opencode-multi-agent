@@ -17,6 +17,7 @@ on:
       - "decisions/**"
       - "scripts/**"
       - "package.json"
+      - ".gitattributes"
       - ".github/workflows/governance-validation.yml"
   push:
     branches: [main]
@@ -35,6 +36,7 @@ on:
       - "decisions/**"
       - "scripts/**"
       - "package.json"
+      - ".gitattributes"
       - ".github/workflows/governance-validation.yml"
 
 permissions:
@@ -54,16 +56,21 @@ jobs:
 
       - name: Syntax-check validators and launcher
         run: |
+          node --check scripts/frontmatter.mjs
+          node --check scripts/test-frontmatter.mjs
           node --check scripts/validate-governance.mjs
           node --check scripts/validate-model-routing.mjs
           node --check scripts/validate-desktop-contract.mjs
+          node --check scripts/validate-public-safety.mjs
           node --check scripts/check-project-overrides.mjs
           bash -n scripts/opencode2-northpalace.sh
 
-      - name: Validate canonical governance, routing, and Desktop contract
+      - name: Validate canonical governance, routing, safety, and Desktop contract
         run: |
+          node scripts/test-frontmatter.mjs
           node scripts/validate-governance.mjs --canonical --project "$GITHUB_WORKSPACE"
           node scripts/validate-model-routing.mjs
+          node scripts/validate-public-safety.mjs
           node scripts/validate-desktop-contract.mjs
 
       - name: Validate project-precedence checker self-case

@@ -1,5 +1,5 @@
 ---
-description: "Rust only: run cargo check to quickly verify types and syntax on Windows"
+description: "Rust only: run project-aware cargo check for types and compilation"
 agent: build
 ---
 
@@ -11,6 +11,4 @@ Run the default-feature workspace check unless the project defines a narrower na
 cargo check --workspace --all-targets --color=never $ARGUMENTS
 ```
 
-Preserve the command exit code and report only the relevant diagnostics when output is large.
-
-Do not add `--all-features` unless the user passed it in `$ARGUMENTS`, the project CI requires it, or repository evidence confirms that all features are compatible. Report errors and the exact command only; do not fix.
+Preserve the command exit code and report only relevant diagnostics when output is large. Do not add `--all-features` unless the user passed it, CI requires it, or repository evidence confirms compatibility. Report errors and the exact command only; do not fix.

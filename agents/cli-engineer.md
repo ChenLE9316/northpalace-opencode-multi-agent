@@ -1,10 +1,11 @@
 ---
 description: "CLI engineer: command structure, argument parsing, UX, output format, configuration."
 mode: subagent
-model: opencode/nemotron-3.5-lightning-free
+model: opencode-go/hy3
+variant: low
 steps: 60
-temperature: 0.2
-reasoningEffort: medium
+temperature: 0.9
+top_p: 1.0
 color: "#14b8a6"
 hidden: false
 permission:

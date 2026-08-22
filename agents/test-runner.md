@@ -1,10 +1,11 @@
 ---
 description: "Test execution + coverage analysis expert: execute, interpret, identify uncovered critical paths."
 mode: subagent
-model: opencode/nemotron-3.5-lightning-free
+model: opencode-go/hy3
+variant: none
 steps: 80
-temperature: 0.1
-reasoningEffort: low
+temperature: 0.9
+top_p: 1.0
 color: "#27AE60"
 hidden: false
 permission:

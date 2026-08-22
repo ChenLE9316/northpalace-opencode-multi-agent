@@ -1,10 +1,10 @@
 ---
 description: "Planning agent: design task decomposition, reasoning steps, dependency analysis, and execution plan."
 mode: subagent
-model: opencode/x-preview-f-free
+model: opencode-go/muse-spark-1.2-contributor
+variant: xhigh
 steps: 80
-temperature: 0.3
-reasoningEffort: high
+temperature: 0.2
 color: "#D35400"
 hidden: false
 permission:

@@ -1,9 +1,9 @@
 ---
 description: Designs and reviews coherent UI systems, user journeys, accessibility constraints, interaction states, responsive behavior, and dark-theme visual language without editing.
 mode: subagent
-model: opencode/mimo-v2.5-free
+model: opencode-go/mimo-v2.5
 steps: 70
-temperature: 0.3
+temperature: 0.35
 color: "#FF6B6B"
 hidden: false
 permission:

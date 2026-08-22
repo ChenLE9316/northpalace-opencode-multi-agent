@@ -1,9 +1,9 @@
 ---
 description: "E2E testing expert: simulate user + visual recognition UI verification (Playwright + screenshots)."
 mode: subagent
-model: opencode/mimo-v2.5-free
+model: opencode-go/mimo-v2.5
 steps: 80
-temperature: 0.2
+temperature: 0.15
 color: "#86efac"
 hidden: false
 permission:

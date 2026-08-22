@@ -6,8 +6,7 @@
   "snapshot": true,
   "default_agent": "build",
   "subagent_depth": 2,
-  "model": "opencode/x-preview-f-free",
-  "small_model": "opencode/nemotron-3.5-lightning-free",
+  "small_model": "opencode-go/mimo-v2.5",
   "lsp": {
     "typescript": {
       "command": ["typescript-language-server", "--stdio"],
@@ -188,7 +187,6 @@
       "mode": "primary",
       "prompt": "{file:./prompts/build.md}",
       "steps": 200,
-      "reasoningEffort": "high",
       "color": "#5E8CFF",
       "permission": {
         "task": {
@@ -226,7 +224,6 @@
       "mode": "primary",
       "prompt": "{file:./prompts/plan.md}",
       "steps": 100,
-      "reasoningEffort": "max",
       "color": "#A78BFA",
       "permission": {
         "edit": "deny",
@@ -270,7 +267,6 @@
       "description": "NorthPace Loop — Human-selected long-horizon Goal mode that keeps advancing one Root Goal until evidence-backed completion or a Human Gate/blocker.",
       "mode": "primary",
       "prompt": "{file:./prompts/northpace-loop.md}",
-      "reasoningEffort": "high",
       "color": "#22C55E",
       "permission": {
         "task": {
@@ -325,9 +321,9 @@
     "explore": {
       "description": "Fast codebase exploration using local search, LSP, and evidence collection.",
       "mode": "subagent",
-      "model": "opencode/nemotron-3.5-lightning-free",
+      "model": "opencode-go/mimo-v2.5",
       "steps": 60,
-      "reasoningEffort": "low",
+      "temperature": 0.1,
       "permission": {
         "edit": "deny",
         "bash": "deny",
@@ -339,9 +335,11 @@
     "general": {
       "description": "General-purpose implementation subagent for bounded delegated tasks.",
       "mode": "subagent",
-      "model": "opencode/nemotron-3.5-lightning-free",
+      "model": "opencode-go/hy3",
+      "variant": "low",
+      "temperature": 0.9,
+      "top_p": 1.0,
       "steps": 90,
-      "reasoningEffort": "medium",
       "prompt": "You are the general subagent: bounded delegated implementation work using the smallest coherent change. Always answer as the general subagent; never claim to be another agent or model. If you need clarification to proceed, surface the question in your text reply and never invoke the `question` tool; the parent agent will answer and the session will continue. ",
       "permission": {
         "task": "deny",

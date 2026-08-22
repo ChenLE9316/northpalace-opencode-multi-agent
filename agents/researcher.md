@@ -1,10 +1,9 @@
 ---
 description: Performs approved external research against primary sources and returns cited, trust-labeled implementation guidance without mutation.
 mode: subagent
-model: opencode/nemotron-3.5-lightning-free
+model: opencode-go/mimo-v2.5
 steps: 80
-temperature: 0.3
-reasoningEffort: medium
+temperature: 0.2
 color: "#94A3B8"
 hidden: false
 permission:

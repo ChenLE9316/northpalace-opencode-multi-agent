@@ -1,10 +1,10 @@
 ---
 description: "Multi-perspective discussion facilitator: moderates structured debates, explores opposing viewpoints, identifies hidden assumptions, and synthesizes balanced conclusions across technical, business, social, and ethical dimensions."
 mode: subagent
-model: opencode/muse-spark-1.2-contributor-free
+model: opencode-go/muse-spark-1.2-contributor
+variant: medium
 steps: 80
-temperature: 0.3
-reasoningEffort: medium
+temperature: 0.35
 color: "#C084FC"
 hidden: false
 permission:

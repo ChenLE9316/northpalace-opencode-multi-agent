@@ -1,10 +1,10 @@
 ---
 description: "Multi-agent orchestration design: DAG, message passing, error recovery, and state management."
 mode: subagent
-model: opencode/x-preview-f-free
+model: opencode-go/muse-spark-1.2-contributor
+variant: xhigh
 steps: 90
-temperature: 0.3
-reasoningEffort: high
+temperature: 0.15
 color: "#7c3aed"
 hidden: false
 permission:

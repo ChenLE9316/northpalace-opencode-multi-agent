@@ -1,10 +1,10 @@
 ---
 description: "DevOps engineer: CI/CD, packaging, release, monitoring, IaC."
 mode: subagent
-model: opencode/nemotron-3.5-lightning-free
+model: opencode-go/muse-spark-1.2-contributor
+variant: high
 steps: 70
-temperature: 0.2
-reasoningEffort: high
+temperature: 0.15
 color: "#0ea5e9"
 hidden: false
 permission:

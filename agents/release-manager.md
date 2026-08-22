@@ -1,10 +1,11 @@
 ---
 description: "Owns release readiness: SemVer/changelog preparation, gated release coordination, and post-release verification."
 mode: subagent
-model: opencode/x-preview-f-free
+model: opencode-go/hy3
+variant: low
 steps: 70
-temperature: 0.2
-reasoningEffort: high
+temperature: 0.9
+top_p: 1.0
 color: "#10b981"
 hidden: false
 permission:
