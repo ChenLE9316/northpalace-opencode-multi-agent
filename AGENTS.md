@@ -12,21 +12,30 @@ These project-agnostic instructions apply to every OpenCode session and agent un
 
 ## Desktop runtime and three L1 trees
 
-- This stack is OpenCode Desktop-first. Desktop owns root/child-session inspection, navigation, steering, continuation, primary selection, and Human Operator interaction; CLI is auxiliary for models/debug/LSP/MCP/health/runtime verification.
+- This stack is OpenCode Desktop-first. Desktop owns root/child-session inspection, navigation, steering, continuation, primary selection, permission approval/Auto Mode, and Human Operator interaction; CLI is auxiliary for models/debug/LSP/MCP/health/runtime verification.
 - NorthPalace defines three Human-visible primary L1 modes/trees: `plan`, `build`, and operator-selected `northpace-loop` (NorthPace Loop).
 - `plan` is hard source-edit read-only and owns bounded planning/evidence work.
 - `build` is a bounded mutating L1 owner for a scoped implementation objective.
 - `northpace-loop` is a long-horizon mutating Goal L1. It is entered only by Human Operator primary selection; when no active Loop goal exists, the next Human prompt establishes its Root Goal.
 - `permission.task` governs **model-autonomous** delegation. Human Operator routing through natural prompts, primary-mode switching, `@agent`, `/command`, and Desktop session steering is a separate mixed-initiative control path and is not an autonomous DAG edge.
-- **L1 Task fallback:** `plan`, `build`, and `northpace-loop` keep their canonical direct L2 routes as `allow`, while `permission.task["*"]` is `ask`. A noncanonical L1 Task route therefore requires Human Operator approval instead of hard rejection. This does not loosen Plan edit/Bash rules, global hard denies, coordinator limits, or subagent Task denies.
+- **L1 Task fallback:** Plan keeps `permission.task["*"] = deny` so Auto Mode can never expand the hard read-only planning tree into mutating specialists. Build and NorthPace Loop use `permission.task["*"] = ask`; their canonical direct L2 routes remain explicit `allow` and noncanonical model-created routes are supervised/Auto-Mode-preauthorized exceptions, not canonical DAG edges.
 - Human Operator may stop, steer, reprioritize, change model/scope, edit manually, switch among Plan/Build/NorthPace Loop, or start standalone work at any time.
+
+## Supervised automation permission model
+
+- `allow` = normal low-risk/high-frequency capability that runs without approval.
+- `ask` = supervised capability. In normal mode Desktop asks (`once|always|reject`); when the Human explicitly enables OpenCode Auto Mode, the runtime automatically approves actions that would otherwise ask.
+- `deny` = hard runtime boundary that remains blocked even in Auto Mode. Do not use alternate shells, scripts, browser routes, APIs, or tools to bypass it.
+- Auto Mode is therefore **Human preauthorization for `ask`, not a bypass of `deny`**. The repository must not describe `ask` as guaranteed per-request Human interaction.
+- Workspace edit remains broadly allowed for mutating owners/writers, but native edit/read deny sensitive credential/private-key paths. Those native rules are not a complete process sandbox: shell-capable agents can still access the filesystem through processes when policy permits, so Auto Mode must be treated as broad shell preauthorization.
+- Global Bash fallback is `ask`. Exact low-risk Git inspection routes remain `allow`; raw deletion, publish/push/deploy, disk/power destruction, and selected irreversible external effects remain explicit `deny`.
 
 ## Configuration and runtime ownership
 
 - `opencode.jsonc` is the V1 canonical runtime config. `RUNTIME_COMPATIBILITY.md` and `compat/v2/` define the separate V2 beta target; never assume V1 and V2 share semantics merely because a key parses.
 - `opencode.jsonc` owns global settings plus inline `build`, `plan`, `northpace-loop`, `explore`, and `general`; each `agents/*.md` owns one specialist. Never define one agent twice.
 - The public baseline intentionally pins OpenCode Free model routes. `plan`, `build`, and `northpace-loop` inherit the public global Ox Alpha Free route with role-specific reasoning tiers; subagents use the exact Free routing matrix validated by `scripts/validate-model-routing.mjs`.
-- NorthPace Loop intentionally omits `steps`; this removes a repository iteration ceiling but does not override provider/runtime failures, Human cancellation, hard permission gates, or root-cause retry policy.
+- NorthPace Loop intentionally omits `steps`; this removes a repository iteration ceiling but does not override provider/runtime failures, Human cancellation, hard permission gates, `doom_loop: deny`, or root-cause retry policy.
 - Resolve the active config root from `OPENCODE_CONFIG_DIR` when set, otherwise the platform default. Runtime-managed `package.json`/lockfiles are dependency evidence, not authoritative runtime-version evidence.
 - After config-time changes, fully restart Desktop before runtime verification. Lazy-read rules/knowledge/decisions/handoffs need explicit re-read or fresh context, not a restart by themselves.
 
@@ -45,16 +54,18 @@ These project-agnostic instructions apply to every OpenCode session and agent un
 
 ## Tool and safety boundaries
 
-- High-risk Playwright tools are globally denied: `playwright_browser_run_code_unsafe`, `playwright_browser_file_upload`, `playwright_browser_drop`, and `playwright_browser_evaluate`. Only `e2e-tester`, `electron-engineer`, and `tauri-engineer` may explicitly re-enable `evaluate`.
-- CUA is globally `deny`, but Build L1 has a supervised `ask` override and the CUA MCP server is enabled. Plan and all subagents remain denied. A rejected CUA request ends that path; Build must not bypass it through another tool. `ask` is supervised friction, not a hardened security boundary.
-- Representative canonical external-effect/destructive shell routes remain hard `deny`. Native read-tool secret denies reduce accidental disclosure but are not a filesystem/process sandbox.
-- Publishing, pushing, deployment, destructive cleanup, credential rotation, or another irreversible external effect remains operator-owned unless policy is explicitly changed.
+- Browser automation is role-scoped rather than globally open. Global `playwright_*` is denied; Build, NorthPace Loop, `frontend-engineer`, `e2e-tester`, `electron-engineer`, and `tauri-engineer` explicitly re-enable bounded browser interaction as `ask`. Unsafe page code/drop remain denied; evaluate is `ask` only for e2e/electron/tauri, and file upload is `ask` only for e2e test fixtures.
+- CUA is globally denied. Build and NorthPace Loop explicitly re-enable `cua-driver_*` as `ask` **only when the CUA MCP/tool transport is actually enabled and available**. Plan and subagents do not inherit CUA authority.
+- Playwright/CUA MCP entries remain disabled by default in canonical config until the Human Operator intentionally enables a verified local transport; permission presence is not proof of tool availability.
+- Native read/edit secret denies reduce accidental disclosure/mutation but are not a filesystem/process sandbox. Shell-capable agents must never claim secrets are globally unreadable.
+- Publishing, pushing, deployment, destructive cleanup, disk/power destruction, credential rotation, or another irreversible external effect remains operator-owned unless policy is explicitly changed.
 
 ## Orchestration
 
 - Maximum model-autonomous hierarchy is L1 → L2 → L3; effective target-runtime depth must be verified and L4 is forbidden.
-- Plan direct L2 authority remains its reviewed 17-role read-only planning tree. Build direct L2 authority remains its reviewed 18-role bounded implementation tree.
-- NorthPace Loop directly owns all 36 canonical subagent identities as L2 targets: inline `explore` + `general` + all 34 specialist subagents. Coordinator L3 allowlists remain unchanged.
+- Plan direct L2 authority remains its reviewed 17-role read-only planning tree, with hard-denied noncanonical Task fallback.
+- Build direct L2 authority remains its reviewed 18-role bounded implementation tree; noncanonical Task fallback is `ask`.
+- NorthPace Loop directly owns all 36 canonical subagent identities as L2 targets: inline `explore` + `general` + all 34 specialist subagents; noncanonical Task fallback is `ask`. Coordinator L3 allowlists remain unchanged.
 - At most one mutating L1 (`build` or `northpace-loop`) owns the same objective at a time. Human mode switches are always allowed, but the new mutating owner must reconcile live tasks, filesystem state, ownership, dependencies, and evidence before further autonomous mutation.
 - Use one writer per owned path and dependency ordering when tasks share interfaces/schemas/lockfiles/generated artifacts. Parallel work also requires semantic independence.
 - Load `@rules/orchestration.md` for multi-agent, multi-session, high-risk, handoff, correction, cancellation, Goal Loop, or provider-budget work.
