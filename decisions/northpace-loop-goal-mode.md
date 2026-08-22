@@ -16,32 +16,32 @@ Add `northpace-loop` / **NorthPace Loop** as the third canonical `mode: primary`
 - The next Human prompt establishes the Root Goal when no Loop goal is active.
 - Public Loop inherits the repository global OpenCode Free route (`opencode/x-preview-f-free`) and uses `reasoningEffort: high`; it has no separate `model`, `variant`, or `temperature` override.
 - Loop has no repository `steps` override.
-- Loop directly auto-allows all 36 canonical subagents as L2 (`explore`, `general`, plus 34 specialists), with `"*": "ask"` fallback for noncanonical L1 Task requests.
+- Loop directly allows all 36 canonical subagents as L2 (`explore`, `general`, plus 34 specialists), with `"*": "ask"` fallback for noncanonical Task requests.
+- Plan keeps noncanonical Task fallback `deny`; Build and Loop use `ask`.
 - Existing coordinator L3 allowlists and `subagent_depth: 2` remain unchanged; L4 remains forbidden.
 - Build and Loop are mutating-capable, but one objective has at most one mutating L1 owner at a time.
 - Human may switch/steer/stop at any time; ownership and filesystem state are reconciled before the receiving mutating L1 continues.
 - Unset `steps` means NorthPalace imposes no goal-horizon iteration ceiling; it does not remove retry limits, permission gates, runtime/provider termination, or Human interruption.
+- Loop hard-denies `doom_loop`; identical repeated tool calls must change strategy or surface a Human Gate.
+- Loop follows the same Supervised Automation Permission Model as the private deployment: global Browser/CUA deny, Loop bounded Browser/CUA `ask`, optional transports disabled-by-default, and Auto Mode preauthorizes `ask` but never bypasses `deny`.
 
-## Public deployment adaptations
+## Public deployment adaptation
 
-The public repository intentionally differs from the private deployment in two current runtime policies:
+The public repository intentionally differs from the private deployment in **model routing only**: public agents use the OpenCode Free matrix validated by `scripts/validate-model-routing.mjs` and documented in README.
 
-1. model routing uses the public OpenCode Free matrix and is validated separately by `scripts/validate-model-routing.mjs`;
-2. CUA remains globally denied but the enabled CUA MCP is available to Build L1 through supervised `ask`; Plan, Loop, and subagents remain denied.
-
-These differences do not change the three-tree topology or Goal contract.
+The three-tree topology, ownership rules, Task fallback semantics, Browser/CUA policy, Auto Mode semantics, final gates, and runtime compatibility contract are aligned with the private deployment.
 
 ## Consequences
 
-Canonical identity count becomes **39**: 3 primary + 2 inline subagents + 34 specialists.
+Canonical identity count is **39**: 3 primary + 2 inline subagents + 34 specialists.
 
-There are now three autonomous delegation trees:
+There are three autonomous delegation trees:
 
-- Plan: 17 direct auto-allowed L2
-- Build: 18 direct auto-allowed L2
-- NorthPace Loop: 36 direct auto-allowed L2
+- Plan: 17 direct auto-allowed L2, noncanonical Task hard-denied
+- Build: 18 direct auto-allowed L2, noncanonical Task `ask`
+- NorthPace Loop: 36 direct auto-allowed L2, noncanonical Task `ask`
 
-The nine roles previously described globally as AO-only L3 are now more precisely **Build-only-via-AO**; NorthPace Loop can call them directly as L2.
+The nine roles previously described globally as AO-only L3 are more precisely **Build-only-via-AO**; NorthPace Loop can call them directly as L2.
 
 The existing `/northpalace-langfei-ni-token` full sweep remains intentionally Plan/Build-only and does not define Loop behavior.
 
