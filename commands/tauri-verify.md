@@ -24,4 +24,4 @@ Ask the fresh `test-runner` to:
 6. inspect `tauri.conf.json`, capabilities, permissions, commands, and frontend IPC callers for version alignment/unsafe broad access;
 7. report build/cache/generated filesystem side effects separately from source changes.
 
-Build integrates the ResultEnvelope and verifies that no unexpected source files changed. If a correction is needed, return the finding to the original implementation owner; never let the verifier fix it. This procedure is **source-non-editing**, not a claim that Cargo/test processes are filesystem read-only.
+The test-runner inherits the global supervised Bash baseline: in normal mode shell work may require Human approval; explicit Auto Mode may preauthorize `ask`, while hard-denied destructive/external-effect routes remain blocked. Build integrates the ResultEnvelope and verifies that no unexpected source files changed. If a correction is needed, return the finding to the original implementation owner; never let the verifier fix it. This procedure is **source-non-editing**, not a claim that Cargo/test processes are filesystem read-only.
