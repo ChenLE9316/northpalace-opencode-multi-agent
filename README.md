@@ -1,3 +1,5 @@
+⚠️ **重要：這是一套由北宮冰玉依照自己的操作習慣、工作流、風險偏好與多 Agent 使用方式高度特化的個人專用強化配置；它首先服務的是我自己的實際使用，不是通用預設，也不建議任何人不經評估就直接照搬。**
+
 # NorthPalace OpenCode Multi-Agent
 
 NorthPalace 的 OpenCode Desktop-first 多 Agent configuration + governance reference architecture。文件以繁體中文（zh-TW）為主；code、commands、paths、identifiers、model IDs 與 protocol/schema keys 保留英文。
