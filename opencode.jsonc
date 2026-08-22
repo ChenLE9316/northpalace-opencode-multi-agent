@@ -66,9 +66,47 @@
       ".env.example": "allow",
       "**/.env.example": "allow"
     },
-    "edit": "allow",
-    "bash": {
+    "edit": {
       "*": "allow",
+      ".env": "deny",
+      ".env.*": "deny",
+      "**/.env": "deny",
+      "**/.env.*": "deny",
+      "~/.local/share/opencode/auth.json": "deny",
+      "**/.local/share/opencode/auth.json": "deny",
+      ".ssh/**": "deny",
+      "**/.ssh/**": "deny",
+      ".npmrc": "deny",
+      "**/.npmrc": "deny",
+      ".git-credentials": "deny",
+      "**/.git-credentials": "deny",
+      ".aws/**": "deny",
+      "**/.aws/**": "deny",
+      ".azure/**": "deny",
+      "**/.azure/**": "deny",
+      ".config/gcloud/**": "deny",
+      "**/.config/gcloud/**": "deny",
+      ".config/gh/**": "deny",
+      "**/.config/gh/**": "deny",
+      ".kube/**": "deny",
+      "**/.kube/**": "deny",
+      ".docker/config.json": "deny",
+      "**/.docker/config.json": "deny",
+      ".netrc": "deny",
+      "**/.netrc": "deny",
+      "*.pem": "deny",
+      "**/*.pem": "deny",
+      "*.key": "deny",
+      "**/*.key": "deny",
+      "credentials.json": "deny",
+      "**/credentials.json": "deny",
+      "service-account*.json": "deny",
+      "**/service-account*.json": "deny",
+      ".env.example": "allow",
+      "**/.env.example": "allow"
+    },
+    "bash": {
+      "*": "ask",
       "git *": "ask",
       "git status*": "allow",
       "git diff*": "allow",
@@ -91,18 +129,30 @@
       "gh release delete*": "deny",
       "gh repo delete*": "deny",
       "docker push*": "deny",
+      "docker * prune*": "deny",
       "kubectl apply*": "deny",
       "kubectl delete*": "deny",
+      "helm install*": "deny",
       "helm upgrade*": "deny",
+      "helm uninstall*": "deny",
       "terraform apply*": "deny",
       "terraform destroy*": "deny",
+      "terraform state rm*": "deny",
       "rm *": "deny",
       "rmdir *": "deny",
       "del *": "deny",
       "Remove-Item *": "deny",
       "powershell*Remove-Item*": "deny",
       "cmd *del *": "deny",
-      "cargo clean*": "deny",
+      "shutdown*": "deny",
+      "reboot*": "deny",
+      "poweroff*": "deny",
+      "halt*": "deny",
+      "mkfs*": "deny",
+      "dd *": "deny",
+      "diskpart*": "deny",
+      "format *": "deny",
+      "cargo clean*": "ask",
       "npm publish*": "deny",
       "pnpm publish*": "deny",
       "bun publish*": "deny",
@@ -111,7 +161,7 @@
     "task": "deny",
     "webfetch": "allow",
     "websearch": "allow",
-    "playwright_*": "allow",
+    "playwright_*": "deny",
     "playwright_browser_run_code_unsafe": "deny",
     "playwright_browser_file_upload": "deny",
     "playwright_browser_drop": "deny",
@@ -162,6 +212,11 @@
           "handoff-drafter": "allow",
           "e2e-tester": "allow"
         },
+        "playwright_*": "ask",
+        "playwright_browser_run_code_unsafe": "deny",
+        "playwright_browser_file_upload": "deny",
+        "playwright_browser_drop": "deny",
+        "playwright_browser_evaluate": "deny",
         "cua-driver_*": "ask",
         "websearch": "allow"
       }
@@ -188,7 +243,7 @@
           "git describe": "allow"
         },
         "task": {
-          "*": "ask",
+          "*": "deny",
           "explore": "allow",
           "planning-agent": "allow",
           "product-manager": "allow",
@@ -207,7 +262,6 @@
           "review": "allow",
           "handoff-drafter": "allow"
         },
-        "cua-driver_*": "deny",
         "external_directory": "ask",
         "websearch": "allow"
       }
@@ -258,6 +312,13 @@
           "test-writer": "allow",
           "ui-designer": "allow"
         },
+        "playwright_*": "ask",
+        "playwright_browser_run_code_unsafe": "deny",
+        "playwright_browser_file_upload": "deny",
+        "playwright_browser_drop": "deny",
+        "playwright_browser_evaluate": "deny",
+        "cua-driver_*": "ask",
+        "doom_loop": "deny",
         "websearch": "allow"
       }
     },
@@ -291,32 +352,21 @@
   "mcp": {
     "playwright": {
       "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@playwright/mcp@0.0.78"
-      ],
+      "command": ["npx", "-y", "@playwright/mcp@0.0.78"],
       "enabled": false
     },
     "context7": {
       "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@upstash/context7-mcp@3.2.5"
-      ],
+      "command": ["npx", "-y", "@upstash/context7-mcp@3.2.5"],
       "enabled": true
     },
     "cua-driver": {
       "type": "local",
-      "command": [
-        "cua-driver",
-        "mcp"
-      ],
+      "command": ["cua-driver", "mcp"],
       "environment": {
         "CUA_DRIVER_RS_TELEMETRY_ENABLED": "0"
       },
-      "enabled": true
+      "enabled": false
     }
   },
   "watcher": {
