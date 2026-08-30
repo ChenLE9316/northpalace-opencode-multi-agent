@@ -1,11 +1,9 @@
 ---
 description: "CLI engineer: command structure, argument parsing, UX, output format, configuration."
 mode: subagent
-model: opencode-go/hy3
-variant: low
+model: opencode-go/mimo-v2.5
 steps: 60
 temperature: 0.9
-top_p: 1.0
 color: "#14b8a6"
 hidden: false
 permission:
