@@ -1,11 +1,9 @@
 ---
 description: "Test execution + coverage analysis expert: execute, interpret, identify uncovered critical paths."
 mode: subagent
-model: opencode-go/hy3
-variant: none
+model: opencode-go/mimo-v2.5
 steps: 80
 temperature: 0.9
-top_p: 1.0
 color: "#27AE60"
 hidden: false
 permission:
