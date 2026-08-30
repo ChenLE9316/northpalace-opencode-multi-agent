@@ -115,24 +115,22 @@ Canonical safety：
 
 Native file deny 不是 process sandbox；不要把 `ask` 描述為 hard security boundary。
 
-## 7. Three-model Specialist Routing — No Free
+## 7. Two-model Specialist Routing — No Free / No Hy3
 
 Canonical model families：
 
 ```text
 MUSE = opencode-go/muse-spark-1.2-contributor
 MIMO = opencode-go/mimo-v2.5
-HY3  = opencode-go/hy3
 ```
 
-任何 `*-free` / preview-Free specialist route 都不是 canonical；validator 必須 FAIL。
+任何 Hy3、`*-free` / preview-Free specialist route 都不是 canonical；validator 必須 FAIL。
 
 ### Distribution
 
 ```text
 Muse = 23
-MiMo = 7
-Hy3  = 4
+MiMo = 11
 Total = 34
 ```
 
@@ -146,7 +144,7 @@ Total = 34
 | api-designer | Muse | high | .15 |
 | architect | Muse | xhigh | .20 |
 | ci-debugger | Muse | high | .10 |
-| cli-engineer | Hy3 | low | .90 |
+| cli-engineer | MiMo | — | .90 |
 | db-engineer | Muse | high | .15 |
 | decision-analyst | Muse | xhigh | .15 |
 | dependency-checker | Muse | low | .10 |
@@ -164,20 +162,20 @@ Total = 34
 | product-manager | Muse | medium | .20 |
 | rag-engineer | Muse | high | .20 |
 | refactorer | Muse | xhigh | .10 |
-| release-manager | Hy3 | low | .90 |
+| release-manager | MiMo | — | .90 |
 | researcher | MiMo | — | .20 |
 | review | Muse | xhigh | .10 |
 | rust-engineer | Muse | high | .20 |
 | screen-context-agent | MiMo | — | .10 |
 | security-auditor | Muse | high | .10 |
 | tauri-engineer | Muse | high | .20 |
-| test-runner | Hy3 | none | .90 |
-| test-writer | Hy3 | low | .90 |
+| test-runner | MiMo | — | .90 |
+| test-writer | MiMo | — | .90 |
 | ui-designer | MiMo | — | .35 |
 
-Hy3 specialist `top_p = 1.0`。Muse role-specific variant in `minimal|low|medium|high|xhigh`。MiMo specialist 不設定 variant/top_p。
+Muse role-specific variant in `minimal|low|medium|high|xhigh`。MiMo specialist 不設定 variant/top_p。
 
-Inline：`explore` = MiMo；`general` = Hy3 low。
+Inline：`explore` = MiMo；`general` = MiMo。
 
 Root + three primaries intentionally do not pin model/variant/temperature，讓 Desktop/session primary selection 保留給 Human Operator。
 
