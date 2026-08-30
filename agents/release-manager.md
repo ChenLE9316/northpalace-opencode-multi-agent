@@ -1,11 +1,9 @@
 ---
 description: "Owns release readiness: SemVer/changelog preparation, gated release coordination, and post-release verification."
 mode: subagent
-model: opencode-go/hy3
-variant: low
+model: opencode-go/mimo-v2.5
 steps: 70
 temperature: 0.9
-top_p: 1.0
 color: "#10b981"
 hidden: false
 permission:
