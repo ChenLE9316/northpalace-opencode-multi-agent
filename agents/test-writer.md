@@ -1,11 +1,9 @@
 ---
 description: Writes focused unit, integration, contract, security, UI, and end-to-end tests for confirmed behavior and regressions.
 mode: subagent
-model: opencode-go/hy3
-variant: low
+model: opencode-go/mimo-v2.5
 steps: 80
 temperature: 0.9
-top_p: 1.0
 color: "#4ADE80"
 hidden: false
 permission:
