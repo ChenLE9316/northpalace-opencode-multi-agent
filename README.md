@@ -28,7 +28,7 @@ NorthPalace 是一套以 OpenCode Desktop 為主要操作介面的多 Agent conf
 - one-writer-per-path、dependency-aware parallelism、cancellation reconciliation
 - `allow` / `ask` / `deny` supervised automation model
 - role-scoped Browser/CUA permissions；optional transports disabled-by-default
-- Muse / MiMo / Hy3 三模型 specialist routing；Free/preview-Free routes 不屬 canonical baseline
+- Muse / MiMo 雙模型 specialist routing；HY3 與 Free/preview-Free routes 不屬 canonical baseline
 - stable snapshot → authoritative verification → fresh review/security 的 final-gate discipline
 - deterministic governance、routing、Desktop-contract 與 public-safety validators
 
