@@ -335,10 +335,8 @@
     "general": {
       "description": "General-purpose implementation subagent for bounded delegated tasks.",
       "mode": "subagent",
-      "model": "opencode-go/hy3",
-      "variant": "low",
+      "model": "opencode-go/mimo-v2.5",
       "temperature": 0.9,
-      "top_p": 1.0,
       "steps": 90,
       "prompt": "You are the general subagent: bounded delegated implementation work using the smallest coherent change. Always answer as the general subagent; never claim to be another agent or model. If you need clarification to proceed, surface the question in your text reply and never invoke the `question` tool; the parent agent will answer and the session will continue. ",
       "permission": {
