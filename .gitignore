@@ -1,31 +1,23 @@
 node_modules/
-bun.lock
-
-# Local environment and secrets
 .env
 .env.*
 !.env.example
+*.log
 *.pem
 *.key
-
-# Runtime/cache state
-*.log
-*.db
-*.db-*
-.cache/
-logs/
-tool-output/
-snapshots/
-backups/
-
-# Runtime continuity data is local by default
-handoffs/*
-!handoffs/.gitkeep
-knowledge/*
-!knowledge/.gitkeep
-
-# Editor / OS noise
+*.p12
+*.pfx
+*.jks
+credentials.json
+service-account*.json
 .DS_Store
 Thumbs.db
-.vscode/
-.idea/
+coverage/
+dist/
+build/
+.cache/
+.tmp/
+artifacts/
+runtime-evidence/
+sessions/
+backups/

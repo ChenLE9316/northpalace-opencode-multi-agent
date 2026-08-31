@@ -1,37 +1,15 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "logLevel": "INFO",
   "share": "disabled",
-  "autoupdate": false,
-  "snapshot": true,
-  "default_agent": "build",
-  "subagent_depth": 2,
-  "small_model": "opencode-go/mimo-v2.5",
-  "lsp": {
-    "typescript": {
-      "command": ["typescript-language-server", "--stdio"],
-      "extensions": [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".mts", ".cts"]
-    },
-    "eslint": {
-      "command": ["vscode-eslint-language-server", "--stdio"],
-      "extensions": [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".mts", ".cts", ".vue"]
-    },
-    "taplo": {
-      "command": ["taplo", "lsp", "stdio"],
-      "extensions": [".toml"]
-    },
-    "pyright": {
-      "command": ["pyright-langserver", "--stdio"],
-      "extensions": [".py", ".pyi"]
-    }
-  },
+  "default_agent": "northpace",
+  "subagent_depth": 3,
   "permission": {
     "read": {
       "*": "allow",
       ".env": "deny",
-      ".env.*": "deny",
       "**/.env": "deny",
-      "**/.env.*": "deny",
+      ".env.example": "allow",
+      "**/.env.example": "allow",
       "~/.local/share/opencode/auth.json": "deny",
       "**/.local/share/opencode/auth.json": "deny",
       ".ssh/**": "deny",
@@ -61,16 +39,14 @@
       "credentials.json": "deny",
       "**/credentials.json": "deny",
       "service-account*.json": "deny",
-      "**/service-account*.json": "deny",
-      ".env.example": "allow",
-      "**/.env.example": "allow"
+      "**/service-account*.json": "deny"
     },
     "edit": {
       "*": "allow",
       ".env": "deny",
-      ".env.*": "deny",
       "**/.env": "deny",
-      "**/.env.*": "deny",
+      ".env.example": "allow",
+      "**/.env.example": "allow",
       "~/.local/share/opencode/auth.json": "deny",
       "**/.local/share/opencode/auth.json": "deny",
       ".ssh/**": "deny",
@@ -100,292 +76,48 @@
       "credentials.json": "deny",
       "**/credentials.json": "deny",
       "service-account*.json": "deny",
-      "**/service-account*.json": "deny",
-      ".env.example": "allow",
-      "**/.env.example": "allow"
+      "**/service-account*.json": "deny"
     },
     "bash": {
       "*": "ask",
-      "git *": "ask",
       "git status*": "allow",
       "git diff*": "allow",
       "git log*": "allow",
-      "git show*": "allow",
-      "git grep*": "allow",
-      "git rev-parse*": "allow",
-      "git ls-files*": "allow",
-      "git branch --show-current*": "allow",
-      "git remote -v*": "allow",
-      "git remote get-url*": "allow",
-      "git describe*": "allow",
       "git push*": "deny",
       "git reset --hard*": "deny",
-      "git clean*": "deny",
-      "git checkout --*": "deny",
-      "git restore*": "deny",
-      "gh pr merge*": "deny",
-      "gh release create*": "deny",
-      "gh release delete*": "deny",
-      "gh repo delete*": "deny",
-      "docker push*": "deny",
-      "docker * prune*": "deny",
-      "kubectl apply*": "deny",
-      "kubectl delete*": "deny",
-      "helm install*": "deny",
-      "helm upgrade*": "deny",
-      "helm uninstall*": "deny",
-      "terraform apply*": "deny",
-      "terraform destroy*": "deny",
-      "terraform state rm*": "deny",
-      "rm *": "deny",
-      "rmdir *": "deny",
-      "del *": "deny",
-      "Remove-Item *": "deny",
-      "powershell*Remove-Item*": "deny",
-      "cmd *del *": "deny",
-      "shutdown*": "deny",
-      "reboot*": "deny",
-      "poweroff*": "deny",
-      "halt*": "deny",
-      "mkfs*": "deny",
-      "dd *": "deny",
-      "diskpart*": "deny",
-      "format *": "deny",
-      "cargo clean*": "ask",
-      "npm publish*": "deny",
-      "pnpm publish*": "deny",
-      "bun publish*": "deny",
-      "cargo publish*": "deny"
+      "rm -rf*": "deny"
     },
-    "task": "deny",
     "webfetch": "allow",
     "websearch": "allow",
-    "playwright_*": "deny",
-    "playwright_browser_run_code_unsafe": "deny",
-    "playwright_browser_file_upload": "deny",
-    "playwright_browser_drop": "deny",
-    "playwright_browser_evaluate": "deny",
-    "context7_*": "allow",
-    "cua-driver_*": "deny",
-    "external_directory": {
-      "*": "ask",
-      "~/.config/opencode/rules/**": "allow",
-      "~/.config/opencode/knowledge/**": "allow",
-      "~/.config/opencode/decisions/**": "allow",
-      "~/.config/opencode/handoffs/**": "allow"
-    },
-    "doom_loop": "ask",
     "skill": {
-      "*": "allow",
-      "northpalace-langfei-ni-token": "deny"
-    },
-    "question": "allow"
+      "*": "allow"
+    }
   },
   "agent": {
-    "build": {
-      "description": "Primary bounded implementation agent for scoped changes, specialist delegation, and evidence-backed verification.",
+    "northpace": {
+      "description": "Public showcase primary orchestrator",
       "mode": "primary",
-      "prompt": "{file:./prompts/build.md}",
-      "steps": 200,
-      "color": "#5E8CFF",
+      "temperature": 0.2,
       "permission": {
-        "task": {
-          "*": "ask",
-          "explore": "allow",
-          "general": "allow",
-          "architect": "allow",
-          "researcher": "allow",
-          "review": "allow",
-          "security-auditor": "allow",
-          "error-analyzer": "allow",
-          "dependency-checker": "allow",
-          "agent-orchestrator": "allow",
-          "frontend-engineer": "allow",
-          "rust-engineer": "allow",
-          "tauri-engineer": "allow",
-          "electron-engineer": "allow",
-          "test-runner": "allow",
-          "release-manager": "allow",
-          "knowledge-curator": "allow",
-          "handoff-drafter": "allow",
-          "e2e-tester": "allow"
-        },
-        "playwright_*": "ask",
-        "playwright_browser_run_code_unsafe": "deny",
-        "playwright_browser_file_upload": "deny",
-        "playwright_browser_drop": "deny",
-        "playwright_browser_evaluate": "deny",
-        "cua-driver_*": "ask",
-        "websearch": "allow"
-      }
-    },
-    "plan": {
-      "description": "Hard source-edit read-only primary agent for architecture, risk analysis, and implementation planning.",
-      "mode": "primary",
-      "prompt": "{file:./prompts/plan.md}",
-      "steps": 100,
-      "color": "#A78BFA",
-      "permission": {
-        "edit": "deny",
-        "bash": {
-          "*": "deny",
-          "git status": "allow",
-          "git status --short": "allow",
-          "git status --porcelain": "allow",
-          "git diff --name-only": "allow",
-          "git diff --stat": "allow",
-          "git rev-parse HEAD": "allow",
-          "git ls-files": "allow",
-          "git branch --show-current": "allow",
-          "git describe": "allow"
-        },
         "task": {
           "*": "deny",
-          "explore": "allow",
-          "planning-agent": "allow",
-          "product-manager": "allow",
-          "researcher": "allow",
-          "api-designer": "allow",
-          "ui-designer": "allow",
-          "a11y-specialist": "allow",
-          "security-auditor": "allow",
-          "screen-context-agent": "allow",
-          "dependency-checker": "allow",
-          "error-analyzer": "allow",
-          "discussion-facilitator": "allow",
-          "multi-angle-researcher": "allow",
-          "decision-analyst": "allow",
+          "planner": "allow",
+          "research-lead": "allow",
+          "delivery-lead": "allow",
+          "review-lead": "allow",
           "architect": "allow",
-          "review": "allow",
-          "handoff-drafter": "allow"
-        },
-        "external_directory": "ask",
-        "websearch": "allow"
-      }
-    },
-    "northpace-loop": {
-      "description": "NorthPace Loop — Human-selected long-horizon Goal mode that keeps advancing one Root Goal until evidence-backed completion or a Human Gate/blocker.",
-      "mode": "primary",
-      "prompt": "{file:./prompts/northpace-loop.md}",
-      "color": "#22C55E",
-      "permission": {
-        "task": {
-          "*": "ask",
-          "explore": "allow",
-          "general": "allow",
-          "a11y-specialist": "allow",
-          "agent-orchestrator": "allow",
-          "ai-ml-engineer": "allow",
-          "api-designer": "allow",
-          "architect": "allow",
-          "ci-debugger": "allow",
-          "cli-engineer": "allow",
-          "db-engineer": "allow",
-          "decision-analyst": "allow",
-          "dependency-checker": "allow",
-          "devops-engineer": "allow",
-          "discussion-facilitator": "allow",
-          "doc-generator": "allow",
-          "e2e-tester": "allow",
-          "electron-engineer": "allow",
-          "error-analyzer": "allow",
-          "frontend-engineer": "allow",
-          "handoff-drafter": "allow",
-          "knowledge-curator": "allow",
-          "multi-angle-researcher": "allow",
-          "planning-agent": "allow",
-          "product-manager": "allow",
-          "rag-engineer": "allow",
-          "refactorer": "allow",
-          "release-manager": "allow",
-          "researcher": "allow",
-          "review": "allow",
-          "rust-engineer": "allow",
-          "screen-context-agent": "allow",
-          "security-auditor": "allow",
-          "tauri-engineer": "allow",
-          "test-runner": "allow",
-          "test-writer": "allow",
-          "ui-designer": "allow"
-        },
-        "playwright_*": "ask",
-        "playwright_browser_run_code_unsafe": "deny",
-        "playwright_browser_file_upload": "deny",
-        "playwright_browser_drop": "deny",
-        "playwright_browser_evaluate": "deny",
-        "cua-driver_*": "ask",
-        "doom_loop": "deny",
-        "websearch": "allow"
-      }
-    },
-    "explore": {
-      "description": "Fast codebase exploration using local search, LSP, and evidence collection.",
-      "mode": "subagent",
-      "model": "opencode-go/mimo-v2.5",
-      "steps": 60,
-      "temperature": 0.1,
-      "permission": {
-        "edit": "deny",
-        "bash": "deny",
-        "task": "deny",
-        "question": "deny"
+          "fullstack-engineer": "allow",
+          "ai-product-engineer": "allow",
+          "domain-specialist": "allow",
+          "creative-producer": "allow",
+          "risk-specialist": "allow",
+          "verifier": "allow",
+          "atomic-code": "allow",
+          "atomic-research": "allow",
+          "atomic-verification": "allow"
+        }
       },
-      "prompt": "You are the explore agent: fast, read-only codebase exploration using glob / grep / LSP / local search. Always answer as the explore agent; never claim to be another agent or model. If you need clarification to proceed, surface the question in your text reply and never invoke the `question` tool; the parent agent will answer and the session will continue. "
-    },
-    "general": {
-      "description": "General-purpose implementation subagent for bounded delegated tasks.",
-      "mode": "subagent",
-      "model": "opencode-go/mimo-v2.5",
-      "temperature": 0.9,
-      "steps": 90,
-      "prompt": "You are the general subagent: bounded delegated implementation work using the smallest coherent change. Always answer as the general subagent; never claim to be another agent or model. If you need clarification to proceed, surface the question in your text reply and never invoke the `question` tool; the parent agent will answer and the session will continue. ",
-      "permission": {
-        "task": "deny",
-        "question": "deny"
-      }
+      "prompt": "Act as a bounded primary orchestrator. Create explicit work contracts, delegate only to registered descendants, pass minimal context, require evidence-backed results, independently verify completion, and stop at Human approval or unknown-evidence gates. Do not create a second runtime, scheduler, daemon, hidden state store, permission engine, or model router."
     }
-  },
-  "mcp": {
-    "playwright": {
-      "type": "local",
-      "command": ["npx", "-y", "@playwright/mcp@0.0.78"],
-      "enabled": false
-    },
-    "context7": {
-      "type": "local",
-      "command": ["npx", "-y", "@upstash/context7-mcp@3.2.5"],
-      "enabled": true
-    },
-    "cua-driver": {
-      "type": "local",
-      "command": ["cua-driver", "mcp"],
-      "environment": {
-        "CUA_DRIVER_RS_TELEMETRY_ENABLED": "0"
-      },
-      "enabled": false
-    }
-  },
-  "watcher": {
-    "ignore": [
-      "**/target/**",
-      "**/node_modules/**",
-      "**/dist/**",
-      "**/build/**",
-      "**/.next/**",
-      "**/coverage/**",
-      "**/.git/**"
-    ]
-  },
-  "tool_output": {
-    "max_lines": 2000,
-    "max_bytes": 51200
-  },
-  "compaction": {
-    "auto": true,
-    "prune": true,
-    "tail_turns": 5,
-    "preserve_recent_tokens": 8000,
-    "reserved": 12000
-  },
-  "shell": "bash"
+  }
 }
