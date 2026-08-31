@@ -1,9 +1,10 @@
 {
+  "name": "northpalace-opencode-multi-agent-public-showcase",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "test:frontmatter": "node scripts/test-frontmatter.mjs",
-    "validate:governance": "npm run test:frontmatter && node scripts/validate-governance.mjs --canonical && node scripts/validate-model-routing.mjs && node scripts/validate-desktop-contract.mjs"
-  },
-  "dependencies": {
-    "@opencode-ai/plugin": "1.18.16"
+    "validate:showcase": "node scripts/validate-showcase.mjs",
+    "validate:public": "node scripts/validate-public-safety.mjs --require-history",
+    "validate": "npm run validate:showcase && npm run validate:public"
   }
 }
