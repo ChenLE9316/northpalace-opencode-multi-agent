@@ -38,3 +38,13 @@ test("reject unknown worktree location",()=>fixture(async({ws,wt,base})=>{
  const runner=new Runner({client:fake(),workspace:ws,worktreeRoot:wt,stateDir:join(base,"state"),env:{}})
  await assert.rejects(runner.add({id:"test",goal:"Implement test task",worktree:join(base,"private"),acceptance:["verified"]}))
 }))
+
+test("blocked session cannot be cancelled without explicit interrupted evidence",()=>fixture(async({ws,wt,base})=>{
+ const c=fake();c.session.prompt=async()=>{throw Error("ambiguous network timeout")}
+ const runner=new Runner({client:c,workspace:ws,worktreeRoot:wt,stateDir:join(base,"state"),env:{}})
+ await runner.add({id:"guard",goal:"Implement safe task",acceptance:["verified"]})
+ await runner.dispatch()
+ await assert.rejects(runner.mark("guard","cancelled","ignore ambiguous session"))
+ const status=(await runner.list()).find(t=>t.id==="guard")
+ assert.equal(status.status,"blocked")
+}))

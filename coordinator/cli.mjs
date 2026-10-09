@@ -8,7 +8,7 @@ import {publicModels,modelOptions,limits} from "./hybrid.mjs"
 
 const [cmd,...args]=process.argv.slice(2)
 const root=resolve(process.env.NP_WORKSPACE||process.cwd())
-const runtime=resolve(process.env.NP_STATE_DIR||join(root,".northpalace-state"))
+const runtime=resolve(process.env.NP_STATE_DIR||join(root,"runtime","state","northpalace"))
 const worktrees=resolve(process.env.NP_WORKTREE_ROOT||join(root,"..","northpalace-worktrees"))
 const token=process.env.OPENCODE_TOKEN
 const client=OpenCode.make({
