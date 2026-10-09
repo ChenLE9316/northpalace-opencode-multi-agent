@@ -1,0 +1,11 @@
+{
+  "id": "feature-example",
+  "goal": "Inspect the current workspace and identify one bounded improvement; implement and test only within the active repository.",
+  "lane": "auto",
+  "write": true,
+  "dependsOn": [],
+  "acceptance": [
+    "Relevant checks executed and results reported",
+    "Independent review completed before integration"
+  ]
+}
