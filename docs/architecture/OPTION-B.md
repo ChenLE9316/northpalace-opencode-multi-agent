@@ -40,3 +40,14 @@ F. 最後才增加遠端 Worktree 或跨電腦 Session 調度。
 ## 保守設計原因
 
 V2 Plugin API 目前可能變動，Session plugin 與 HTTP client 的 API 範圍不同。Plugin storage 不是具一致性保障的任務佇列；Client event stream live-only，不可當唯一持久日誌。
+
+## Phase 2 delivered (2026-10-09)
+
+- `coordinator/task-core.mjs`: dependency gate, task transition rules, single-writer and lane admission.
+- `coordinator/task-store.mjs`: durable local registry with serializing lock and atomic file replacement.
+- `coordinator/hybrid.mjs`: local-first tool-model discovery with explicit cloud opt-in.
+- `coordinator/runner.mjs`: Session create/prompt admission and conservative reconciliation.
+- `coordinator/cli.mjs`: add, dispatch, reconcile, tasks, models, doctor, mark, watch.
+- `scripts/verify-v2.ps1`: local Windows test runner and optional Client installation.
+
+**Still pending:** remote Session authentication, reliable peer event push, lifecycle event-driven task completion checks, durable per-task snapshot recovery in all failure windows, DAG visualization, credential isolation and OS sandbox. Avoid equating task state transitions with actual Git integration.

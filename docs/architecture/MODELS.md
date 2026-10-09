@@ -1,20 +1,26 @@
-# Models / local provider resource schedule
+# Hybrid Models — Windows 11 local-first
 
-No provider model ID is hard-coded in this repository; use a tool-capable model that the current V2 instance has actually discovered.
+## Decision
 
-## Scheduler policy
+**Hybrid means local-first with an explicitly configured cloud lane, not an unconditional cloud fallback.**
 
-- Model capability gate: Code Mode/tool calling, context, output cap, multimodal needs.
-- Avoid parallel model sessions whose combined VRAM/KV cache exceeds available capacity.
-- First milestone uses one active model writer; grow to two or three only after measuring latency and memory.
-- Subagents inherit parent's model unless a profile explicitly overrides it.
-- Track session model, queue time, token/cost/latency, error and retry.
-- Prefer small/fast models for pure exploration only if they reliably use the required tools.
+- Model inventory comes from the V2 `model.list` API filtered by project location.
+- Eligible agents need tool calling; reject models where `capabilities.tools !== true`.
+- Local priority: LM Studio, Ollama, vLLM; no implicit or guessed model IDs.
+- Set `NP_LOCAL_MODEL` to pin an exact discovered local model ID (optional).
+- Cloud is only eligible with **both** `NP_ALLOW_CLOUD=1` and `NP_CLOUD_MODEL=provider/model-id`.
+- An `auto` task uses local while any valid local model is present. To force paid cloud choose `lane=cloud`.
+- Default `NP_MAX_LOCAL=1`, `NP_MAX_CLOUD=1` admission slots; tune after runtime load testing. These are admission policies, not GPU VRAM enforcement.
 
-## Local provider options
+## Why
 
-V2 can discover LM Studio and Ollama. For custom OpenAI-compatible APIs explicitly configure provider metadata and verify actual model/tool capabilities.
+Different OpenCode Sessions can compete for the same local model RAM/VRAM and KV cache. A queued task does not grant memory. Use the actual Provider/model capabilities rather than assuming a certain GPU or historical model is installed.
 
-## Deliberate omissions
+## Future
 
-This repository does not presume a particular GPU, LM Studio model ID or local port is currently available on the machine running OpenCode. Browser depends on Desktop attachment, not on model choice alone.
+- Dynamic failure classification and optional policy-driven failover (only with explicit financial authorization).
+- Per-provider token/cost budget and queue fairness.
+- Capability-aware routing for image/audio/browser workloads.
+- Better local endpoint health and context/performance samples.
+
+Currently there is no automatic paid fallback, no cross-provider request retry and no real-time budget enforcement.

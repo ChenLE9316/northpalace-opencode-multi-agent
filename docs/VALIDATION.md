@@ -29,3 +29,18 @@
 - [ ] OS sandbox.
 
 Do not label an unchecked runtime validation as passed.
+
+## Phase 2 — Hybrid / Windows / project-only
+
+- [x] Source: hybrid selector with cloud opt-in, tool capability validation and local-first routing.
+- [x] Source: local registry lock, task graph checks and admission policies.
+- [x] Source: Session create / prompt / conservative reconcile implementation.
+- [x] Node test files for selector, task core, runner mock and existing legacy state logic.
+- [x] Project-level Windows test and launch scripts planned without global rule edits.
+- [ ] Run `node --test` on user's actual Windows checkout after installing Node >=22.
+- [ ] Run `node coordinator/cli.mjs doctor` against OpenCode V2 server.
+- [ ] Verify LM Studio/Ollama and cloud model capability list.
+- [ ] Verify live `session.create`, `session.prompt`, `session.get` and plugin registration.
+- [ ] Verify actual Worktree file isolation and nested L0→L3 execution.
+- [ ] Execute a mocked network timeout and inspect manual blocking behavior.
+- [ ] Verify XDG paths & actual OpenCode runtime paths on Windows.

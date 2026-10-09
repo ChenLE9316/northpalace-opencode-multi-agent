@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "node cli.mjs",
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test"
   },
   "dependencies": {
     "@opencode/client": "2.0.24"

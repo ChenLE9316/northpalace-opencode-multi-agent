@@ -34,9 +34,9 @@ async function run(){
     const [taskId,status,...parts]=args
     return out(await runner.mark(taskId,status,parts.join(" ")))
   }
-  if(cmd==="models")return out(publicModels(await client.model.list()))
+  if(cmd==="models")return out(publicModels(await client.model.list({location:{directory:root}})))
   if(cmd==="doctor"){
-    const modelList=publicModels(await client.model.list())
+    const modelList=publicModels(await client.model.list({location:{directory:root}}))
     const plugins=await client.plugin.list({location:{directory:root}})
     const agents=await client.agent.list({location:{directory:root}})
     return out({workspace:root,stateDir:runtime,worktreeRoot:worktrees,

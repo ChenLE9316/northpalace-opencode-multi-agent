@@ -35,9 +35,10 @@ export class Runner {
       const t=state.tasks.find(t=>t.id===taskId)
       if(!t)throw Error("task not found")
       // Never allow arbitrary accept/complete from an inactive session.
-      if(!["review","accepted","integrated","blocked","cancelled","assigned","changes_requested"].includes(status))
+      if(!["review","accepted","integrated","blocked","cancelled","changes_requested"].includes(status))
         throw Error("unsupported operator transition")
-      if(status==="assigned" && t.status==="blocked")t.sessionID=null
+      if(status==="cancelled" && t.sessionID && !note.startsWith("confirmed-interrupted:"))
+        throw Error("task has a session; interrupt/check it manually, then supply reason beginning 'confirmed-interrupted:'")
       changeStatus(t,status,note)
       log(state,"transition",taskId,{status,note})
       return t
@@ -47,7 +48,7 @@ export class Runner {
     const snapshot=await this.state.read()
     const candidates=snapshot.tasks.filter(t=>t.status==="queued"||t.status==="changes_requested")
     if(!candidates.length)return {state:"empty"}
-    const catalog=readModels(await this.client.model.list())
+    const catalog=readModels(await this.client.model.list({location:{directory:this.workspace}}))
     const opts=modelOptions(this.env),caps=limits(this.env)
     const errors=[]
     for(const candidate of candidates){

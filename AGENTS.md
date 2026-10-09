@@ -42,3 +42,9 @@ Applies to this repository and nested project Locations. OpenCode V2 loads AGENT
 - Use websearch/webfetch for current facts, Browser namespace when Desktop has an attached browser, otherwise report unavailable and use an explicitly configured alternative.
 - Skills are on-demand procedures, not agents; commands are entry points, not a scheduler.
 - Do not rely on `instructions: []` to inject rules. Use this file and nested AGENTS.md.
+
+## Hybrid model routing (project-specific)
+- Prefer a discovered tool-capable LM Studio/Ollama/vLLM model; choose cloud only if the operator explicitly enabled it through local environment settings.
+- No silent cloud fallback; never assume cloud usage is free or authorized by merely selecting Hybrid.
+- A task is not complete because its Session is idle; report observed evidence to the task registry.
+- Do not modify user-global OpenCode rules or settings for this project.
