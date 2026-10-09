@@ -11,6 +11,6 @@
     "test": "node --test"
   },
   "dependencies": {
-    "@opencode/client": "2.0.24"
+    "@opencode/client": "2.0.26"
   }
 }

@@ -9,6 +9,13 @@ export class Store {
     try{
       const data=JSON.parse(await readFile(this.file,"utf8"))
       if(data.version!==2||!Array.isArray(data.tasks)||!Array.isArray(data.sessions))throw Error("incompatible registry schema")
+      // Older v2 registries may lack the uncertainty marker. A nonterminal
+      // task without a Session ID may have crossed the session.create boundary.
+      for(const task of data.tasks){
+        const mayHaveSession=["assigned","running","review","blocked","failed","changes_requested"].includes(task.status)
+        if(!task.sessionID&&mayHaveSession)task.sessionUnknown=true
+        else if(typeof task.sessionUnknown!=="boolean")task.sessionUnknown=false
+      }
       return data
     }catch(e){if(e.code==="ENOENT")return defaultState();throw e}
   }

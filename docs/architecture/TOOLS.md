@@ -30,3 +30,7 @@ Headless Server 可單獨規劃 Playwright MCP 或受控 browser service，但�
 ## Priority
 
 直接內建工具 → Code Mode 組合原生工具 → 本地 Plugin 能力 → 必要時才啟動 MCP。避免讓每個子 Agent 都看到所有遠端工具，降低上下文與授權面積。
+
+## 2026-10-09 實機觀察
+
+OpenCode v2.0.26 的本地 `NorthPalac` Session 實際使用 `read`、`glob`、`skill`、`shell`、`write`、`execute` 與 `subagent`。本地模型以 Python/import 語法呼叫 JavaScript Code Mode，執行器拒絕該呼叫；沒有有效 JavaScript Execute 成功案例。Mailbox Plugin 註冊、Browser attachment、Edit、Grep、Web Fetch 與 Web Search 尚未以 runtime API 驗證。細項見 [`docs/VALIDATION.md`](../VALIDATION.md)。

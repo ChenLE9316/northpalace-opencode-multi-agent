@@ -12,10 +12,12 @@ From repository root in PowerShell:
 
 ```powershell
 .\scripts\verify-v2.ps1
-.\scripts\verify-v2.ps1 -InstallClient
+.\scripts\verify-v2.ps1 -InstallDependencies
 ```
 
-Only `coordinator/node_modules` and `runtime/npm-cache` are used for installed Client dependencies/cache. No global npm install. V2 itself must be installed separately, or copied into `runtime/bin/opencode.exe`.
+`-InstallDependencies` installs project-local packages from both `coordinator/package.json` and `.opencode/package.json`; dependencies live under their respective `node_modules` directories, and npm's cache is placed in `runtime/npm-cache`. No global npm install. V2 itself must be installed separately, or copied into `runtime/bin/opencode.exe`.
+
+When the V2 server uses HTTP Basic Auth, set `OPENCODE_PASSWORD` for the Coordinator client; the username defaults to `opencode` and can be changed with `OPENCODE_SERVER_USERNAME`. `OPENCODE_TOKEN` remains available for Bearer-authenticated servers and takes precedence if both are set. Authenticated connections require HTTPS or a loopback HTTP URL. Do not put credentials in `OPENCODE_URL`.
 
 Run the dedicated server in another terminal:
 
@@ -75,9 +77,11 @@ These last three commands are **registry state transitions, not automatic git op
 - Lane quotas `NP_MAX_LOCAL` and `NP_MAX_CLOUD`, configurable 0..16.
 - The project root OR a direct child directory of `NP_WORKTREE_ROOT` may be assigned. Arbitrary paths are rejected.
 - Server-created Session ID is saved before `session.prompt`.
+- Session creation is marked uncertain before the API call; cancellation while create is pending needs `confirmed-interrupted:`. If a task stops before prompt delivery, the new Session is removed and no prompt is sent.
 - Network timeout after Session create is **ambiguous**, so the task becomes `blocked` and is not automatically retried.
 - Blocking retains a writer reservation and lane slot until manual resolution.
 - Canceling a task with an active/unknown Session requires verifying interruption first; the note must start with `confirmed-interrupted:`.
+- A stale `prompting` task can be recovered by marking it `blocked` with `confirmed-interrupted:` after stopping the Session, then explicitly requeueing it.
 - Registry uses atomic write-then-rename plus an exclusive filesystem lock, not network-distributed transactions. A crash can leave the lock directory; never remove it before confirming no coordinator is active.
 
 ## Caveats

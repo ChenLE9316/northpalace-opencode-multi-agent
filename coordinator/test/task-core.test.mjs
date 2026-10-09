@@ -8,6 +8,10 @@ test("task schema validates scope and acceptance",()=>{
   assert.throws(()=>newTask("../escape"))
   assert.equal(newTask("one").status,"queued")
 })
+test("task IDs must be unique within the registry",()=>{
+  const first=newTask("duplicate")
+  assert.throws(()=>normalizeTask({id:"duplicate",goal:"another feature",acceptance:["tests pass"]},[first],ws),/duplicate task ID/)
+})
 test("dependency state unlocks only when integrated",()=>{
   const a=newTask("first"),b=normalizeTask({id:"second",goal:"run dependent step",acceptance:["reviewed"],dependsOn:["first"]},[a],ws)
   assert.equal(isReady(b,[a,b]),false)

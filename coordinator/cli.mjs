@@ -3,6 +3,7 @@
 import { OpenCode } from "@opencode/client"
 import {resolve,join} from "node:path"
 import {readFile} from "node:fs/promises"
+import {clientOptions} from "./auth.mjs"
 import {Runner} from "./runner.mjs"
 import {publicModels,modelOptions,limits} from "./hybrid.mjs"
 
@@ -10,11 +11,7 @@ const [cmd,...args]=process.argv.slice(2)
 const root=resolve(process.env.NP_WORKSPACE||process.cwd())
 const runtime=resolve(process.env.NP_STATE_DIR||join(root,"runtime","state","northpalace"))
 const worktrees=resolve(process.env.NP_WORKTREE_ROOT||join(root,"..","northpalace-worktrees"))
-const token=process.env.OPENCODE_TOKEN
-const client=OpenCode.make({
-  baseUrl:process.env.OPENCODE_URL||"http://127.0.0.1:4096",
-  ...(token?{headers:{authorization:"Bearer "+token}}:{})
-})
+const client=OpenCode.make(clientOptions())
 const runner=new Runner({client,workspace:root,worktreeRoot:worktrees,stateDir:runtime})
 const out=(x)=>console.log(JSON.stringify(x,null,2))
 const usage=()=>{

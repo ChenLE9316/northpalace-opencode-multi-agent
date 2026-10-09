@@ -8,9 +8,9 @@ export const TRANSITIONS = Object.freeze({
   running:["review","blocked","failed","cancelled"],
   review:["accepted","changes_requested","blocked"],
   accepted:["integrated","blocked"],
-  changes_requested:["assigned","cancelled"],
-  blocked:["assigned","cancelled"],
-  failed:["assigned","cancelled"],
+  changes_requested:["assigned","queued","cancelled"],
+  blocked:["assigned","queued","cancelled"],
+  failed:["assigned","queued","cancelled"],
   cancelled:[],integrated:[]
 })
 export const BUSY = new Set(["assigned","running","review","blocked"])
@@ -34,7 +34,7 @@ export function normalizeTask(input, existing=[],workspace="") {
   return {
     id:input.id,goal:input.goal.trim(),worktree,dependsOn,acceptance:criteria,
     write:input.write!==false,lane:input.lane??"auto",agent:"NorthPalac",
-    status:"queued",sessionID:null,model:null,createdAt:new Date().toISOString(),
+    status:"queued",sessionID:null,sessionUnknown:false,model:null,createdAt:new Date().toISOString(),
     updatedAt:new Date().toISOString(),evidence:[],activity:"unstarted",error:null
   }
 }

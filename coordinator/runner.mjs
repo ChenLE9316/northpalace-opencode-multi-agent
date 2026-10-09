@@ -34,11 +34,20 @@ export class Runner {
     return this.state.transaction(state=>{
       const t=state.tasks.find(t=>t.id===taskId)
       if(!t)throw Error("task not found")
+      if(t.status==="assigned" && t.activity==="prompting" && !(status==="blocked" && note.startsWith("confirmed-interrupted:")))
+        throw Error("session.prompt is in progress; wait for dispatch to finish, or confirm interruption before blocking it")
       // Never allow arbitrary accept/complete from an inactive session.
-      if(!["review","accepted","integrated","blocked","cancelled","changes_requested"].includes(status))
+      if(!["queued","review","accepted","integrated","blocked","failed","cancelled","changes_requested"].includes(status))
         throw Error("unsupported operator transition")
-      if(status==="cancelled" && t.sessionID && !note.startsWith("confirmed-interrupted:"))
+      if(status==="cancelled" && (t.sessionID || t.sessionUnknown) && !note.startsWith("confirmed-interrupted:"))
         throw Error("task has a session; interrupt/check it manually, then supply reason beginning 'confirmed-interrupted:'")
+      if(status==="queued" && (t.sessionID || t.sessionUnknown) && !note.startsWith("confirmed-interrupted:"))
+        throw Error("task has a session; verify interruption before requeueing and start the note with 'confirmed-interrupted:'")
+      if(status==="queued"){
+        t.sessionID=null
+        t.sessionUnknown=false
+        t.activity="unstarted"
+      }
       changeStatus(t,status,note)
       log(state,"transition",taskId,{status,note})
       return t
@@ -65,6 +74,10 @@ export class Runner {
           if(!result.ok)return null
           this.checkLocation(t.worktree)
           t.model=choice
+          // Persist the non-idempotent launch boundary before the API call so
+          // another CLI process cannot cancel/requeue while create is in flight.
+          t.sessionUnknown=true
+          t.activity="creating-session"
           changeStatus(t,"assigned","reserved workspace and model lane")
           log(state,"reserved",t.id,{lane:choice.lane,worktree:t.worktree})
           return {...t}
@@ -83,9 +96,33 @@ export class Runner {
         await this.state.transaction(state=>{
           const t=state.tasks.find(t=>t.id===reserved.id)
           t.sessionID=response.id
+          t.sessionUnknown=false
+          t.activity="session-created"
           state.sessions.push({id:response.id,taskId:t.id,createdAt:new Date().toISOString()})
           log(state,"session-created",t.id,{sessionID:response.id})
         })
+        const promptAllowed=await this.state.transaction(state=>{
+          const t=state.tasks.find(t=>t.id===reserved.id)
+          if(t.status!=="assigned"){
+            log(state,"prompt-skipped",t.id,{sessionID:response.id,status:t.status})
+            return false
+          }
+          t.activity="prompting"
+          log(state,"prompt-started",t.id,{sessionID:response.id})
+          return true
+        })
+        if(!promptAllowed){
+          let cleanupError=null
+          try{await this.client.session.remove({sessionID:response.id})}
+          catch(e){cleanupError=String(e)}
+          return await this.state.transaction(state=>{
+            const t=state.tasks.find(t=>t.id===reserved.id)
+            t.activity=cleanupError?"pre-prompt-cleanup-failed":t.status==="cancelled"?"cancelled-before-prompt":"stopped-before-prompt"
+            if(cleanupError)t.error="Session created after task stopped; cleanup failed: "+cleanupError
+            log(state,cleanupError?"session-cleanup-failed":"session-removed-before-prompt",t.id,{sessionID:response.id,error:cleanupError})
+            return {state:t.status,task:t,cleanupError}
+          })
+        }
         const request=[
           "NorthPalace task contract ID: "+reserved.id,
           "Goal: "+reserved.goal,
@@ -100,15 +137,23 @@ export class Runner {
         return await this.state.transaction(state=>{
           const t=state.tasks.find(t=>t.id===reserved.id)
           changeStatus(t,"running","prompt admitted by server")
+          t.activity="prompt-admitted"
           log(state,"prompt-admitted",t.id,{sessionID:t.sessionID})
           return {state:"running",task:t}
         })
       }catch(e){
         return await this.state.transaction(state=>{
           const t=state.tasks.find(t=>t.id===reserved.id)
-          changeStatus(t,"blocked","Ambiguous launch or delivery; inspect server before requeue: "+String(e))
-          t.error=String(e);log(state,"dispatch-blocked",t.id,{error:t.error})
-          return {state:"blocked",task:t,error:String(e)}
+          const error=String(e)
+          if(t.status==="assigned")changeStatus(t,"blocked","Ambiguous launch or delivery; inspect server before requeue: "+error)
+          else t.error="Launch result failed after task moved to "+t.status+": "+error
+          if(!t.sessionID){
+            t.sessionUnknown=true
+            t.activity="unknown-session"
+          }else if(t.status==="blocked")t.activity="prompt-ambiguous"
+          t.error=t.error||error
+          log(state,"dispatch-blocked",t.id,{error:t.error})
+          return {state:t.status,task:t,error}
         })
       }
     }
@@ -117,18 +162,32 @@ export class Runner {
   async reconcile(){
     const snapshot=await this.state.read()
     const checks=[]
+    const record=(task,activity,details={})=>checks.push({
+      id:task.id,status:task.status,sessionID:task.sessionID,priorActivity:task.activity,activity,...details
+    })
     for(const t of snapshot.tasks.filter(x=>BUSY.has(x.status))){
-      if(!t.sessionID){checks.push({id:t.id,activity:"unconfirmed-session"});continue}
+      if(t.status==="assigned" && t.activity==="prompting"){
+        record(t,"prompt-admission-pending")
+        continue
+      }
+      if(!t.sessionID){
+        record(t,t.activity==="creating-session"?"session-create-pending":"unconfirmed-session")
+        continue
+      }
       try{
         const response=unwrap(await this.client.session.get({sessionID:t.sessionID}))
-        checks.push({id:t.id,activity:response?.id?"session-present":"unconfirmed-session"})
-      }catch(e){checks.push({id:t.id,activity:"session-unreachable",error:String(e)})}
+        record(t,response?.id?"session-present":"unconfirmed-session")
+      }catch(e){record(t,"session-unreachable",{error:String(e)})}
     }
     return this.state.transaction(state=>{
       for(const check of checks){
         const t=state.tasks.find(x=>x.id===check.id)
         if(!t||!BUSY.has(t.status))continue
+        // Do not let a slow Session GET overwrite a newer dispatch state.
+        if(t.status!==check.status||t.sessionID!==check.sessionID||t.activity!==check.priorActivity)continue
+        if(check.activity==="session-create-pending"||check.activity==="prompt-admission-pending")continue
         t.activity=check.activity
+        if(check.activity==="unconfirmed-session" && t.status==="assigned")t.sessionUnknown=true
         if(check.activity==="session-unreachable" || (check.activity==="unconfirmed-session" && t.status==="assigned")){
           if(t.status!=="blocked")changeStatus(t,"blocked","reconciliation requires operator review")
         }

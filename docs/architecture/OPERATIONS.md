@@ -7,6 +7,15 @@ undefined
 - Repo AGENTS.md and Agent profile rules are the authoritative project rules; the optional global template is not installed.
 - Read `coordinator/README.md` for task JSON, CLI and recovery steps.
 
+### Coordinator connection authentication
+
+Coordinator Client 對 OpenCode Server 支援：
+
+- `OPENCODE_TOKEN`：Bearer authorization header。
+- `OPENCODE_PASSWORD`：HTTP Basic Auth；username 預設 `opencode`，需要時用 `OPENCODE_SERVER_USERNAME` 指定。
+
+不要將認證值寫入設定檔、日誌或驗證報告。`scripts/start-v2.ps1` 預設只綁定 `127.0.0.1`；執行 `doctor` 前要確認 Server 認證可由當次程序安全提供。
+
 ### Phase 2 quick test
 
 ```powershell

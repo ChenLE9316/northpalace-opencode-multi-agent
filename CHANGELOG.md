@@ -10,3 +10,12 @@
 - Added persistent task registry with serialized writes, Worktree single-writer admission and dependency gates.
 - Added conservative Session recovery, CLI task transitions and unit/mock tests.
 - Added project-scoped Windows tests and detailed operator instructions.
+
+## 2026-10-09 — Runtime validation fixes
+- Aligned `@opencode/client` with the installed OpenCode CLI at `2.0.26` and added HTTP Basic Auth header support alongside Bearer tokens.
+- Refused credential-bearing OpenCode URLs and non-loopback plaintext HTTP for authenticated Coordinator connections.
+- Added a project-local `.opencode` dependency manifest and lockfile pinning `@opencode/plugin` to `2.0.26`.
+- Redirected OpenCode `TEMP`/`TMP` and Node test fixtures to the project `runtime/` directory.
+- Added explicit, evidence-gated requeue from blocked, failed and changes-requested Coordinator tasks.
+- Guarded in-flight and ambiguous `session.create` calls against cancellation or duplicate dispatch, including legacy registry migration; expanded Coordinator tests for auth, persistence, duplicate IDs, concurrent writers and safe retry.
+- Recorded partial real-runtime results and all unverified/blocked checks in `docs/VALIDATION.md` and the dated report.

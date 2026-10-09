@@ -20,7 +20,9 @@
 ## State Machine
 
 `queued -> assigned -> running -> review -> accepted -> integrated`
-Exception: `blocked | failed | cancelled | changes_requested`. Rework path: `changes_requested -> assigned`.
+Exception states: `blocked | failed | cancelled | changes_requested`.
+
+The Coordinator CLI recovery path is `blocked | failed | changes_requested -> queued`; normal dispatch then reserves the task and moves it to `assigned`. `assigned` is an internal dispatch state and is not an operator recovery target. `cancelled` and `integrated` are terminal. When a task has a Session ID, or Session creation may have succeeded without returning an ID, cancellation or requeue requires evidence that the previous Session was interrupted; the evidence note must start with `confirmed-interrupted:`. While `session.prompt` admission is in flight, ordinary status changes are rejected. To recover a stale prompt after checking and interrupting the Session, first mark the task `blocked` with a `confirmed-interrupted:` note, then requeue it with the same evidence prefix. A Session merely being idle is not sufficient.
 
 ## Invariants
 
@@ -31,6 +33,7 @@ Exception: `blocked | failed | cancelled | changes_requested`. Rework path: `cha
 - Results must cite observed test/diff evidence.
 - No automatic push, deploy or destructive remote action.
 - Integration is local and only after acceptance checks.
+- Requeue is an explicit operator transition; there is no automatic retry after ambiguous prompt delivery.
 
 ## Foreground/background
 
