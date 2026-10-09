@@ -1,7 +1,5 @@
 ---
-description: Verify a local integration gate.
-agent: integrator
-subagent: true
+description: Run a local verified integration gate with parent-selected mode.
 ---
 
-Load `np-integration`. Check accepted worktree outputs and integrate ONLY locally when all gates pass: $ARGUMENTS.
+Load np-integration. Evaluate locally: $ARGUMENTS. Gate on accepted review evidence; delegate to integrator in foreground when dependent work must wait, otherwise background where safe. Never push remotely.

@@ -1,7 +1,5 @@
 ---
-description: Delegate a bounded task with explicit dependencies and acceptance.
-agent: NorthPalac
-subagent: false
+description: Delegate a scoped task with dynamic foreground/background decision.
 ---
 
-Load `np-delegation`. Determine role, worktree, task contract, and whether foreground/background is appropriate. Invoke permitted subagents for: $ARGUMENTS.
+Load np-delegation. Decide which child Agent can achieve: $ARGUMENTS. Set complete task scope and acceptance criteria, then invoke the native subagent tool with background chosen by you according to whether its output blocks the critical path.

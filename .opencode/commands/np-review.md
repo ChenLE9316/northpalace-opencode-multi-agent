@@ -1,7 +1,5 @@
 ---
-description: Perform independent code review and acceptance.
-agent: reviewer
-subagent: true
+description: Review changes without forcing asynchronous dispatch.
 ---
 
-Load `np-review`. Review the specified diff/task and return concrete findings and gate decision: $ARGUMENTS.
+Load np-review and delegate an independent review of: $ARGUMENTS. You are the parent; choose native foreground for a blocking gate, otherwise background. Require evidence and a clear acceptance decision.

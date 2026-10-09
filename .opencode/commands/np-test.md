@@ -1,7 +1,5 @@
 ---
-description: Run scoped tests with evidence.
-agent: tester
-subagent: true
+description: Test changes without forcing asynchronous dispatch.
 ---
 
-Load `np-testing`. Test scope: $ARGUMENTS. Record commands, exits, environment, and unresolved gaps.
+Load np-testing and delegate relevant tests of: $ARGUMENTS. As parent, choose foreground if integration is blocked by this result; otherwise use background for independent tests.
