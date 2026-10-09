@@ -1,0 +1,30 @@
+{
+  // Native OpenCode V2 configuration: https://opencode.ai/v2/docs/config
+  "$schema": "https://opencode.ai/config.json",
+  "default_agent": "NorthPalac",
+  "experimental": {
+    "subagent_depth": 3
+  },
+  "worktree": {
+    "directory": "../northpalace-worktrees"
+  },
+  "snapshots": true,
+  "compaction": {
+    "auto": true,
+    "keep": { "tokens": 15000 },
+    "buffer": 20000
+  },
+  "watcher": {
+    "ignore": [
+      "node_modules/**",
+      "**/.northpalace-state/**",
+      "**/dist/**",
+      "**/coverage/**"
+    ]
+  },
+  "formatter": true,
+  "tool_output": {
+    "max_lines": 2000,
+    "max_bytes": 65536
+  }
+}
