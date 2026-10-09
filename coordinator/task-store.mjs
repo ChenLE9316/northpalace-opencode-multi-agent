@@ -31,7 +31,7 @@ export class Store {
       try {
         await writeFile(temp,JSON.stringify(state,null,2)+"\n",{flag:"wx"})
         // sync file before atomic replacement. Windows rename is same-filesystem only.
-        const fd=await open(temp,"r")
+        const fd=await open(temp,"r+")
         try{await fd.sync()}finally{await fd.close()}
         await rename(temp,this.file)
       }finally{await rm(temp,{force:true}).catch(()=>{})}
