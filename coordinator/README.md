@@ -87,3 +87,7 @@ OpenCode V2 API is changing; pin OpenCode V2 and Client versions together. A non
 The `watch` command shows new events and invokes `reconcile` on reconnect. It does NOT automatically accept, complete, or integrate tasks.
 
 References: https://opencode.ai/v2/docs/build/client and https://opencode.ai/v2/docs/api
+
+## CI
+
+`.github/workflows/coordinator-ci.yml` triggers **only on main** pushes and `workflow_dispatch`. It executes Node.js 22 module parsing + `node --test` on both `windows-latest` and `ubuntu-latest`. This is an offline test suite, not proof of model/provider integration.

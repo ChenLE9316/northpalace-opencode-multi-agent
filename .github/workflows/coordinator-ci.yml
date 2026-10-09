@@ -1,0 +1,39 @@
+name: NorthPalace Coordinator CI
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-tests:
+    name: Node 22 / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    timeout-minutes: 8
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Parse runtime modules
+        shell: bash
+        run: |
+          node --check coordinator/task-core.mjs
+          node --check coordinator/task-store.mjs
+          node --check coordinator/hybrid.mjs
+          node --check coordinator/runner.mjs
+          node --check coordinator/cli.mjs
+      - name: Execute offline unit and mock tests
+        working-directory: coordinator
+        shell: bash
+        run: node --test

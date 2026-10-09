@@ -44,3 +44,9 @@ Do not label an unchecked runtime validation as passed.
 - [ ] Verify actual Worktree file isolation and nested L0→L3 execution.
 - [ ] Execute a mocked network timeout and inspect manual blocking behavior.
 - [ ] Verify XDG paths & actual OpenCode runtime paths on Windows.
+
+## Continuous integration
+
+- [x] Added `.github/workflows/coordinator-ci.yml` on pushes to main and manual workflow dispatch.
+- [ ] Confirm GitHub Actions Windows + Linux Node 22 matrix result after workflow run.
+- GitHub CI runs pure Node source syntax and offline unit/mock tests. It does **not** install models, launch OpenCode V2, exercise real Plugin/Browser, or verify live Windows desktop paths.
